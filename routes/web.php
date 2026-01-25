@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\LotteryNumberController;
 use App\Http\Controllers\Admin\LotteryResultController;
+use App\Http\Controllers\Admin\LottoDataController;
+use App\Http\Controllers\Admin\LottoDetailsController;
 use App\Http\Controllers\Admin\SourceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\AccuracyController;
@@ -36,6 +38,18 @@ Route::middleware('auth')->group(function () {
         Route::get('results/import', [LotteryResultController::class, 'importForm'])->name('results.import');
         Route::post('results/import', [LotteryResultController::class, 'importFromApi'])->name('results.import.store');
         Route::resource('numbers', LotteryNumberController::class)->except(['show']);
+        
+        // Lotto Data Admin Interface (หน้า admin เหมือน lottodataBack/admin/index.php)
+        Route::get('lotto-data', [\App\Http\Controllers\Admin\LottoDataAdminController::class, 'index'])->name('lotto-data.index');
+        
+        // Lotto Data API endpoints (เหมือนกับ lottodataBack/admin/fetch_lotto_data.php)
+        Route::post('lotto-data/fetch-all', [LottoDataController::class, 'fetchAll'])->name('lotto-data.fetch-all');
+        Route::post('lotto-data/fetch-single', [LottoDataController::class, 'fetchSingle'])->name('lotto-data.fetch-single');
+        
+        // Lotto Details API endpoints (เหมือนกับ lottodataBack/admin/fetch_lotto_details.php)
+        Route::post('lotto-details/fetch-all-pending', [LottoDetailsController::class, 'fetchAllPending'])->name('lotto-details.fetch-all-pending');
+        Route::post('lotto-details/fetch-batch', [LottoDetailsController::class, 'fetchBatch'])->name('lotto-details.fetch-batch');
+        Route::post('lotto-details/fetch-single', [LottoDetailsController::class, 'fetchSingle'])->name('lotto-details.fetch-single');
     });
 });
 
