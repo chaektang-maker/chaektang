@@ -5,7 +5,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, reactive } from 'vue';
 
 const props = defineProps({
     filters: Object,
@@ -14,11 +14,16 @@ const props = defineProps({
     hotNumbers: Array,
 });
 
+const localFilters = reactive({
+    draw_date: props.filters?.draw_date || '',
+    sort: props.filters?.sort || 'latest',
+});
+
 const apply = (e) => {
     e?.preventDefault?.();
     router.get(route('lucky-numbers.index'), {
-        draw_date: props.filters?.draw_date || '',
-        sort: props.filters?.sort || 'latest',
+        draw_date: localFilters.draw_date || '',
+        sort: localFilters.sort || 'latest',
     }, { preserveState: true, replace: true });
 };
 
@@ -113,14 +118,14 @@ const getCardColor = (index) => {
                     <form class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end" @submit="apply">
                         <div>
                             <InputLabel value="งวด" />
-                            <select v-model="props.filters.draw_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
+                            <select v-model="localFilters.draw_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
                                 <option value="">เลือกงวด</option>
                                 <option v-for="(label, value) in availableDrawDates" :key="value" :value="value">{{ label }}</option>
                             </select>
                         </div>
                         <div>
                             <InputLabel value="เรียงตาม" />
-                            <select v-model="props.filters.sort" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
+                            <select v-model="localFilters.sort" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
                                 <option value="latest">อัปเดตล่าสุด</option>
                                 <option value="popular">ความนิยม</option>
                             </select>
