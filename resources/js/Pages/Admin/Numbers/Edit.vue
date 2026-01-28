@@ -23,7 +23,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.put(route('admin.numbers.update', props.number.id));
+    form.put(route('backoffice.numbers.update', props.number.id));
 };
 </script>
 
@@ -34,7 +34,7 @@ const submit = () => {
         <template #header>
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">แก้ไขเลขสำนัก</h2>
-                <Link :href="route('admin.numbers.index')">
+                <Link :href="route('backoffice.numbers.index')">
                     <SecondaryButton>ย้อนกลับ</SecondaryButton>
                 </Link>
             </div>

@@ -438,7 +438,7 @@
                 const formData = new FormData();
                 formData.append('action', 'fetch_all');
                 
-                const response = await fetch('{{ route("admin.lotto-data.fetch-all") }}', {
+                const response = await fetch('{{ route("backoffice.lotto-data.fetch-all") }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
@@ -505,7 +505,7 @@
                 const formData = new FormData();
                 formData.append('page', pageNumber);
                 
-                const response = await fetch('{{ route("admin.lotto-data.fetch-single") }}', {
+                const response = await fetch('{{ route("backoffice.lotto-data.fetch-single") }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
@@ -568,7 +568,7 @@
                 const formData = new FormData();
                 formData.append('action', 'fetch_all_pending');
                 
-                const response = await fetch('{{ route("admin.lotto-details.fetch-all-pending") }}', {
+                const response = await fetch('{{ route("backoffice.lotto-details.fetch-all-pending") }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
@@ -631,7 +631,7 @@
                 const formData = new FormData();
                 formData.append('limit', limit);
                 
-                const response = await fetch('{{ route("admin.lotto-details.fetch-batch") }}', {
+                const response = await fetch('{{ route("backoffice.lotto-details.fetch-batch") }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
@@ -698,7 +698,7 @@
                 const formData = new FormData();
                 formData.append('lotto_id', lottoId);
                 
-                const response = await fetch('{{ route("admin.lotto-details.fetch-single") }}', {
+                const response = await fetch('{{ route("backoffice.lotto-details.fetch-single") }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,

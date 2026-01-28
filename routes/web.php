@@ -23,16 +23,19 @@ Route::get('/accuracy', [AccuracyController::class, 'index'])->name('accuracy.in
 Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
 Route::get('/recheck', [ResultsController::class, 'index'])->name('results.index');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::prefix('admin')->name('admin.')->middleware(['verified'])->group(function () {
+    Route::prefix('backoffice')->name('backoffice.')->middleware(['verified'])->group(function () {
+        // Dashboard - เข้าถึงได้ทุกคนที่ login แล้ว
+        Route::get('dashboard', function () {
+            return Inertia::render('Dashboard');
+        })->name('dashboard');
+        
+        // Routes ที่ต้อง permission
+        Route::middleware(\App\Http\Middleware\CheckPermission::class)->group(function () {
         Route::resource('sources', SourceController::class)->except(['show']);
         Route::resource('results', LotteryResultController::class)->except(['show']);
         Route::get('results/import', [LotteryResultController::class, 'importForm'])->name('results.import');
@@ -50,6 +53,14 @@ Route::middleware('auth')->group(function () {
         Route::post('lotto-details/fetch-all-pending', [LottoDetailsController::class, 'fetchAllPending'])->name('lotto-details.fetch-all-pending');
         Route::post('lotto-details/fetch-batch', [LottoDetailsController::class, 'fetchBatch'])->name('lotto-details.fetch-batch');
         Route::post('lotto-details/fetch-single', [LottoDetailsController::class, 'fetchSingle'])->name('lotto-details.fetch-single');
+        
+        // User & Permission management (เฉพาะ admin)
+        Route::middleware(\App\Http\Middleware\EnsureUserIsAdmin::class)->group(function () {
+            Route::resource('users', \App\Http\Controllers\Backoffice\UserController::class);
+            Route::get('permissions', [\App\Http\Controllers\Backoffice\PermissionController::class, 'index'])->name('permissions.index');
+            Route::put('permissions/{user}', [\App\Http\Controllers\Backoffice\PermissionController::class, 'update'])->name('permissions.update');
+        });
+        });
     });
 });
 

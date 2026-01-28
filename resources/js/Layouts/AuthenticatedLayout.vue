@@ -23,7 +23,7 @@ const showingNavigationDropdown = ref(false);
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
+                                <Link :href="route('backoffice.dashboard')">
                                     <ApplicationLogo
                                         class="block h-9 w-auto fill-current text-gray-800"
                                     />
@@ -35,28 +35,45 @@ const showingNavigationDropdown = ref(false);
                                 class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
                             >
                                 <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
+                                    :href="route('backoffice.dashboard')"
+                                    :active="route().current('backoffice.dashboard')"
                                 >
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    :href="route('admin.sources.index')"
-                                    :active="route().current('admin.sources.*')"
+                                    v-if="$page.props.auth.user?.can_access?.sources"
+                                    :href="route('backoffice.sources.index')"
+                                    :active="route().current('backoffice.sources.*')"
                                 >
                                     จัดการสำนัก
                                 </NavLink>
                                 <NavLink
-                                    :href="route('admin.results.index')"
-                                    :active="route().current('admin.results.*')"
+                                    v-if="$page.props.auth.user?.can_access?.results"
+                                    :href="route('backoffice.results.index')"
+                                    :active="route().current('backoffice.results.*')"
                                 >
                                     ผลหวย
                                 </NavLink>
                                 <NavLink
-                                    :href="route('admin.numbers.index')"
-                                    :active="route().current('admin.numbers.*')"
+                                    v-if="$page.props.auth.user?.can_access?.numbers"
+                                    :href="route('backoffice.numbers.index')"
+                                    :active="route().current('backoffice.numbers.*')"
                                 >
                                     เลขสำนัก
+                                </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user?.can_access?.lottoData"
+                                    :href="route('backoffice.lotto-data.index')"
+                                    :active="route().current('backoffice.lotto-data.*')"
+                                >
+                                    จัดการข้อมูลหวย
+                                </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user?.is_admin"
+                                    :href="route('backoffice.users.index')"
+                                    :active="route().current('backoffice.users.*') || route().current('backoffice.permissions.*')"
+                                >
+                                    จัดการผู้ใช้
                                 </NavLink>
                                 <NavLink
                                     :href="route('lucky-numbers.index')"
@@ -166,7 +183,7 @@ const showingNavigationDropdown = ref(false);
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
-                            :href="route('dashboard')"
+                            :href="route('backoffice.dashboard')"
                             :active="route().current('dashboard')"
                         >
                             Dashboard

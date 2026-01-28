@@ -20,7 +20,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('admin.numbers.store'));
+    form.post(route('backoffice.numbers.store'));
 };
 </script>
 
@@ -31,7 +31,7 @@ const submit = () => {
         <template #header>
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">เพิ่มเลขสำนัก</h2>
-                <Link :href="route('admin.numbers.index')">
+                <Link :href="route('backoffice.numbers.index')">
                     <SecondaryButton>ย้อนกลับ</SecondaryButton>
                 </Link>
             </div>

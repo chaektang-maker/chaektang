@@ -28,7 +28,7 @@ const submit = () => {
     progress.value = null;
     summary.value = null;
 
-    form.post(route('admin.results.import.store'), {
+    form.post(route('backoffice.results.import.store'), {
         preserveScroll: true,
         onSuccess: (page) => {
             isProcessing.value = false;
@@ -53,7 +53,7 @@ const submit = () => {
         <template #header>
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">ดึงข้อมูลหวยย้อนหลัง</h2>
-                <Link :href="route('admin.results.index')">
+                <Link :href="route('backoffice.results.index')">
                     <SecondaryButton>ย้อนกลับ</SecondaryButton>
                 </Link>
             </div>
@@ -186,7 +186,7 @@ const submit = () => {
                                     กำลังดำเนินการ...
                                 </span>
                             </PrimaryButton>
-                            <Link :href="route('admin.results.index')">
+                            <Link :href="route('backoffice.results.index')">
                                 <SecondaryButton :disabled="form.processing || isProcessing">ยกเลิก</SecondaryButton>
                             </Link>
                         </div>
@@ -199,7 +199,7 @@ const submit = () => {
                     <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside">
                         <li>ระบบจะดึงข้อมูลจาก API: <code class="bg-blue-100 px-1 rounded">https://lotto.api.rayriffy.com</code></li>
                         <li>ข้อมูลที่ดึงมา: รางวัลที่ 1, เลขท้าย 2 ตัว, เลขท้าย 3 ตัว, และเลขวิ่ง</li>
-                        <li>หลังจากดึงข้อมูลเสร็จแล้ว สามารถดูผลลัพธ์ได้ที่หน้า <Link :href="route('admin.results.index')" class="underline font-medium">บันทึกผลหวย</Link></li>
+                        <li>หลังจากดึงข้อมูลเสร็จแล้ว สามารถดูผลลัพธ์ได้ที่หน้า <Link :href="route('backoffice.results.index')" class="underline font-medium">บันทึกผลหวย</Link></li>
                     </ul>
                 </div>
             </div>

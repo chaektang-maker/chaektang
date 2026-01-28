@@ -58,7 +58,7 @@ defineProps({
                 <div class="flex items-center gap-3">
                     <Link
                         v-if="page.props.auth?.user"
-                        :href="route('dashboard')"
+                        :href="route('backoffice.dashboard')"
                         class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
                     >
                         แดชบอร์ด
@@ -122,7 +122,7 @@ defineProps({
                     </Link>
                 </div>
                 <div v-else class="pt-4 border-t border-gray-200">
-                    <Link :href="route('dashboard')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
+                    <Link :href="route('backoffice.dashboard')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                         แดชบอร์ด
                     </Link>
                 </div>

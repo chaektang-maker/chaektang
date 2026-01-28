@@ -12,7 +12,7 @@ const page = usePage();
 
 const destroyResult = (id) => {
     if (!confirm('ยืนยันลบผลหวยนี้?')) return;
-    router.delete(route('admin.results.destroy', id));
+    router.delete(route('backoffice.results.destroy', id));
 };
 </script>
 
@@ -24,10 +24,10 @@ const destroyResult = (id) => {
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">บันทึกผลหวย</h2>
                 <div class="flex items-center gap-2">
-                    <Link :href="route('admin.results.import')">
+                    <Link :href="route('backoffice.results.import')">
                         <SecondaryButton>📥 ดึงข้อมูลย้อนหลัง</SecondaryButton>
                     </Link>
-                    <Link :href="route('admin.results.create')">
+                    <Link :href="route('backoffice.results.create')">
                         <PrimaryButton>+ เพิ่มผลหวย</PrimaryButton>
                     </Link>
                 </div>
@@ -64,7 +64,7 @@ const destroyResult = (id) => {
                                         <span v-else class="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600 border border-gray-200">ยัง</span>
                                     </td>
                                     <td class="px-6 py-4 text-right text-sm">
-                                        <Link class="text-indigo-600 hover:text-indigo-800 font-medium" :href="route('admin.results.edit', r.id)">แก้ไข</Link>
+                                        <Link class="text-indigo-600 hover:text-indigo-800 font-medium" :href="route('backoffice.results.edit', r.id)">แก้ไข</Link>
                                         <button class="ml-3 text-red-600 hover:text-red-800 font-medium" type="button" @click="destroyResult(r.id)">ลบ</button>
                                     </td>
                                 </tr>

@@ -23,7 +23,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.put(route('admin.results.update', props.result.id));
+    form.put(route('backoffice.results.update', props.result.id));
 };
 </script>
 
@@ -36,7 +36,7 @@ const submit = () => {
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
                     แก้ไขผลหวย: {{ result.draw_date }}
                 </h2>
-                <Link :href="route('admin.results.index')">
+                <Link :href="route('backoffice.results.index')">
                     <SecondaryButton>ย้อนกลับ</SecondaryButton>
                 </Link>
             </div>

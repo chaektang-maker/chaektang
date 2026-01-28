@@ -15,19 +15,19 @@ const page = usePage();
 
 const applyFilters = (e) => {
     e?.preventDefault?.();
-    router.get(route('admin.sources.index'), {
+    router.get(route('backoffice.sources.index'), {
         q: props.filters?.q || '',
         status: props.filters?.status || '',
     }, { preserveState: true, replace: true });
 };
 
 const clearFilters = () => {
-    router.get(route('admin.sources.index'), {}, { preserveState: true, replace: true });
+    router.get(route('backoffice.sources.index'), {}, { preserveState: true, replace: true });
 };
 
 const destroySource = (id) => {
     if (!confirm('ยืนยันลบสำนักนี้?')) return;
-    router.delete(route('admin.sources.destroy', id));
+    router.delete(route('backoffice.sources.destroy', id));
 };
 </script>
 
@@ -40,7 +40,7 @@ const destroySource = (id) => {
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
                     จัดการสำนักหวย
                 </h2>
-                <Link :href="route('admin.sources.create')">
+                <Link :href="route('backoffice.sources.create')">
                     <PrimaryButton>+ เพิ่มสำนัก</PrimaryButton>
                 </Link>
             </div>
@@ -101,7 +101,7 @@ const destroySource = (id) => {
                                         <span v-else class="text-sm text-gray-400">-</span>
                                     </td>
                                     <td class="px-6 py-4 text-right text-sm">
-                                        <Link class="text-indigo-600 hover:text-indigo-800 font-medium" :href="route('admin.sources.edit', s.id)">แก้ไข</Link>
+                                        <Link class="text-indigo-600 hover:text-indigo-800 font-medium" :href="route('backoffice.sources.edit', s.id)">แก้ไข</Link>
                                         <button class="ml-3 text-red-600 hover:text-red-800 font-medium" type="button" @click="destroySource(s.id)">ลบ</button>
                                     </td>
                                 </tr>

@@ -16,19 +16,19 @@ const page = usePage();
 
 const applyFilters = (e) => {
     e?.preventDefault?.();
-    router.get(route('admin.numbers.index'), {
+    router.get(route('backoffice.numbers.index'), {
         source_id: props.filters?.source_id || '',
         draw_date: props.filters?.draw_date || '',
     }, { preserveState: true, replace: true });
 };
 
 const clearFilters = () => {
-    router.get(route('admin.numbers.index'), {}, { preserveState: true, replace: true });
+    router.get(route('backoffice.numbers.index'), {}, { preserveState: true, replace: true });
 };
 
 const destroyNumber = (id) => {
     if (!confirm('ยืนยันลบรายการเลขนี้?')) return;
-    router.delete(route('admin.numbers.destroy', id));
+    router.delete(route('backoffice.numbers.destroy', id));
 };
 
 const fmtRunning = (arr) => {
@@ -45,7 +45,7 @@ const fmtRunning = (arr) => {
         <template #header>
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">จัดการเลขสำนัก</h2>
-                <Link :href="route('admin.numbers.create')">
+                <Link :href="route('backoffice.numbers.create')">
                     <PrimaryButton>+ เพิ่มเลข</PrimaryButton>
                 </Link>
             </div>
@@ -100,7 +100,7 @@ const fmtRunning = (arr) => {
                                     <td class="px-6 py-4 text-sm text-gray-700">{{ n.three_digit || '-' }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-700">{{ fmtRunning(n.running_numbers) }}</td>
                                     <td class="px-6 py-4 text-right text-sm">
-                                        <Link class="text-indigo-600 hover:text-indigo-800 font-medium" :href="route('admin.numbers.edit', n.id)">แก้ไข</Link>
+                                        <Link class="text-indigo-600 hover:text-indigo-800 font-medium" :href="route('backoffice.numbers.edit', n.id)">แก้ไข</Link>
                                         <button class="ml-3 text-red-600 hover:text-red-800 font-medium" type="button" @click="destroyNumber(n.id)">ลบ</button>
                                     </td>
                                 </tr>

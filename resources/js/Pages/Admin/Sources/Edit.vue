@@ -23,7 +23,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.put(route('admin.sources.update', props.source.id));
+    form.put(route('backoffice.sources.update', props.source.id));
 };
 </script>
 
@@ -36,7 +36,7 @@ const submit = () => {
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
                     แก้ไขสำนัก: {{ source.name }}
                 </h2>
-                <Link :href="route('admin.sources.index')">
+                <Link :href="route('backoffice.sources.index')">
                     <SecondaryButton>ย้อนกลับ</SecondaryButton>
                 </Link>
             </div>

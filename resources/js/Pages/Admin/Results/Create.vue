@@ -16,7 +16,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('admin.results.store'));
+    form.post(route('backoffice.results.store'));
 };
 </script>
 
@@ -27,7 +27,7 @@ const submit = () => {
         <template #header>
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">เพิ่มผลหวย</h2>
-                <Link :href="route('admin.results.index')">
+                <Link :href="route('backoffice.results.index')">
                     <SecondaryButton>ย้อนกลับ</SecondaryButton>
                 </Link>
             </div>

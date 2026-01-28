@@ -17,7 +17,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('admin.sources.store'));
+    form.post(route('backoffice.sources.store'));
 };
 </script>
 
@@ -28,7 +28,7 @@ const submit = () => {
         <template #header>
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">เพิ่มสำนัก</h2>
-                <Link :href="route('admin.sources.index')">
+                <Link :href="route('backoffice.sources.index')">
                     <SecondaryButton>ย้อนกลับ</SecondaryButton>
                 </Link>
             </div>

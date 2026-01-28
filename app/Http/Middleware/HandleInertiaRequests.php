@@ -29,10 +29,46 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        
+        $canAccess = [];
+        $isAdmin = false;
+        
+        if ($user) {
+            $isAdmin = $user->isAdmin();
+            
+            if ($isAdmin) {
+                // Admin เข้าถึงได้ทุกอย่าง
+                $canAccess = [
+                    'sources' => true,
+                    'results' => true,
+                    'numbers' => true,
+                    'lottoData' => true,
+                ];
+            } else {
+                // Staff เช็คจาก permissions
+                $permissions = $user->permissions()->pluck('slug')->toArray();
+                
+                $canAccess = [
+                    'sources' => $user->canAccessRoute('backoffice.sources.index'),
+                    'results' => $user->canAccessRoute('backoffice.results.index'),
+                    'numbers' => $user->canAccessRoute('backoffice.numbers.index'),
+                    'lottoData' => $user->canAccessRoute('backoffice.lotto-data.index'),
+                ];
+            }
+        }
+        
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'is_admin' => $isAdmin,
+                    'can_access' => $canAccess,
+                ] : null,
             ],
         ];
     }
