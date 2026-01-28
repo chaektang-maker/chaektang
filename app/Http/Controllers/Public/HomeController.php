@@ -14,56 +14,65 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // ดึงข้อมูลผลหวยล่าสุด
+        // ดึงงวดล่าสุด (ไม่จำเป็นต้อง fetched แล้ว)
         $latestLotto = LottoData::query()
-            ->where('is_fetched', 1)
             ->whereNotNull('draw_date')
             ->orderByDesc('draw_date')
             ->first();
 
         $latestResult = null;
         if ($latestLotto) {
-            // ดึงรางวัลที่ 1
-            $firstPrize = LottoPrize::where('lotto_id', $latestLotto->lotto_id)
-                ->where('prize_id', 'prizeFirst')
-                ->first();
+            if (!$latestLotto->is_fetched) {
+                // ถ้างวดนี้ยังไม่ดึงผล ให้โชว์เลขเป็น x แทน
+                $latestResult = [
+                    'lotto_id' => $latestLotto->lotto_id,
+                    'draw_date' => $latestLotto->draw_date?->format('Y-m-d'),
+                    'date_text' => $this->formatDateText($latestLotto->date_text),
+                    'first_prize' => 'xxxxxx',
+                    'last_two_digit' => 'xx',
+                    'front_three_digit' => ['xxx', 'xxx'],
+                    'last_three_digit' => ['xxx', 'xxx'],
+                    'nearby_prizes' => [],
+                    'second_prizes' => [],
+                ];
+            } else {
+                // ดึงผลจริงของงวดล่าสุดที่ดึงแล้ว
+                $firstPrize = LottoPrize::where('lotto_id', $latestLotto->lotto_id)
+                    ->where('prize_id', 'prizeFirst')
+                    ->first();
 
-            // ดึงเลขท้าย 2 ตัว
-            $lastTwoDigit = LottoRunningNumber::where('lotto_id', $latestLotto->lotto_id)
-                ->where('running_id', 'runningNumberBackTwo')
-                ->first();
+                $lastTwoDigit = LottoRunningNumber::where('lotto_id', $latestLotto->lotto_id)
+                    ->where('running_id', 'runningNumberBackTwo')
+                    ->first();
 
-            // ดึงเลขหน้า 3 ตัว
-            $frontThreeDigit = LottoRunningNumber::where('lotto_id', $latestLotto->lotto_id)
-                ->where('running_id', 'runningNumberFrontThree')
-                ->first();
+                $frontThreeDigit = LottoRunningNumber::where('lotto_id', $latestLotto->lotto_id)
+                    ->where('running_id', 'runningNumberFrontThree')
+                    ->first();
 
-            // ดึงเลขท้าย 3 ตัว
-            $lastThreeDigit = LottoRunningNumber::where('lotto_id', $latestLotto->lotto_id)
-                ->where('running_id', 'runningNumberBackThree')
-                ->first();
+                $lastThreeDigit = LottoRunningNumber::where('lotto_id', $latestLotto->lotto_id)
+                    ->where('running_id', 'runningNumberBackThree')
+                    ->first();
 
-            // ดึงรางวัลเลขข้างเคียงรางวัลที่ 1
-            $nearbyPrize = LottoPrize::where('lotto_id', $latestLotto->lotto_id)
-                ->where('prize_id', 'prizeFirstNear')
-                ->first();
+                $nearbyPrize = LottoPrize::where('lotto_id', $latestLotto->lotto_id)
+                    ->where('prize_id', 'prizeFirstNear')
+                    ->first();
 
-            // ดึงรางวัลที่ 2
-            $secondPrize = LottoPrize::where('lotto_id', $latestLotto->lotto_id)
-                ->where('prize_id', 'prizeSecond')
-                ->first();
+                $secondPrize = LottoPrize::where('lotto_id', $latestLotto->lotto_id)
+                    ->where('prize_id', 'prizeSecond')
+                    ->first();
 
-            $latestResult = [
-                'lotto_id' => $latestLotto->lotto_id,
-                'draw_date' => $latestLotto->draw_date?->format('Y-m-d'),
-                'date_text' => $this->formatDateText($latestLotto->date_text),
-                'first_prize' => $firstPrize?->numbers[0] ?? null,
-                'last_two_digit' => $lastTwoDigit?->numbers[0] ?? null,
-                'front_three_digit' => $frontThreeDigit?->numbers ?? [],
-                'last_three_digit' => $lastThreeDigit?->numbers ?? [],
-                'nearby_prizes' => $nearbyPrize?->numbers ?? [],
-                'second_prizes' => $secondPrize?->numbers ?? [],
-            ];
+                $latestResult = [
+                    'lotto_id' => $latestLotto->lotto_id,
+                    'draw_date' => $latestLotto->draw_date?->format('Y-m-d'),
+                    'date_text' => $this->formatDateText($latestLotto->date_text),
+                    'first_prize' => $firstPrize?->numbers[0] ?? null,
+                    'last_two_digit' => $lastTwoDigit?->numbers[0] ?? null,
+                    'front_three_digit' => $frontThreeDigit?->numbers ?? [],
+                    'last_three_digit' => $lastThreeDigit?->numbers ?? [],
+                    'nearby_prizes' => $nearbyPrize?->numbers ?? [],
+                    'second_prizes' => $secondPrize?->numbers ?? [],
+                ];
+            }
         }
 
         // ดึงรายการงวดทั้งหมดสำหรับ dropdown

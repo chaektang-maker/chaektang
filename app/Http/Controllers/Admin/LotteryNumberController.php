@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\LotteryNumber;
 use App\Models\Source;
+use App\Models\LottoData;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -42,6 +43,13 @@ class LotteryNumberController extends Controller
     {
         return Inertia::render('Admin/Numbers/Create', [
             'sources' => Source::query()->orderBy('name')->get(['id', 'name', 'status']),
+            'availableDrawDates' => LottoData::query()
+                ->whereNotNull('draw_date')
+                ->orderByDesc('draw_date')
+                ->get()
+                ->pluck('draw_date')
+                ->map(fn ($d) => $d->format('Y-m-d'))
+                ->values(),
         ]);
     }
 
@@ -49,7 +57,7 @@ class LotteryNumberController extends Controller
     {
         $data = $request->validate([
             'source_id' => ['required', 'exists:sources,id'],
-            'draw_date' => ['required', 'date'],
+            'draw_date' => ['required', 'date', 'exists:lotto_data,draw_date'],
             'two_digit' => ['nullable', 'string', 'max:10'],
             'three_digit' => ['nullable', 'string', 'max:10'],
             'running_numbers' => ['nullable', 'string'], // "1,2,3"
@@ -72,7 +80,7 @@ class LotteryNumberController extends Controller
             'running_numbers' => $running,
         ]);
 
-        return redirect()->route('admin.numbers.index')->with('success', 'บันทึกเลขสำเร็จ');
+        return redirect()->route('backoffice.numbers.index')->with('success', 'บันทึกเลขสำเร็จ');
     }
 
     public function edit(LotteryNumber $number)
@@ -112,13 +120,13 @@ class LotteryNumberController extends Controller
             'running_numbers' => $running,
         ]);
 
-        return redirect()->route('admin.numbers.index')->with('success', 'บันทึกสำเร็จ');
+        return redirect()->route('backoffice.numbers.index')->with('success', 'บันทึกสำเร็จ');
     }
 
     public function destroy(LotteryNumber $number)
     {
         $number->delete();
 
-        return redirect()->route('admin.numbers.index')->with('success', 'ลบเลขสำเร็จ');
+        return redirect()->route('backoffice.numbers.index')->with('success', 'ลบเลขสำเร็จ');
     }
 }

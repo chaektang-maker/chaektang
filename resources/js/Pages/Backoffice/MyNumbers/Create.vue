@@ -5,15 +5,16 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
-    sources: Array,
     availableDrawDates: Array,
+    source: Object,
 });
 
+const page = usePage();
+
 const form = useForm({
-    source_id: props.sources?.[0]?.id || '',
     draw_date: props.availableDrawDates?.[0] || '',
     two_digit: '',
     three_digit: '',
@@ -21,37 +22,34 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('backoffice.numbers.store'));
+    form.post(route('backoffice.my-numbers.store'));
 };
 </script>
 
 <template>
-    <Head title="เพิ่มเลขสำนัก" />
+    <Head title="เพิ่มเลขของสำนักฉัน" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between gap-4">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">เพิ่มเลขสำนัก</h2>
-                <Link :href="route('backoffice.numbers.index')">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    เพิ่มเลขของสำนักฉัน
+                    <span v-if="source" class="ml-2 text-sm text-gray-500">({{ source.name }})</span>
+                </h2>
+                <Link :href="route('backoffice.my-numbers.index')">
                     <SecondaryButton>ย้อนกลับ</SecondaryButton>
                 </Link>
             </div>
         </template>
 
         <div class="py-12">
-            <div class="mx-auto max-w-3xl sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-3xl sm:px-6 lg:px-8 space-y-4">
+                <div v-if="page.props.flash?.success" class="rounded-lg bg-green-50 border border-green-200 p-4 text-green-800">
+                    {{ page.props.flash.success }}
+                </div>
+
                 <div class="bg-white shadow-sm sm:rounded-lg p-6">
                     <form class="space-y-4" @submit.prevent="submit">
-                        <div>
-                            <InputLabel value="สำนัก" />
-                            <select v-model="form.source_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option v-for="s in sources" :key="s.id" :value="s.id">
-                                    {{ s.name }} ({{ s.status }})
-                                </option>
-                            </select>
-                            <InputError class="mt-2" :message="form.errors.source_id" />
-                        </div>
-
                         <div>
                             <InputLabel value="งวด (วันที่)" />
                             <select
@@ -59,11 +57,7 @@ const submit = () => {
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             >
                                 <option value="">-- เลือกงวด --</option>
-                                <option
-                                    v-for="d in availableDrawDates"
-                                    :key="d"
-                                    :value="d"
-                                >
+                                <option v-for="d in availableDrawDates" :key="d" :value="d">
                                     {{ d }}
                                 </option>
                             </select>

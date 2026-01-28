@@ -62,6 +62,13 @@ const showingNavigationDropdown = ref(false);
                                     เลขสำนัก
                                 </NavLink>
                                 <NavLink
+                                    v-if="$page.props.auth.user?.is_source_owner"
+                                    :href="route('backoffice.my-numbers.index')"
+                                    :active="route().current('backoffice.my-numbers.*')"
+                                >
+                                    เลขของสำนักฉัน
+                                </NavLink>
+                                <NavLink
                                     v-if="$page.props.auth.user?.can_access?.lottoData"
                                     :href="route('backoffice.lotto-data.index')"
                                     :active="route().current('backoffice.lotto-data.*')"
@@ -74,6 +81,13 @@ const showingNavigationDropdown = ref(false);
                                     :active="route().current('backoffice.users.*') || route().current('backoffice.permissions.*')"
                                 >
                                     จัดการผู้ใช้
+                                </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user?.is_admin"
+                                    :href="route('backoffice.vip-requests.index')"
+                                    :active="route().current('backoffice.vip-requests.*')"
+                                >
+                                    คำขอ VIP
                                 </NavLink>
                                 <NavLink
                                     :href="route('lucky-numbers.index')"

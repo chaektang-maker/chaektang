@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'source_id',
     ];
 
     /**
@@ -54,6 +55,14 @@ class User extends Authenticatable
         return $this->hasMany(Subscription::class);
     }
 
+    /**
+     * สำนักที่ user นี้เป็นเจ้าของ (ถ้ามี)
+     */
+    public function source(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Source::class);
+    }
+
     public function userVotes(): HasMany
     {
         return $this->hasMany(UserVote::class);
@@ -70,6 +79,14 @@ class User extends Authenticatable
             ->where('status', 'active')
             ->where('ends_at', '>', now())
             ->exists();
+    }
+
+    /**
+     * User นี้เป็นเจ้าของสำนักหรือไม่
+     */
+    public function isSourceOwner(): bool
+    {
+        return (bool) $this->source_id;
     }
 
     /**
