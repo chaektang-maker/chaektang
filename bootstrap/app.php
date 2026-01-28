@@ -19,5 +19,17 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // จัดการ 404 errors สำหรับ Inertia
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'ไม่พบหน้านี้'], 404);
+            }
+            
+            // สำหรับ web requests ใช้ Inertia พร้อม header และ footer
+            return \Inertia\Inertia::render('Errors/404', [
+                'status' => 404,
+                'canLogin' => \Illuminate\Support\Facades\Route::has('login'),
+                'canRegister' => \Illuminate\Support\Facades\Route::has('register'),
+            ])->toResponse($request)->setStatusCode(404);
+        });
     })->create();
