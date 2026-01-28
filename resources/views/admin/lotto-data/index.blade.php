@@ -746,5 +746,52 @@
             }
         }
     </script>
+    
+    <!-- Footer -->
+    <footer style="background: #1a1a1a; color: #d1d5db; padding: 48px 20px; margin-top: 20px;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 32px; margin-bottom: 32px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                        <div style="width: 32px; height: 32px; background: #dc2626; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <span style="color: white; font-size: 18px; font-weight: bold;">L</span>
+                        </div>
+                        <div style="font-size: 24px; font-weight: bold; color: #f87171;">
+                            Lotto
+                        </div>
+                    </div>
+                    <p style="font-size: 14px; color: #9ca3af;">
+                        ระบบลอตเตอรี่ออนไลน์ที่ทันสมัยและปลอดภัย
+                    </p>
+                </div>
+                <div>
+                    <h3 style="color: white; font-weight: 600; margin-bottom: 16px;">เกี่ยวกับเรา</h3>
+                    <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+                        <li><a href="#" style="color: #d1d5db; text-decoration: none; font-size: 14px; transition: color 0.2s;">เกี่ยวกับเรา</a></li>
+                        <li><a href="#" style="color: #d1d5db; text-decoration: none; font-size: 14px; transition: color 0.2s;">ทีมงาน</a></li>
+                        <li><a href="#" style="color: #d1d5db; text-decoration: none; font-size: 14px; transition: color 0.2s;">ข่าวสาร</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: white; font-weight: 600; margin-bottom: 16px;">บริการ</h3>
+                    <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+                        <li><a href="{{ route('lucky-numbers.index') }}" style="color: #d1d5db; text-decoration: none; font-size: 14px; transition: color 0.2s;">รวมเลขเด็ด</a></li>
+                        <li><a href="{{ route('statistics.index') }}" style="color: #d1d5db; text-decoration: none; font-size: 14px; transition: color 0.2s;">สถิติหวย</a></li>
+                        <li><a href="{{ route('accuracy.index') }}" style="color: #d1d5db; text-decoration: none; font-size: 14px; transition: color 0.2s;">ตารางคะแนน</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 style="color: white; font-weight: 600; margin-bottom: 16px;">ติดต่อเรา</h3>
+                    <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #d1d5db;">
+                        <li>อีเมล: chaektang@gmail.com</li>
+                        <li>โทรศัพท์: 083-487-1695</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="border-top: 1px solid #374151; padding-top: 32px; text-align: center; font-size: 14px; color: #9ca3af;">
+                <p>&copy; 2024 Lotto. สงวนลิขสิทธิ์</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
