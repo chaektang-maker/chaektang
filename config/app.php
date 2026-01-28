@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'APP_NAME="Chaek Tang'),
+    'name' => env('APP_NAME', 'Chaek Tang'),
 
     /*
     |--------------------------------------------------------------------------
@@ -52,7 +52,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'http://chaektang.com'),
 
     /*
     |--------------------------------------------------------------------------
