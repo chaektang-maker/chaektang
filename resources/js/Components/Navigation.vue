@@ -65,14 +65,14 @@ defineProps({
                 
                 <!-- ปุ่มขวาสุด -->
                 <div class="flex items-center gap-3">
-                    <Link
+                 <!--   <Link
                         v-if="page.props.auth?.user"
                         :href="route('backoffice.dashboard')"
                         class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
                     >
                         แดชบอร์ด
-                    </Link>
-                    <template v-else>
+                    </Link>-->
+                    <!--<template v-else>
                         <Link
                             :href="route('login')"
                             class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
@@ -85,17 +85,17 @@ defineProps({
                         >
                             สมัครสมาชิก
                         </Link>
-                    </template>
+                    </template>-->
                     
                     <!-- Mobile Menu Button -->
-                    <button @click="toggleMobileMenu" class="lg:hidden text-gray-700 hover:text-red-600">
+                    <!--<button @click="toggleMobileMenu" class="lg:hidden text-gray-700 hover:text-red-600">
                         <svg v-if="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                         <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
-                    </button>
+                    </button>-->
                 </div>
             </div>
         </div>
@@ -118,19 +118,19 @@ defineProps({
                 <Link :href="route('accuracy.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     ตารางคะแนน
                 </Link>
-                <div v-if="!page.props.auth?.user" class="pt-4 border-t border-gray-200 space-y-2">
+                <!--<div v-if="!page.props.auth?.user" class="pt-4 border-t border-gray-200 space-y-2">
                     <Link :href="route('login')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                         เข้าสู่ระบบ
                     </Link>
                     <Link v-if="canRegister" :href="route('register')" class="block px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all font-medium text-sm text-center">
                         สมัครสมาชิก
                     </Link>
-                </div>
-                <div v-else class="pt-4 border-t border-gray-200">
+                </div>-->
+                    <!--<div v-else class="pt-4 border-t border-gray-200">
                     <Link :href="route('backoffice.dashboard')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                         แดชบอร์ด
                     </Link>
-                </div>
+                </div>       -->
             </div>
         </div>
     </nav>

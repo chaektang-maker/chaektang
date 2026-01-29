@@ -254,9 +254,9 @@ const formatNumber = (num) => {
     </section>
 
     <!-- Hero Section -->
-    <section class="relative min-h-[60vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-red-50 to-white">
+    <!--<section class="relative min-h-[60vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-red-50 to-white">-->
         <!-- Background Pattern -->
-        <div class="absolute inset-0 opacity-5">
+        <!---<div class="absolute inset-0 opacity-5">
             <div class="absolute top-0 left-0 w-full h-full" style="background-image: radial-gradient(circle, #dc2626 1px, transparent 1px); background-size: 50px 50px;"></div>
         </div>
 
@@ -291,10 +291,10 @@ const formatNumber = (num) => {
                     >
                         เข้าสู่ระบบ
                     </Link>
-                </div>
+                </div> -->
 
                 <!-- Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-16 max-w-4xl mx-auto">
+               <!--- <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-16 max-w-4xl mx-auto">
                     <div class="bg-white rounded-2xl p-6 shadow-lg border border-red-100">
                         <div class="text-4xl font-bold text-red-600 mb-2">10,000+</div>
                         <div class="text-gray-600">ผู้ใช้งาน</div>
@@ -310,10 +310,10 @@ const formatNumber = (num) => {
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Features Section -->
-    <section class="py-24 bg-white">
+   <!--- <section class="py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -322,11 +322,11 @@ const formatNumber = (num) => {
                 <p class="text-xl text-gray-600 max-w-2xl mx-auto">
                     ระบบที่ออกแบบมาเพื่อความสะดวกและความปลอดภัยของคุณ
                 </p>
-            </div>
+            </div> -->
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+           <!-- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">-->
                 <!-- Feature 1 -->
-                <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
+               <!--- <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
                     <div class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
@@ -337,10 +337,10 @@ const formatNumber = (num) => {
                         ระบบรักษาความปลอดภัยระดับสูงด้วยเทคโนโลยีเข้ารหัสข้อมูล 
                         เพื่อปกป้องข้อมูลส่วนตัวของคุณ
                     </p>
-                </div>
+                </div> -->
 
                 <!-- Feature 2 -->
-                <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
+               <!--- <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
                     <div class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -351,10 +351,10 @@ const formatNumber = (num) => {
                         ระบบที่ทำงานเร็วและเสถียร พร้อมให้บริการทุกที่ทุกเวลา 
                         ไม่ต้องรอคอยนาน
                     </p>
-                </div>
+                </div> -->
 
                 <!-- Feature 3 -->
-                <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
+               <!-- <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
                     <div class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -365,10 +365,10 @@ const formatNumber = (num) => {
                         อินเทอร์เฟซที่เข้าใจง่าย ใช้งานสะดวก 
                         เหมาะสำหรับทุกเพศทุกวัย
                     </p>
-                </div>
+                </div>  -->
 
                 <!-- Feature 4 -->
-                <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
+               <!--- <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
                     <div class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
@@ -379,10 +379,10 @@ const formatNumber = (num) => {
                         ได้รับการรับรองจากหน่วยงานที่เกี่ยวข้อง 
                         มั่นใจได้ในความน่าเชื่อถือ
                     </p>
-                </div>
+                </div> -->
 
                 <!-- Feature 5 -->
-                <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
+               <!-- <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
                     <div class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -393,10 +393,10 @@ const formatNumber = (num) => {
                         มีทีมงานคอยให้คำปรึกษาและช่วยเหลือตลอด 24 ชั่วโมง 
                         พร้อมตอบคำถามทุกข้อสงสัย
                     </p>
-                </div>
+                </div> -->
 
                 <!-- Feature 6 -->
-                <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
+               <!--- <div class="group bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-red-100">
                     <div class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -410,10 +410,10 @@ const formatNumber = (num) => {
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- CTA Section -->
-    <section class="py-24 bg-gradient-to-r from-red-600 to-red-700">
+   <!--- <section class="py-24 bg-gradient-to-r from-red-600 to-red-700">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
                 พร้อมเริ่มต้นแล้วหรือยัง?
@@ -438,7 +438,7 @@ const formatNumber = (num) => {
                 </Link>
             </div>
         </div>
-    </section>
+    </section> -->
     </PublicLayout>
 </template>
 
