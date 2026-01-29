@@ -6,6 +6,9 @@
 
         <title inertia>{{ config('app.name', 'Chaek Tang') }}</title>
 
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="{{ asset('favIcon.png') }}">
+
         <!-- Google Analytics -->
         @include('partials.google-analytics')
 
