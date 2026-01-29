@@ -57,7 +57,7 @@ class SourceController extends Controller
 
         Source::create($data);
 
-        return redirect()->route('admin.sources.index')->with('success', 'เพิ่มสำนักสำเร็จ');
+        return redirect()->route('backoffice.sources.index')->with('success', 'เพิ่มสำนักสำเร็จ');
     }
 
     public function edit(Source $source)
@@ -82,13 +82,13 @@ class SourceController extends Controller
 
         $source->update($data);
 
-        return redirect()->route('admin.sources.index')->with('success', 'บันทึกสำเร็จ');
+        return redirect()->route('backoffice.sources.index')->with('success', 'บันทึกสำเร็จ');
     }
 
     public function destroy(Source $source)
     {
         $source->delete();
 
-        return redirect()->route('admin.sources.index')->with('success', 'ลบสำนักสำเร็จ');
+        return redirect()->route('backoffice.sources.index')->with('success', 'ลบสำนักสำเร็จ');
     }
 }

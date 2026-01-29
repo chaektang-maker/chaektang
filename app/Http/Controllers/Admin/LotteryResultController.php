@@ -62,7 +62,7 @@ class LotteryResultController extends Controller
             // ถ้าคำนวณไม่สำเร็จ ให้บันทึกผลหวยไว้ก่อน (อาจจะยังไม่มีเลขจากสำนัก)
         }
 
-        return redirect()->route('admin.results.index')->with('success', 'บันทึกผลหวยสำเร็จ');
+        return redirect()->route('backoffice.results.index')->with('success', 'บันทึกผลหวยสำเร็จ');
     }
 
     public function edit(LotteryResult $result)
@@ -112,14 +112,14 @@ class LotteryResultController extends Controller
             }
         }
 
-        return redirect()->route('admin.results.index')->with('success', 'บันทึกสำเร็จ');
+        return redirect()->route('backoffice.results.index')->with('success', 'บันทึกสำเร็จ');
     }
 
     public function destroy(LotteryResult $result)
     {
         $result->delete();
 
-        return redirect()->route('admin.results.index')->with('success', 'ลบผลหวยสำเร็จ');
+        return redirect()->route('backoffice.results.index')->with('success', 'ลบผลหวยสำเร็จ');
     }
 
     /**
