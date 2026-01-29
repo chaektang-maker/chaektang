@@ -75,9 +75,8 @@ class HomeController extends Controller
             }
         }
 
-        // ดึงรายการงวดทั้งหมดสำหรับ dropdown
+        // ดึงรายการงวดทั้งหมดสำหรับ dropdown ตรวจสลาก (ใช้ทุกงวดที่มี draw_date ไม่เฉพาะ is_fetched)
         $availableDraws = LottoData::query()
-            ->where('is_fetched', 1)
             ->whereNotNull('draw_date')
             ->orderByDesc('draw_date')
             ->limit(50)
