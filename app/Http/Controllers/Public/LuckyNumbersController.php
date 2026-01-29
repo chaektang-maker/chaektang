@@ -15,10 +15,44 @@ class LuckyNumbersController extends Controller
     public function index(Request $request)
     {
         $sort = $request->string('sort')->toString() ?: 'latest';
+
+        // ดึงรายการงวดจาก lotto_data เท่านั้น (ไม่สน is_fetched)
+        $availableDrawDates = LottoData::query()
+            ->whereNotNull('draw_date')
+            ->orderByDesc('draw_date')
+            ->get()
+            ->map(function ($item) {
+                $dateText = str_replace('ลากกินแบ่งรัฐบาลงวดประจำวันที่-', '', $item->date_text ?? '');
+                $dateText = str_replace('กกินแบ่งรัฐบาล งวดประจำวันที่', '', $dateText);
+                $dateText = str_replace('กกินแบ่งรัฐบาล', '', $dateText);
+                $dateText = str_replace('ลา ', '', $dateText);
+                $dateText = str_replace('ผสลา', '', $dateText);
+                $dateText = str_replace('งวด', '', $dateText);
+                $dateText = str_replace('ผสล', '', $dateText);
+                $dateText = str_replace('ประจำวันที่', '', $dateText);
+                $dateText = str_replace('-', ' ', $dateText);
+                $dateText = trim($dateText);
+                $drawDateStr = $item->draw_date ? $item->draw_date->format('Y-m-d') : null;
+                return ['value' => $drawDateStr, 'label' => $dateText ?: $drawDateStr];
+            })
+            ->filter(fn ($item) => !empty($item['value']))
+            ->values()
+            ->all();
+
         $drawDate = $request->string('draw_date')->toString();
 
+        // ครั้งแรกหรือไม่ส่งงวดมา = ใช้งวดล่าสุดจาก lotto_data
+        if (!$drawDate && count($availableDrawDates) > 0) {
+            $drawDate = $availableDrawDates[0]['value'];
+        }
         if (!$drawDate) {
-            $drawDate = LotteryNumber::query()->max('draw_date') ?: now()->toDateString();
+            $drawDate = now()->toDateString();
+        }
+
+        // ถ้าส่งงวดมา ต้องมีใน lotto_data เท่านั้น (ป้องกันวันที่มั่ว)
+        $validDates = collect($availableDrawDates)->pluck('value')->toArray();
+        if ($drawDate && !in_array($drawDate, $validDates, true)) {
+            $drawDate = count($availableDrawDates) > 0 ? $availableDrawDates[0]['value'] : now()->toDateString();
         }
 
         $query = LotteryNumber::query()
@@ -61,44 +95,7 @@ class LuckyNumbersController extends Controller
             })
             ->toArray();
 
-        // ดึงข้อมูลงวดจาก lotto_data และแปลง date_text
-        // เรียงตาม draw_date จากมากไปน้อย (งวดล่าสุดก่อน)
-        $availableDrawDates = LottoData::query()
-            ->where('is_fetched', 1)
-            ->whereNotNull('draw_date') // กรองเฉพาะที่มี draw_date
-            ->select('date_text', 'lotto_id', 'draw_date')
-            ->orderByDesc('draw_date') // เรียงตาม draw_date จากมากไปน้อย (งวดล่าสุดก่อน)
-            ->get()
-            ->map(function ($item) {
-                // ตัดคำว่า "ลากกินแบ่งรัฐบาลงวดประจำวันที่-" ออก
-                $dateText = str_replace('ลากกินแบ่งรัฐบาลงวดประจำวันที่-', '', $item->date_text);
-                $dateText = str_replace('กกินแบ่งรัฐบาล งวดประจำวันที่', '', $dateText);
-                $dateText = str_replace('กกินแบ่งรัฐบาล', '', $dateText);
-                $dateText = str_replace('ลา ', '', $dateText);
-                $dateText = str_replace('ผสลา', '', $dateText);
-                $dateText = str_replace('งวด', '', $dateText);
-                $dateText = str_replace('ผสล', '', $dateText);
-                $dateText = str_replace('ประจำวันที่', '', $dateText);
-
-                // ตัดเครื่องหมาย "-" ออก
-                $dateText = str_replace('-', ' ', $dateText);
-                // trim whitespace
-                $dateText = trim($dateText);
-                
-                // ใช้ draw_date จาก database โดยตรง
-                $drawDate = $item->draw_date ? $item->draw_date->format('Y-m-d') : null;
-                
-                return [
-                    'value' => $drawDate, // ใช้ draw_date เป็น value
-                    'label' => $dateText, // แสดงวันที่ที่แปลงแล้ว (จาก date_text)
-                ];
-            })
-            ->filter(function ($item) {
-                return !empty($item['value']); // กรองเฉพาะที่มี draw_date
-            })
-            ->pluck('label', 'value') // pluck หลังจาก sort แล้ว
-            ->toArray();
-
+        // ส่งเป็น array ของ { value, label } ให้ front เลือกงวดได้
         return Inertia::render('LuckyNumbers/Index', [
             'filters' => [
                 'draw_date' => $drawDate,

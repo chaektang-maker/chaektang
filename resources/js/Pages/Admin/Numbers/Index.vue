@@ -5,24 +5,33 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { reactive } from 'vue';
 
 const props = defineProps({
     numbers: Object,
     sources: Array,
     filters: Object,
+    availableDrawDates: Array,
 });
 
 const page = usePage();
 
+const localFilters = reactive({
+    source_id: props.filters?.source_id ?? '',
+    draw_date: props.filters?.draw_date ?? '',
+});
+
 const applyFilters = (e) => {
     e?.preventDefault?.();
     router.get(route('backoffice.numbers.index'), {
-        source_id: props.filters?.source_id || '',
-        draw_date: props.filters?.draw_date || '',
+        source_id: localFilters.source_id || '',
+        draw_date: localFilters.draw_date || '',
     }, { preserveState: true, replace: true });
 };
 
 const clearFilters = () => {
+    localFilters.source_id = '';
+    localFilters.draw_date = '';
     router.get(route('backoffice.numbers.index'), {}, { preserveState: true, replace: true });
 };
 
@@ -61,7 +70,7 @@ const fmtRunning = (arr) => {
                     <form class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end" @submit="applyFilters">
                         <div>
                             <InputLabel value="สำนัก" />
-                            <select v-model="props.filters.source_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <select v-model="localFilters.source_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="">ทั้งหมด</option>
                                 <option v-for="s in sources" :key="s.id" :value="s.id">
                                     {{ s.name }} ({{ s.status }})
@@ -69,8 +78,11 @@ const fmtRunning = (arr) => {
                             </select>
                         </div>
                         <div>
-                            <InputLabel value="งวด (วันที่)" />
-                            <TextInput v-model="props.filters.draw_date" type="date" class="mt-1 block w-full" />
+                            <InputLabel value="งวด (จาก lotto_data)" />
+                            <select v-model="localFilters.draw_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">ทั้งหมด</option>
+                                <option v-for="d in availableDrawDates" :key="d" :value="d">{{ d }}</option>
+                            </select>
                         </div>
                         <div class="flex gap-2">
                             <PrimaryButton type="submit">กรอง</PrimaryButton>

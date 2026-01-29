@@ -10,6 +10,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 const props = defineProps({
     number: Object,
     sources: Array,
+    availableDrawDates: Array,
 });
 
 const page = usePage();
@@ -59,8 +60,11 @@ const submit = () => {
                         </div>
 
                         <div>
-                            <InputLabel value="งวด (วันที่)" />
-                            <TextInput v-model="form.draw_date" type="date" class="mt-1 block w-full" />
+                            <InputLabel value="งวด (จาก lotto_data)" />
+                            <select v-model="form.draw_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">-- เลือกงวด --</option>
+                                <option v-for="d in availableDrawDates" :key="d" :value="d">{{ d }}</option>
+                            </select>
                             <InputError class="mt-2" :message="form.errors.draw_date" />
                         </div>
 

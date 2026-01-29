@@ -80,7 +80,6 @@ defineProps({
                             เข้าสู่ระบบ
                         </Link>
                         <Link
-                            v-if="canRegister"
                             :href="route('register')"
                             class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all font-medium text-sm shadow-md"
                         >
@@ -108,19 +107,16 @@ defineProps({
                     หน้าแรก
                 </Link>
                 <Link :href="route('results.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
-                    ผลรางวัล
+                    ตรวจผลรางวัลย้อนหลัง
                 </Link>
                 <Link :href="route('lucky-numbers.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
-                    รวมเลขเด็ด
+                    เลขเด็ด
                 </Link>
                 <Link :href="route('statistics.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     สถิติหวย
                 </Link>
                 <Link :href="route('accuracy.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     ตารางคะแนน
-                </Link>
-                <Link href="#" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
-                    ติดต่อเรา
                 </Link>
                 <div v-if="!page.props.auth?.user" class="pt-4 border-t border-gray-200 space-y-2">
                     <Link :href="route('login')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">

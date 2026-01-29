@@ -11,15 +11,32 @@ use Inertia\Inertia;
 
 class LotteryNumberController extends Controller
 {
+    /**
+     * รายการงวดจาก lotto_data เท่านั้น (ล็อกไม่ให้เลือกวันที่มั่ว)
+     */
+    private function getAvailableDrawDates(): array
+    {
+        return LottoData::query()
+            ->whereNotNull('draw_date')
+            ->orderByDesc('draw_date')
+            ->get()
+            ->map(fn ($d) => $d->draw_date->format('Y-m-d'))
+            ->values()
+            ->all();
+    }
+
     public function index(Request $request)
     {
+        $availableDrawDates = $this->getAvailableDrawDates();
+
         $query = LotteryNumber::query()->with('source');
 
         if ($sourceId = $request->integer('source_id')) {
             $query->where('source_id', $sourceId);
         }
 
-        if ($drawDate = $request->string('draw_date')->toString()) {
+        $drawDate = $request->string('draw_date')->toString();
+        if ($drawDate && in_array($drawDate, $availableDrawDates, true)) {
             $query->where('draw_date', $drawDate);
         }
 
@@ -32,9 +49,10 @@ class LotteryNumberController extends Controller
         return Inertia::render('Admin/Numbers/Index', [
             'filters' => [
                 'source_id' => $request->integer('source_id') ?: null,
-                'draw_date' => $request->string('draw_date')->toString(),
+                'draw_date' => $drawDate,
             ],
             'sources' => Source::query()->orderBy('name')->get(['id', 'name', 'status']),
+            'availableDrawDates' => $availableDrawDates,
             'numbers' => $numbers,
         ]);
     }
@@ -43,13 +61,7 @@ class LotteryNumberController extends Controller
     {
         return Inertia::render('Admin/Numbers/Create', [
             'sources' => Source::query()->orderBy('name')->get(['id', 'name', 'status']),
-            'availableDrawDates' => LottoData::query()
-                ->whereNotNull('draw_date')
-                ->orderByDesc('draw_date')
-                ->get()
-                ->pluck('draw_date')
-                ->map(fn ($d) => $d->format('Y-m-d'))
-                ->values(),
+            'availableDrawDates' => $this->getAvailableDrawDates(),
         ]);
     }
 
@@ -90,6 +102,7 @@ class LotteryNumberController extends Controller
         return Inertia::render('Admin/Numbers/Edit', [
             'number' => $number,
             'sources' => Source::query()->orderBy('name')->get(['id', 'name', 'status']),
+            'availableDrawDates' => $this->getAvailableDrawDates(),
         ]);
     }
 
@@ -97,7 +110,7 @@ class LotteryNumberController extends Controller
     {
         $data = $request->validate([
             'source_id' => ['required', 'exists:sources,id'],
-            'draw_date' => ['required', 'date'],
+            'draw_date' => ['required', 'date', 'exists:lotto_data,draw_date'],
             'two_digit' => ['nullable', 'string', 'max:10'],
             'three_digit' => ['nullable', 'string', 'max:10'],
             'running_numbers' => ['nullable', 'string'],

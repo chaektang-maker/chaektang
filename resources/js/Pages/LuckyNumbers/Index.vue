@@ -128,7 +128,7 @@ const getCardColor = (index) => {
                             <InputLabel value="งวด" />
                             <select v-model="localFilters.draw_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
                                 <option value="">เลือกงวด</option>
-                                <option v-for="(label, value) in availableDrawDates" :key="value" :value="value">{{ label }}</option>
+                                <option v-for="d in availableDrawDates" :key="d.value" :value="d.value">{{ d.label }}</option>
                             </select>
                         </div>
                         <div>
