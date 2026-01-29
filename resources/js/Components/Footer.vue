@@ -44,7 +44,7 @@ import { Link } from '@inertiajs/vue3';
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-                <p>&copy; 2024 Lotto. สงวนลิขสิทธิ์</p>
+                <p>&copy; 2026 chaektang.com สงวนลิขสิทธิ์</p>
             </div>
         </div>
     </footer>
