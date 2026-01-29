@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
-import Navigation from '@/Components/Navigation.vue';
+import PublicLayout from '@/Layouts/PublicLayout.vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -86,8 +86,7 @@ const formatNumber = (num) => {
 <template>
     <Head title="ยินดีต้อนรับ" />
     
-    <!-- Navigation -->
-    <Navigation :can-login="canLogin" :can-register="canRegister" />
+    <PublicLayout :can-login="canLogin" :can-register="canRegister">
 
     <!-- ตรวจหวย Section -->
     <section class="pt-24 pb-12 bg-gradient-to-b from-red-600 to-red-700">
@@ -430,6 +429,7 @@ const formatNumber = (num) => {
             </div>
         </div>
     </section>
+    </PublicLayout>
 </template>
 
 <style scoped>
