@@ -31,7 +31,15 @@ const topScores = computed(() => {
 </script>
 
 <template>
-    <Head title="ตารางคะแนนความแม่นยำ" />
+    <Head>
+        <title>ตารางคะแนนความแม่นยำ - แจกตัง | เปรียบเทียบความแม่นยำของสำนัก</title>
+        <meta name="description" content="ตารางคะแนนความแม่นยำของสำนักหวย เปรียบเทียบความแม่นยำในการทำนายเลข 2 ตัว 3 ตัว และเลขวิ่ง" />
+        <meta name="keywords" content="ตารางคะแนน, ความแม่นยำ, สำนักหวย, เปรียบเทียบสำนัก, คะแนนสำนัก" />
+        <meta property="og:title" content="ตารางคะแนนความแม่นยำ - แจกตัง" />
+        <meta property="og:description" content="ตารางคะแนนความแม่นยำของสำนักหวย เปรียบเทียบความแม่นยำในการทำนายเลข" />
+        <meta name="twitter:title" content="ตารางคะแนนความแม่นยำ - แจกตัง" />
+        <meta name="twitter:description" content="ตารางคะแนนความแม่นยำของสำนักหวย เปรียบเทียบความแม่นยำในการทำนายเลข" />
+    </Head>
 
     <PublicLayout>
         <div class="py-10">

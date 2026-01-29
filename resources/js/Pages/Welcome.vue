@@ -84,7 +84,17 @@ const formatNumber = (num) => {
 </script>
 
 <template>
-    <Head title="ยินดีต้อนรับ" />
+    <Head>
+        <title>ยินดีต้อนรับ - แจกตัง | ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล</title>
+        <meta name="description" content="แจกตัง - ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ ตรวจหวยง่าย รวดเร็ว ปลอดภัย" />
+        <meta name="keywords" content="ตรวจหวย, ผลหวย, สลากกินแบ่ง, เลขเด็ด, สถิติหวย, ตารางคะแนน, ตรวจผลรางวัล, หวยออนไลน์, แจกตัง" />
+        <meta property="og:title" content="ยินดีต้อนรับ - แจกตัง | ตรวจหวยออนไลน์" />
+        <meta property="og:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="ยินดีต้อนรับ - แจกตัง | ตรวจหวยออนไลน์" />
+        <meta name="twitter:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง" />
+    </Head>
     
     <PublicLayout :can-login="canLogin" :can-register="canRegister">
 

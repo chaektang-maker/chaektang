@@ -20,6 +20,9 @@ use Inertia\Inertia;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/check-lottery', [HomeController::class, 'checkLottery'])->name('check-lottery');
 
+// Sitemap
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 Route::get('/lucky-numbers', [LuckyNumbersController::class, 'index'])->name('lucky-numbers.index');
 Route::get('/accuracy', [AccuracyController::class, 'index'])->name('accuracy.index');
 Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');

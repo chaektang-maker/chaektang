@@ -6,8 +6,57 @@
 
         <title inertia>{{ config('app.name', 'Chaek Tang') }}</title>
 
+        <!-- SEO Meta Tags -->
+        <meta name="description" content="แจกตัง - ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ ตรวจหวยง่าย รวดเร็ว ปลอดภัย">
+        <meta name="keywords" content="ตรวจหวย, ผลหวย, สลากกินแบ่ง, เลขเด็ด, สถิติหวย, ตารางคะแนน, ตรวจผลรางวัล, หวยออนไลน์, แจกตัง">
+        <meta name="author" content="Chaek Tang">
+        <meta name="robots" content="index, follow">
+        <meta name="language" content="Thai">
+        <meta name="revisit-after" content="1 days">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ config('app.url') }}">
+        <meta property="og:title" content="{{ config('app.name', 'Chaek Tang') }} - ระบบตรวจหวยออนไลน์">
+        <meta property="og:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ">
+        <meta property="og:image" content="{{ config('app.url') }}/logo-29012026.jpg">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:image:alt" content="แจกตัง - Logo">
+        <meta property="og:locale" content="th_TH">
+        <meta property="og:site_name" content="{{ config('app.name', 'Chaek Tang') }}">
+        
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:url" content="{{ config('app.url') }}">
+        <meta name="twitter:title" content="{{ config('app.name', 'Chaek Tang') }} - ระบบตรวจหวยออนไลน์">
+        <meta name="twitter:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง">
+        <meta name="twitter:image" content="{{ config('app.url') }}/logo-29012026.jpg">
+        <meta name="twitter:image:alt" content="แจกตัง - Logo">
+        
+        <!-- Canonical URL -->
+        <link rel="canonical" href="{{ config('app.url') }}{{ request()->getPathInfo() }}">
+        
+        <!-- Structured Data (JSON-LD) -->
+        <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => config('app.name', 'Chaek Tang'),
+            'alternateName' => 'แจกตัง',
+            'url' => config('app.url'),
+            'description' => 'ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ',
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => config('app.url') . '/search?q={search_term_string}',
+                'query-input' => 'required name=search_term_string',
+            ],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+        </script>
+        
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.png') }}">
+        <link rel="apple-touch-icon" href="{{ asset('logo-29012026.jpg') }}">
 
         <!-- Google Analytics -->
         @include('partials.google-analytics')

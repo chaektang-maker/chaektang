@@ -28,6 +28,15 @@ defineProps({
                 <!-- Logo และชื่อบริษัท -->
                 <Link href="/" class="flex items-center gap-2">
                     <div class="text-2xl font-extrabold">
+                       <!-- <span class="text-red-600">แจก</span><span class="text-gray-800">ตัง</span>-->
+                                        <!-- Logo และชื่อบริษัท -->
+                    <img 
+                        src="/logo-29012026.jpg" 
+                        alt="แจกตัง" 
+                        class="h-16 md:h-20 w-auto object-contain"
+                    />
+                    </div>
+                    <div class="text-2xl font-extrabold">
                         <span class="text-red-600">แจก</span><span class="text-gray-800">ตัง</span>
                     </div>
                 </Link>

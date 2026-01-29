@@ -37,7 +37,15 @@ const resetFilters = () => {
 </script>
 
 <template>
-    <Head title="สถิติหวยย้อนหลัง" />
+    <Head>
+        <title>สถิติหวยย้อนหลัง - แจกตัง | สถิติเลขออกบ่อย</title>
+        <meta name="description" content="สถิติหวยย้อนหลัง สถิติเลขออกบ่อย 2 ตัว 3 ตัว เลขวิ่ง วิเคราะห์ข้อมูลหวยย้อนหลังหลายปี" />
+        <meta name="keywords" content="สถิติหวย, สถิติเลขออกบ่อย, สถิติหวยย้อนหลัง, เลขออกบ่อย, วิเคราะห์หวย" />
+        <meta property="og:title" content="สถิติหวยย้อนหลัง - แจกตัง" />
+        <meta property="og:description" content="สถิติหวยย้อนหลัง สถิติเลขออกบ่อย 2 ตัว 3 ตัว เลขวิ่ง" />
+        <meta name="twitter:title" content="สถิติหวยย้อนหลัง - แจกตัง" />
+        <meta name="twitter:description" content="สถิติหวยย้อนหลัง สถิติเลขออกบ่อย 2 ตัว 3 ตัว เลขวิ่ง" />
+    </Head>
     
     <PublicLayout>
         <div class="py-10">

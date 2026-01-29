@@ -94,7 +94,15 @@ const getCardColor = (index) => {
 </script>
 
 <template>
-    <Head title="รวมเลขเด็ดงวดนี้" />
+    <Head>
+        <title>รวมเลขเด็ดงวดนี้ - แจกตัง | เลขเด็ดจากหลายสำนัก</title>
+        <meta name="description" content="รวมเลขเด็ดงวดนี้ จากหลายสำนัก เลือกดูตามงวดและการเรียง เลขเด็ด 2 ตัว 3 ตัว และเลขวิ่ง" />
+        <meta name="keywords" content="เลขเด็ด, เลขเด็ดงวดนี้, เลขเด็ด 2 ตัว, เลขเด็ด 3 ตัว, เลขวิ่ง, สำนักหวย" />
+        <meta property="og:title" content="รวมเลขเด็ดงวดนี้ - แจกตัง" />
+        <meta property="og:description" content="รวมเลขเด็ดงวดนี้ จากหลายสำนัก เลือกดูตามงวดและการเรียง" />
+        <meta name="twitter:title" content="รวมเลขเด็ดงวดนี้ - แจกตัง" />
+        <meta name="twitter:description" content="รวมเลขเด็ดงวดนี้ จากหลายสำนัก เลือกดูตามงวดและการเรียง" />
+    </Head>
 
     <PublicLayout>
         <div class="py-10">

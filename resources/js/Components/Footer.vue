@@ -8,15 +8,14 @@ import { Link } from '@inertiajs/vue3';
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
-                            <span class="text-white text-lg font-bold">L</span>
-                        </div>
-                        <div class="text-2xl font-bold text-red-400">
-                            Lotto
-                        </div>
+                        <img
+                            src="/logo-29012026.jpg" 
+                            alt="แจกตัง" 
+                            class="h-20 md:h-24 w-auto object-contain"
+                        />
                     </div>
                     <p class="text-sm text-gray-400">
-                        ระบบลอตเตอรี่ออนไลน์ที่ทันสมัยและปลอดภัย
+                        รวมเลขเด็ดจากทุกสำนัก หวยย้อนหลัง ตารางคะแนนความแม่นยำ
                     </p>
                 </div>
                 <div>
