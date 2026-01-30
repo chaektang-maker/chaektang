@@ -60,6 +60,10 @@
 
         <!-- Google Analytics -->
         @include('partials.google-analytics')
+        
+        <!-- Google AdSense -->
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5880634868894114"
+            crossorigin="anonymous"></script>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
