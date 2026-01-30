@@ -19,6 +19,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    affiliateSections: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const scrollY = ref(0);
@@ -249,6 +253,66 @@ const formatNumber = (num) => {
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- วัตถุมงคล แยก section ตามแพลตฟอร์ม -->
+    <section
+        v-for="section in affiliateSections"
+        :key="section.platform.id"
+        class="py-12 bg-white border-t border-gray-100"
+    >
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-3 mb-6">
+                <img
+                    v-if="section.platform.logo_url"
+                    :src="section.platform.logo_url"
+                    :alt="section.platform.name"
+                    class="h-10 w-10 object-contain rounded"
+                />
+                <h2 class="text-2xl font-bold text-gray-900">
+                    สินค้าวัตถุมงคลจาก {{ section.platform.name }}
+                </h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <a
+                    v-for="product in section.products"
+                    :key="product.id"
+                    :href="product.affiliate_url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="group block bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-red-200 transition-all duration-200"
+                >
+                    <div class="aspect-square bg-gray-100 overflow-hidden">
+                        <img
+                            v-if="product.image_url"
+                            :src="product.image_url"
+                            :alt="product.title"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                        <div
+                            v-else
+                            class="w-full h-full flex items-center justify-center text-gray-400 text-4xl"
+                        >
+                            🧿
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900 line-clamp-2 group-hover:text-red-600 transition-colors">
+                            {{ product.title }}
+                        </h3>
+                        <p
+                            v-if="product.description"
+                            class="text-sm text-gray-500 mt-1 line-clamp-2"
+                        >
+                            {{ product.description }}
+                        </p>
+                        <span class="inline-block mt-2 text-sm text-red-600 font-medium">
+                            ดูที่ {{ section.platform.name }} →
+                        </span>
+                    </div>
+                </a>
             </div>
         </div>
     </section>

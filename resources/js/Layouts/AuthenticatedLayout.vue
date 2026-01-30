@@ -19,8 +19,8 @@ const showingNavigationDropdown = ref(false);
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
-                        <div class="flex">
+                    <div class="flex min-h-16 flex-wrap items-center justify-between gap-y-2 py-2">
+                        <div class="flex flex-wrap items-center gap-x-1 gap-y-0">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
                                 <Link :href="route('backoffice.dashboard')">
@@ -32,7 +32,7 @@ const showingNavigationDropdown = ref(false);
 
                             <!-- Navigation Links -->
                             <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
+                                class="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-x-1 sm:gap-y-0 sm:ms-6"
                             >
                                 <NavLink
                                     :href="route('backoffice.dashboard')"
@@ -45,7 +45,7 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('backoffice.sources.index')"
                                     :active="route().current('backoffice.sources.*')"
                                 >
-                                    จัดการสำนัก
+                                    สำนัก
                                 </NavLink>
                                 <NavLink
                                     v-if="$page.props.auth.user?.can_access?.results"
@@ -66,34 +66,48 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('backoffice.my-numbers.index')"
                                     :active="route().current('backoffice.my-numbers.*')"
                                 >
-                                    เลขของสำนักฉัน
+                                    เลขของฉัน
                                 </NavLink>
                                 <NavLink
                                     v-if="$page.props.auth.user?.can_access?.lottoData"
                                     :href="route('backoffice.lotto-data.index')"
                                     :active="route().current('backoffice.lotto-data.*')"
                                 >
-                                    จัดการข้อมูลหวย
+                                    ข้อมูลหวย
+                                </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user?.is_admin"
+                                    :href="route('backoffice.platforms.index')"
+                                    :active="route().current('backoffice.platforms.*')"
+                                >
+                                    แพลตฟอร์ม
+                                </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user?.is_admin"
+                                    :href="route('backoffice.affiliate-products.index')"
+                                    :active="route().current('backoffice.affiliate-products.*')"
+                                >
+                                    วัตถุมงคล
                                 </NavLink>
                                 <NavLink
                                     v-if="$page.props.auth.user?.is_admin"
                                     :href="route('backoffice.users.index')"
                                     :active="route().current('backoffice.users.*') || route().current('backoffice.permissions.*')"
                                 >
-                                    จัดการผู้ใช้
+                                    ผู้ใช้
                                 </NavLink>
                                 <NavLink
                                     v-if="$page.props.auth.user?.is_admin"
                                     :href="route('backoffice.vip-requests.index')"
                                     :active="route().current('backoffice.vip-requests.*')"
                                 >
-                                    คำขอ VIP
+                                    VIP
                                 </NavLink>
                                 <NavLink
                                     :href="route('lucky-numbers.index')"
                                     :active="route().current('lucky-numbers.*')"
                                 >
-                                    รวมเลขเด็ด
+                                    เลขเด็ด
                                 </NavLink>
                             </div>
                         </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LottoData;
 use App\Models\LottoPrize;
 use App\Models\LottoRunningNumber;
+use App\Models\Platform;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -90,11 +91,37 @@ class HomeController extends Controller
             })
             ->toArray();
 
+        // แพลตฟอร์มที่มีสินค้า affiliate เปิดแสดง — แยก section ตามแพลตฟอร์ม
+        $affiliateSections = Platform::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->with(['affiliateProducts' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')])
+            ->get()
+            ->filter(fn ($p) => $p->affiliateProducts->isNotEmpty())
+            ->map(fn ($p) => [
+                'platform' => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'logo_url' => $p->logo_url,
+                ],
+                'products' => $p->affiliateProducts->map(fn ($prod) => [
+                    'id' => $prod->id,
+                    'title' => $prod->title,
+                    'description' => $prod->description,
+                    'image_url' => $prod->image_url,
+                    'affiliate_url' => $prod->affiliate_url,
+                ])->values()->all(),
+            ])
+            ->values()
+            ->all();
+
         return Inertia::render('Welcome', [
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
             'latestResult' => $latestResult,
             'availableDraws' => $availableDraws,
+            'affiliateSections' => $affiliateSections,
         ]);
     }
 

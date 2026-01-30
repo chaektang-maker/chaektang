@@ -77,6 +77,10 @@ Route::middleware('auth')->group(function () {
             Route::get('permissions', [\App\Http\Controllers\Backoffice\PermissionController::class, 'index'])->name('permissions.index');
             Route::put('permissions/{user}', [\App\Http\Controllers\Backoffice\PermissionController::class, 'update'])->name('permissions.update');
 
+            // แพลตฟอร์ม & สินค้าวัตถุมงคล (Affiliate)
+            Route::resource('platforms', \App\Http\Controllers\Backoffice\PlatformController::class);
+            Route::resource('affiliate-products', \App\Http\Controllers\Backoffice\AffiliateProductController::class);
+
             // จัดการคำขอ VIP จากการโอนเงิน
             Route::get('vip-requests', [VipRequestAdminController::class, 'index'])->name('vip-requests.index');
             Route::get('vip-requests/{vipRequest}', [VipRequestAdminController::class, 'show'])->name('vip-requests.show');
