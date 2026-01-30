@@ -49,8 +49,8 @@ const formatThaiDate = (dateString) => {
     <Head>
         <title>ตรวจผลรางวัลย้อนหลัง - แจกตัง | ผลหวยย้อนหลัง</title>
         <meta name="description" content="ตรวจผลรางวัลย้อนหลัง ผลหวยย้อนหลัง ผลสลากกินแบ่งรัฐบาลย้อนหลัง ตรวจหวยงวดที่ผ่านมา" />
-        <meta name="keywords" content="ผลหวยย้อนหลัง, ตรวจผลรางวัล, ผลสลากกินแบ่ง, ผลหวยงวดที่ผ่านมา, ผลรางวัลย้อนหลัง" />
-        <meta property="og:title" content="ตรวจผลรางวัลย้อนหลัง - แจกตัง" />
+        <meta name="keywords" content="ตรวจหวยย้อนหลัง,ผลหวยย้อนหลัง, ตรวจผลรางวัล, ผลสลากกินแบ่ง, ผลหวยงวดที่ผ่านมา, ผลรางวัลย้อนหลัง" />
+        <meta property="og:title" content="ตรวจหวยย้อนหลัง - แจกตัง" />
         <meta property="og:description" content="ตรวจผลรางวัลย้อนหลัง ผลหวยย้อนหลัง ผลสลากกินแบ่งรัฐบาลย้อนหลัง" />
         <meta name="twitter:title" content="ตรวจผลรางวัลย้อนหลัง - แจกตัง" />
         <meta name="twitter:description" content="ตรวจผลรางวัลย้อนหลัง ผลหวยย้อนหลัง ผลสลากกินแบ่งรัฐบาลย้อนหลัง" />
