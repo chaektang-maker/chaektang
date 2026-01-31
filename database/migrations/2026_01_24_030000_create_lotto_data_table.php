@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lotto_data', function (Blueprint $table) {
-            $table->string('lotto_id')->primary();
-            $table->string('url');
-            $table->string('date_text');
-            $table->boolean('is_fetched')->default(false);
-            $table->timestamps();
-            
-            $table->index('date_text');
-        });
+        if (!Schema::hasTable('lotto_data')) {
+            Schema::create('lotto_data', function (Blueprint $table) {
+                $table->string('lotto_id')->primary();
+                $table->string('url');
+                $table->string('date_text');
+                $table->boolean('is_fetched')->default(false);
+                $table->timestamps();
+                
+                $table->index('date_text');
+            });
+        }
     }
 
     /**

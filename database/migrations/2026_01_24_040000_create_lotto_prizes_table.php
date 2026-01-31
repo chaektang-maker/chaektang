@@ -11,20 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lotto_prizes', function (Blueprint $table) {
-            $table->id();
-            $table->string('lotto_id');
-            $table->string('prize_id');
-            $table->string('prize_name')->nullable();
-            $table->string('reward')->nullable();
-            $table->integer('amount')->default(0);
-            $table->json('numbers')->nullable();
-            $table->timestamps();
-            
-            $table->index('lotto_id');
-            $table->index('prize_id');
-            $table->foreign('lotto_id')->references('lotto_id')->on('lotto_data')->onDelete('cascade');
-        });
+        if (!Schema::hasTable('lotto_prizes')) {
+            Schema::create('lotto_prizes', function (Blueprint $table) {
+                $table->id();
+                $table->string('lotto_id');
+                $table->string('prize_id');
+                $table->string('prize_name')->nullable();
+                $table->string('reward')->nullable();
+                $table->integer('amount')->default(0);
+                $table->json('numbers')->nullable();
+                $table->timestamps();
+                
+                $table->index('lotto_id');
+                $table->index('prize_id');
+                $table->foreign('lotto_id')->references('lotto_id')->on('lotto_data')->onDelete('cascade');
+            });
+        }
     }
 
     /**

@@ -272,10 +272,10 @@ const formatNumber = (num) => {
                     class="h-10 w-10 object-contain rounded"
                 />
                 <h2 class="text-2xl font-bold text-gray-900">
-                    สินค้าวัตถุมงคลจาก {{ section.platform.name }}
+                    สินค้าจาก {{ section.platform.name }}
                 </h2>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <a
                     v-for="product in section.products"
                     :key="product.id"

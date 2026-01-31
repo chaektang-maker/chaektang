@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lotto_details', function (Blueprint $table) {
-            $table->id();
-            $table->string('lotto_id');
-            $table->string('date')->nullable();
-            $table->string('endpoint')->nullable();
-            $table->timestamps();
-            
-            $table->index('lotto_id');
-            $table->foreign('lotto_id')->references('lotto_id')->on('lotto_data')->onDelete('cascade');
-        });
+        if (!Schema::hasTable('lotto_details')) {
+            Schema::create('lotto_details', function (Blueprint $table) {
+                $table->id();
+                $table->string('lotto_id');
+                $table->string('date')->nullable();
+                $table->string('endpoint')->nullable();
+                $table->timestamps();
+                
+                $table->index('lotto_id');
+                $table->foreign('lotto_id')->references('lotto_id')->on('lotto_data')->onDelete('cascade');
+            });
+        }
     }
 
     /**
