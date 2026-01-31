@@ -24,12 +24,12 @@
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="แจกตัง - Logo">
         <meta property="og:locale" content="th_TH">
-        <meta property="og:site_name" content="{{ config('app.name', 'Chaek Tang') }}">
+        <meta property="og:site_name" content="{{ config('app.name', 'แจกตัง') }}">
         
         <!-- Twitter -->
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:url" content="{{ config('app.url') }}">
-        <meta name="twitter:title" content="{{ config('app.name', 'Chaek Tang') }} - ระบบตรวจหวยออนไลน์">
+        <meta name="twitter:title" content="{{ config('app.name', 'แจกตัง') }} - ระบบตรวจหวยออนไลน์">
         <meta name="twitter:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง">
         <meta name="twitter:image" content="{{ config('app.url') }}/logo-29012026.jpg">
         <meta name="twitter:image:alt" content="แจกตัง - Logo">
@@ -42,7 +42,7 @@
         {!! json_encode([
             '@context' => 'https://schema.org',
             '@type' => 'WebSite',
-            'name' => config('app.name', 'Chaek Tang'),
+            'name' => config('app.name', 'แจกตัง'),
             'alternateName' => 'แจกตัง',
             'url' => config('app.url'),
             'description' => 'ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ',
