@@ -95,24 +95,24 @@ const getCardColor = (index) => {
 
 <template>
     <Head>
-        <title>รวมเลขเด็ดงวดนี้ - แจกตัง | เลขเด็ดจากหลายสำนัก</title>
-        <meta name="description" content="รวมเลขเด็ดงวดนี้ หวยเลขเด็ด จากหลายสำนัก เลือกดูตามงวดและการเรียง เลขเด็ด 2 ตัว 3 ตัว และเลขวิ่ง" />
-        <meta name="keywords" content="หวยเลขเด็ด, เลขเด็ด, เลขเด็ดงวดนี้, เลขเด็ด 2 ตัว, เลขเด็ด 3 ตัว, เลขวิ่ง, สำนักหวย" />
-        <meta property="og:title" content="รวมเลขเด็ดงวดนี้ - แจกตัง" />
-        <meta property="og:description" content="รวมเลขเด็ดงวดนี้ หวยเลขเด็ด จากหลายสำนัก เลือกดูตามงวดและการเรียง" />
-        <meta name="twitter:title" content="รวมเลขเด็ดงวดนี้ - แจกตัง" />
-        <meta name="twitter:description" content="รวมเลขเด็ดงวดนี้ หวยเลขเด็ด จากหลายสำนัก เลือกดูตามงวดและการเรียง" />
+        <title>เลขเด็ด เลขเด็ดงวดนี้ - แจกตัง | รวมเลขเด็ดจากหลายสำนัก</title>
+        <meta name="description" content="เลขเด็ด เลขเด็ดงวดนี้ รวมเลขจากหลายสำนัก หวยเลขเด็ด อัปเดตรายงวด เลขเด็ด 2 ตัว 3 ตัว เลขวิ่ง เลือกดูตามงวดและการเรียง" />
+        <meta name="keywords" content="เลขเด็ด, เลขเด็ดงวดนี้, หวยเลขเด็ด, เลขเด็ด 2 ตัว, เลขเด็ด 3 ตัว, เลขวิ่ง, สำนักหวย, รวมเลขเด็ด, แจกตัง" />
+        <meta property="og:title" content="เลขเด็ด เลขเด็ดงวดนี้ - แจกตัง | รวมเลขเด็ดจากหลายสำนัก" />
+        <meta property="og:description" content="เลขเด็ด เลขเด็ดงวดนี้ รวมเลขจากหลายสำนัก หวยเลขเด็ด อัปเดตรายงวด เลขเด็ด 2 ตัว 3 ตัว เลขวิ่ง" />
+        <meta name="twitter:title" content="เลขเด็ด เลขเด็ดงวดนี้ - แจกตัง | รวมเลขเด็ด" />
+        <meta name="twitter:description" content="เลขเด็ด เลขเด็ดงวดนี้ รวมเลขจากหลายสำนัก หวยเลขเด็ด อัปเดตรายงวด เลขเด็ด 2 ตัว 3 ตัว เลขวิ่ง" />
     </Head>
 
     <PublicLayout>
         <div class="py-10">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
-                <!-- Header -->
+                <!-- Header: SEO เลขเด็ด / เลขเด็ดงวดนี้ -->
                 <div class="text-center mb-8">
                     <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                        <span class="text-red-600">รวมเลขเด็ดงวดนี้</span>
+                        <span class="text-red-600">เลขเด็ด งวดนี้</span> — รวมเลขเด็ดจากหลายสำนัก
                     </h1>
-                    <p class="text-xl text-gray-600">รวมเลขจากหลายสำนัก เลือกดูตามงวดและการเรียง</p>
+                    <p class="text-xl text-gray-600">เลขเด็ด อัปเดตรายงวด เลขเด็ด 2 ตัว 3 ตัว เลขวิ่ง เลือกดูตามงวดและการเรียง</p>
                 </div>
 
                 <!-- Filters -->
