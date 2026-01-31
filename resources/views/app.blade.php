@@ -55,8 +55,14 @@
         </script>
         
         <!-- Favicon -->
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.png') }}">
-        <link rel="apple-touch-icon" href="{{ asset('logo-29012026.jpg') }}">
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon.png') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon.png') }}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('logo-29012026.jpg') }}">
+        <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('logo-29012026.jpg') }}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-29012026.jpg') }}">
+        <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <meta name="theme-color" content="#dc2626">
 
         <!-- Google Analytics -->
         @include('partials.google-analytics')

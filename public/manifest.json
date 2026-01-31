@@ -1,0 +1,32 @@
+{
+    "name": "แจกตัง - ระบบตรวจหวยออนไลน์",
+    "short_name": "แจกตัง",
+    "description": "ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#dc2626",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/favicon.png",
+            "sizes": "16x16",
+            "type": "image/png"
+        },
+        {
+            "src": "/favicon.png",
+            "sizes": "32x32",
+            "type": "image/png"
+        },
+        {
+            "src": "/logo-29012026.jpg",
+            "sizes": "192x192",
+            "type": "image/jpeg"
+        },
+        {
+            "src": "/logo-29012026.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg"
+        }
+    ]
+}
