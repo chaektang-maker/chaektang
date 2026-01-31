@@ -7,8 +7,8 @@
         <title inertia>{{ config('app.name', 'แจกตัง') }}</title>
 
         <!-- SEO Meta Tags -->
-        <meta name="description" content="แจกตัง - ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ ตรวจหวยง่าย รวดเร็ว ปลอดภัย">
-        <meta name="keywords" content="ตรวจหวย, ผลหวย, สลากกินแบ่ง, เลขเด็ด, สถิติหวย, ตารางคะแนน, ตรวจผลรางวัล, หวยออนไลน์, แจกตัง">
+        <meta name="description" content="แจกตัง - ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล หวยเลขเด็ด เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ ตรวจหวยง่าย รวดเร็ว ปลอดภัย">
+        <meta name="keywords" content="ตรวจหวย, ผลหวย, สลากกินแบ่ง, หวยเลขเด็ด, เลขเด็ด, สถิติหวย, ตารางคะแนน, ตรวจผลรางวัล, หวยออนไลน์, แจกตัง">
         <meta name="author" content="แจกตัง">
         <meta name="robots" content="index, follow">
         <meta name="language" content="Thai">
@@ -18,7 +18,7 @@
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ config('app.url') }}">
         <meta property="og:title" content="แจกตัง - ตรวจหวย">
-        <meta property="og:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ">
+        <meta property="og:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล หวยเลขเด็ด เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ">
         <meta property="og:image" content="{{ config('app.url') }}/logo-29012026.jpg">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
@@ -30,7 +30,7 @@
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:url" content="{{ config('app.url') }}">
         <meta name="twitter:title" content="{{ config('app.name', 'แจกตัง') }} - ระบบตรวจหวยออนไลน์">
-        <meta name="twitter:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง">
+        <meta name="twitter:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล หวยเลขเด็ด เลขเด็ด สถิติหวยย้อนหลัง">
         <meta name="twitter:image" content="{{ config('app.url') }}/logo-29012026.jpg">
         <meta name="twitter:image:alt" content="แจกตัง - Logo">
         
@@ -45,7 +45,7 @@
             'name' => config('app.name', 'แจกตัง'),
             'alternateName' => 'แจกตัง',
             'url' => config('app.url'),
-            'description' => 'ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ',
+            'description' => 'ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล หวยเลขเด็ด เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ',
             'potentialAction' => [
                 '@type' => 'SearchAction',
                 'target' => config('app.url') . '/search?q={search_term_string}',
