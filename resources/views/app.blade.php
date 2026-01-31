@@ -4,12 +4,12 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Chaek Tang') }}</title>
+        <title inertia>{{ config('app.name', 'แจกตัง') }}</title>
 
         <!-- SEO Meta Tags -->
         <meta name="description" content="แจกตัง - ระบบตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ ตรวจหวยง่าย รวดเร็ว ปลอดภัย">
         <meta name="keywords" content="ตรวจหวย, ผลหวย, สลากกินแบ่ง, เลขเด็ด, สถิติหวย, ตารางคะแนน, ตรวจผลรางวัล, หวยออนไลน์, แจกตัง">
-        <meta name="author" content="Chaek Tang">
+        <meta name="author" content="แจกตัง">
         <meta name="robots" content="index, follow">
         <meta name="language" content="Thai">
         <meta name="revisit-after" content="1 days">
@@ -17,7 +17,7 @@
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ config('app.url') }}">
-        <meta property="og:title" content="{{ config('app.name', 'Chaek Tang') }} - ระบบตรวจหวยออนไลน์">
+        <meta property="og:title" content="แจกตัง - ตรวจหวย">
         <meta property="og:description" content="ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล เลขเด็ด สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ">
         <meta property="og:image" content="{{ config('app.url') }}/logo-29012026.jpg">
         <meta property="og:image:width" content="1200">
