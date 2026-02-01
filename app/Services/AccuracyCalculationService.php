@@ -66,6 +66,9 @@ class AccuracyCalculationService
                 }
             }
 
+            // Track Record: เก็บสถิติเข้าตรง/ตัวกลับ/เฉียด ต่อสำนักต่องวด
+            app(SourceTrackRecordService::class)->calculateForDraw($drawDate);
+
             // อัปเดต accuracy_scores สำหรับทุกสำนัก
             $this->updateAccuracyScores();
 

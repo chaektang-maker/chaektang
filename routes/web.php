@@ -13,6 +13,7 @@ use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\LuckyNumbersController;
 use App\Http\Controllers\Public\ResultsController;
 use App\Http\Controllers\Public\StatisticsController;
+use App\Http\Controllers\Public\BlogController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -27,6 +28,8 @@ Route::get('/lucky-numbers', [LuckyNumbersController::class, 'index'])->name('lu
 Route::get('/accuracy', [AccuracyController::class, 'index'])->name('accuracy.index');
 Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
 Route::get('/recheck', [ResultsController::class, 'index'])->name('results.index');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
 // ถ้าเข้าที่ /backoffice:
 // - ถ้ายังไม่ login → ไปหน้า login (/backoffice/login)
@@ -80,6 +83,8 @@ Route::middleware('auth')->group(function () {
             // แพลตฟอร์ม & สินค้าวัตถุมงคล (Affiliate)
             Route::resource('platforms', \App\Http\Controllers\Backoffice\PlatformController::class);
             Route::resource('affiliate-products', \App\Http\Controllers\Backoffice\AffiliateProductController::class);
+            Route::post('posts/upload-image', [\App\Http\Controllers\Backoffice\PostController::class, 'uploadImage'])->name('posts.upload-image');
+            Route::resource('posts', \App\Http\Controllers\Backoffice\PostController::class);
 
             // จัดการคำขอ VIP จากการโอนเงิน
             Route::get('vip-requests', [VipRequestAdminController::class, 'index'])->name('vip-requests.index');

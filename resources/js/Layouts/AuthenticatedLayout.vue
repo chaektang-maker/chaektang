@@ -91,6 +91,13 @@ const showingNavigationDropdown = ref(false);
                                 </NavLink>
                                 <NavLink
                                     v-if="$page.props.auth.user?.is_admin"
+                                    :href="route('backoffice.posts.index')"
+                                    :active="route().current('backoffice.posts.*')"
+                                >
+                                    บทความ
+                                </NavLink>
+                                <NavLink
+                                    v-if="$page.props.auth.user?.is_admin"
                                     :href="route('backoffice.users.index')"
                                     :active="route().current('backoffice.users.*') || route().current('backoffice.permissions.*')"
                                 >

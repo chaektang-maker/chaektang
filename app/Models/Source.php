@@ -42,6 +42,11 @@ class Source extends Model
         return $this->hasMany(AccuracyHistory::class);
     }
 
+    public function sourceAccuracyRecords(): HasMany
+    {
+        return $this->hasMany(SourceAccuracyRecord::class);
+    }
+
     public function userVotes(): HasMany
     {
         return $this->hasMany(UserVote::class);

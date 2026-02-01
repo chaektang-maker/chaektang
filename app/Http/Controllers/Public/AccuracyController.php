@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Source;
 use App\Models\AccuracyScore;
 use App\Models\AccuracyHistory;
+use App\Services\SourceTrackRecordService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -79,9 +80,15 @@ class AccuracyController extends Controller
             ->reverse()
             ->values();
 
+        // Track Record: สถิติ 10 งวดล่าสุด + สำนักแนะนำประจำงวด
+        $trackRecordRanking = app(SourceTrackRecordService::class)->getTrackRecordRanking(10);
+
         return Inertia::render('Accuracy/Index', [
             'scores' => $scores,
             'histories' => $histories,
+            'trackRecords' => $trackRecordRanking['track_records'],
+            'recommendedSourceIds' => $trackRecordRanking['recommended_source_ids'],
+            'lastDrawDates' => $trackRecordRanking['last_draw_dates'],
             'filters' => [
                 'type' => $type,
                 'sort' => $sortBy,

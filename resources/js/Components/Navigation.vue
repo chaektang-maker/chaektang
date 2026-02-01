@@ -58,6 +58,9 @@ defineProps({
                     <Link :href="route('accuracy.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         ตารางคะแนน
                     </Link>
+                    <Link :href="route('blog.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
+                        บทความ
+                    </Link>
                     <Link href="#" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         ติดต่อเรา
                     </Link>
@@ -117,6 +120,9 @@ defineProps({
                 </Link>
                 <Link :href="route('accuracy.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     ตารางคะแนน
+                </Link>
+                <Link :href="route('blog.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
+                    บทความ
                 </Link>
                 <!--<div v-if="!page.props.auth?.user" class="pt-4 border-t border-gray-200 space-y-2">
                     <Link :href="route('login')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
