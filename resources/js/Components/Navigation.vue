@@ -55,15 +55,15 @@ defineProps({
                     <Link :href="route('statistics.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         สถิติหวย
                     </Link>
-                    <Link :href="route('accuracy.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
+                    <!-- <Link :href="route('accuracy.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         ตารางคะแนน
-                    </Link>
+                    </Link> -->
                     <Link :href="route('blog.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         บทความ
                     </Link>
-                    <Link href="#" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
+                    <!-- <Link href="#" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         ติดต่อเรา
-                    </Link>
+                    </Link> -->
                 </div>
                 
                 <!-- ปุ่มขวาสุด -->
@@ -113,9 +113,9 @@ defineProps({
                 <Link :href="route('statistics.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     สถิติหวย
                 </Link>
-                <Link :href="route('accuracy.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
+                <!-- <Link :href="route('accuracy.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     ตารางคะแนน
-                </Link>
+                </Link> -->
                 <Link :href="route('blog.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     บทความ
                 </Link>

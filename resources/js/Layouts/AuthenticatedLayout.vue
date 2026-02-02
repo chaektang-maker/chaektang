@@ -47,13 +47,13 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     สำนัก
                                 </NavLink>
-                                <NavLink
+                                <!-- <NavLink
                                     v-if="$page.props.auth.user?.can_access?.results"
                                     :href="route('backoffice.results.index')"
                                     :active="route().current('backoffice.results.*')"
                                 >
                                     ผลหวย
-                                </NavLink>
+                                </NavLink> -->
                                 <NavLink
                                     v-if="$page.props.auth.user?.can_access?.numbers"
                                     :href="route('backoffice.numbers.index')"
@@ -110,12 +110,12 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     VIP
                                 </NavLink>
-                                <NavLink
+                                <!-- <NavLink
                                     :href="route('lucky-numbers.index')"
                                     :active="route().current('lucky-numbers.*')"
                                 >
                                     เลขเด็ด
-                                </NavLink>
+                                </NavLink> -->
                             </div>
                         </div>
 

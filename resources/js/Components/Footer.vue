@@ -18,20 +18,20 @@ import { Link } from '@inertiajs/vue3';
                         รวมเลขเด็ดจากทุกสำนัก หวยย้อนหลัง ตารางคะแนนความแม่นยำ
                     </p>
                 </div>
-                <div>
+                <!-- <div>
                     <h3 class="text-white font-semibold mb-4">เกี่ยวกับเรา</h3>
                     <ul class="space-y-2 text-sm">
                         <li><a href="#" class="hover:text-white transition-colors">เกี่ยวกับเรา</a></li>
                         <li><a href="#" class="hover:text-white transition-colors">ทีมงาน</a></li>
                         <li><a href="#" class="hover:text-white transition-colors">ข่าวสาร</a></li>
                     </ul>
-                </div>
+                </div> -->
                 <div>
                     <h3 class="text-white font-semibold mb-4">บริการ</h3>
                     <ul class="space-y-2 text-sm">
                         <li><Link :href="route('lucky-numbers.index')" class="hover:text-white transition-colors">รวมเลขเด็ด</Link></li>
                         <li><Link :href="route('statistics.index')" class="hover:text-white transition-colors">สถิติหวย</Link></li>
-                        <li><Link :href="route('accuracy.index')" class="hover:text-white transition-colors">ตารางคะแนน</Link></li>
+                        <!-- <li><Link :href="route('accuracy.index')" class="hover:text-white transition-colors">ตารางคะแนน</Link></li> -->
                     </ul>
                 </div>
                 <div>
