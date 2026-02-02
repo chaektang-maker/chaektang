@@ -169,9 +169,9 @@ const getCardColor = (index) => {
                             class="bg-white rounded-xl px-6 py-4 shadow-lg border-2 border-yellow-300 hover:border-yellow-400 hover:scale-105 transition-all duration-200"
                         >
                             <div class="flex items-center gap-3">
-                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white font-bold text-lg">
+                                <!-- <div class="flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white font-bold text-lg">
                                     {{ index + 1 }}
-                                </div>
+                                </div> -->
                                 <div>
                                     <div class="text-3xl font-bold text-red-600">{{ hot.number }}</div>
                                     <div class="text-xs text-gray-600 mt-1">
@@ -196,9 +196,9 @@ const getCardColor = (index) => {
                                 <div class="text-xs font-medium text-gray-600 mb-1">สำนัก</div>
                                 <div class="text-xl font-bold text-gray-900">{{ n.source?.name }}</div>
                             </div>
-                            <div :class="`${getCardColor(index).accent} text-white rounded-lg px-3 py-1 text-xs font-semibold`">
+                            <!-- <div :class="`${getCardColor(index).accent} text-white rounded-lg px-3 py-1 text-xs font-semibold`">
                                 งวด
-                            </div>
+                            </div> -->
                         </div>
                         
                         <!-- Date -->
