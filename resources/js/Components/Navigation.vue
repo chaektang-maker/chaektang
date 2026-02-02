@@ -91,13 +91,8 @@ defineProps({
                     </template>-->
                     
                     <!-- Mobile Menu Button -->
-                    <button @click="toggleMobileMenu" class="lg:hidden text-gray-700 hover:text-red-600">
-                        <svg v-if="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                        <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                    <button @click="toggleMobileMenu" class="lg:hidden px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
+                        {{ mobileMenuOpen ? 'ปิด' : 'เมนู' }}
                     </button>
                 </div>
             </div>

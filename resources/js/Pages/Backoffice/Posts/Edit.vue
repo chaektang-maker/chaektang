@@ -6,24 +6,53 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 
 const props = defineProps({
-    post: Object,
+    post: {
+        type: Object,
+        required: true,
+        default: () => ({}),
+    },
 });
 
+// สร้าง form โดยใช้ข้อมูลจาก props.post
 const form = useForm({
-    title: props.post.title,
-    slug: props.post.slug ?? '',
-    excerpt: props.post.excerpt ?? '',
-    content: props.post.content,
+    title: '',
+    slug: '',
+    excerpt: '',
+    content: '',
     cover_image: null,
     remove_cover_image: false,
-    published_at: props.post.published_at ?? '',
-    is_published: props.post.is_published ?? false,
-    meta_title: props.post.meta_title ?? '',
-    meta_description: props.post.meta_description ?? '',
+    published_at: '',
+    is_published: false,
+    meta_title: '',
+    meta_description: '',
 });
+
+// ฟังก์ชันสำหรับอัปเดต form จาก props
+const updateFormFromProps = () => {
+    if (props.post && props.post.id) {
+        form.title = props.post.title || '';
+        form.slug = props.post.slug || '';
+        form.excerpt = props.post.excerpt || '';
+        form.content = props.post.content || '';
+        form.published_at = props.post.published_at || '';
+        form.is_published = props.post.is_published || false;
+        form.meta_title = props.post.meta_title || '';
+        form.meta_description = props.post.meta_description || '';
+    }
+};
+
+// อัปเดต form เมื่อ component mount
+onMounted(() => {
+    updateFormFromProps();
+});
+
+// Watch props.post เพื่ออัปเดต form เมื่อ props เปลี่ยน
+watch(() => props.post, () => {
+    updateFormFromProps();
+}, { immediate: true, deep: true });
 
 const coverPreview = ref(null);
 
@@ -43,9 +72,47 @@ const removeCover = () => {
 const currentCoverUrl = () => coverPreview.value ?? props.post.cover_image;
 
 const submit = () => {
-    form.post(route('backoffice.posts.update', props.post.id), {
-        forceFormData: true,
-        _method: 'put',
+    // ตรวจสอบว่ามีข้อมูลครบ
+    if (!form.title || !form.title.trim()) {
+        alert('กรุณากรอกชื่อบทความ');
+        return;
+    }
+    
+    // ตรวจสอบ content - ลบ HTML tags เพื่อตรวจสอบว่ามีเนื้อหาจริงหรือไม่
+    const contentText = form.content ? form.content.replace(/<[^>]*>/g, '').trim() : '';
+    if (!contentText || contentText.length === 0) {
+        alert('กรุณากรอกเนื้อหา');
+        return;
+    }
+    
+    // Debug: แสดงข้อมูลที่จะส่ง
+    console.log('Form data before submit:', {
+        title: form.title,
+        content: form.content,
+        contentLength: form.content?.length || 0,
+        hasTitle: !!form.title,
+        hasContent: !!form.content,
+        formData: form.data(),
+    });
+    
+    // ตรวจสอบว่ามี file upload หรือไม่
+    const hasFileUpload = form.cover_image instanceof File;
+    
+    // ใช้ patch โดยใช้ forceFormData เฉพาะเมื่อมี file upload
+    form.patch(route('backoffice.posts.update', props.post.id), {
+        ...(hasFileUpload && { forceFormData: true }),
+        preserveScroll: true,
+        onError: (errors) => {
+            console.error('Validation errors:', errors);
+            console.error('Form data on error:', {
+                title: form.title,
+                content: form.content,
+                allData: form.data(),
+            });
+        },
+        onSuccess: () => {
+            console.log('Update successful');
+        },
     });
 };
 </script>
@@ -107,8 +174,15 @@ const submit = () => {
 
                         <div>
                             <label for="content" class="block text-sm font-medium text-gray-700 mb-1">เนื้อหา</label>
-                            <RichTextEditor v-model="form.content" placeholder="เขียนเนื้อหาที่นี่" />
+                            <RichTextEditor 
+                                v-model="form.content"
+                                placeholder="เขียนเนื้อหาที่นี่" 
+                            />
                             <InputError :message="form.errors.content" class="mt-2" />
+                            <!-- Debug: แสดง content length -->
+                            <p class="text-xs text-gray-500 mt-1">
+                                ความยาวเนื้อหา: {{ form.content ? form.content.length : 0 }} ตัวอักษร
+                            </p>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

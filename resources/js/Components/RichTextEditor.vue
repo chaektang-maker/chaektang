@@ -67,15 +67,21 @@ const editor = useEditor({
         },
     },
     onUpdate: ({ editor }) => {
-        emit('update:modelValue', editor.getHTML());
+        const html = editor.getHTML();
+        emit('update:modelValue', html);
     },
+    immediatelyRender: false,
 });
 
 watch(() => props.modelValue, (val) => {
-    if (editor.value && val !== editor.value.getHTML()) {
-        editor.value.commands.setContent(val || '', false);
+    if (editor.value) {
+        const currentContent = editor.value.getHTML();
+        // ตรวจสอบว่า content เปลี่ยนจริงๆ หรือไม่ (เพื่อป้องกัน infinite loop)
+        if (val !== currentContent) {
+            editor.value.commands.setContent(val || '', false);
+        }
     }
-});
+}, { immediate: true });
 
 onBeforeUnmount(() => {
     editor.value?.destroy();
