@@ -55,8 +55,8 @@ const reject = () => {
                     <div>
                         <h3 class="text-lg font-semibold mb-2">ข้อมูลผู้ใช้</h3>
                         <p class="text-sm text-gray-800">
-                            {{ request.user?.name }}<br />
-                            <span class="text-gray-500">{{ request.user?.email }}</span>
+                            {{ request.customer?.name }}<br />
+                            <span class="text-gray-500">{{ request.customer?.email }}</span>
                         </p>
                     </div>
 
@@ -95,6 +95,18 @@ const reject = () => {
                         <p class="text-sm text-gray-800 whitespace-pre-line">
                             {{ request.note || '-' }}
                         </p>
+                    </div>
+
+                    <div v-if="request.slip_url" class="border-t pt-4 mt-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-2">สลิปการโอนเงิน</h3>
+                        <a :href="request.slip_url" target="_blank" rel="noopener" class="inline-block">
+                            <img
+                                :src="request.slip_url"
+                                alt="สลิปโอนเงิน"
+                                class="max-w-full max-h-96 rounded-lg border border-gray-200 shadow-sm object-contain"
+                            />
+                        </a>
+                        <p class="mt-2 text-xs text-gray-500">คลิกที่รูปเพื่อเปิดขนาดเต็ม</p>
                     </div>
 
                     <div v-if="request.status !== 'pending'" class="border-t pt-4 mt-4">

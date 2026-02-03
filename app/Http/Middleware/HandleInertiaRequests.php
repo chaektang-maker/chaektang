@@ -29,16 +29,16 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $user = $request->user();
-        
+        $user = $request->user('web'); // Backoffice (users table)
+        $customer = $request->user('customer'); // ลูกค้า (customers table)
+
         $canAccess = [];
         $isAdmin = false;
-        
+
         if ($user) {
             $isAdmin = $user->isAdmin();
-            
+
             if ($isAdmin) {
-                // Admin เข้าถึงได้ทุกอย่าง
                 $canAccess = [
                     'sources' => true,
                     'results' => true,
@@ -46,9 +46,6 @@ class HandleInertiaRequests extends Middleware
                     'lottoData' => true,
                 ];
             } else {
-                // Staff เช็คจาก permissions
-                $permissions = $user->permissions()->pluck('slug')->toArray();
-                
                 $canAccess = [
                     'sources' => $user->canAccessRoute('backoffice.sources.index'),
                     'results' => $user->canAccessRoute('backoffice.results.index'),
@@ -57,9 +54,18 @@ class HandleInertiaRequests extends Middleware
                 ];
             }
         }
-        
+
+        $pendingVipRequestsCount = 0;
+        if ($user && $isAdmin) {
+            $pendingVipRequestsCount = \App\Models\VipRequest::where('status', 'pending')->count();
+        }
+
         return [
             ...parent::share($request),
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+            ],
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -68,6 +74,13 @@ class HandleInertiaRequests extends Middleware
                     'role' => $user->role,
                     'is_admin' => $isAdmin,
                     'can_access' => $canAccess,
+                    'pending_vip_requests_count' => $pendingVipRequestsCount,
+                ] : null,
+                'customer' => $customer ? [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'email' => $customer->email,
+                    'is_vip' => $customer->isVip(),
                 ] : null,
             ],
         ];

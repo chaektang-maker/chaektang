@@ -42,6 +42,14 @@ const statusClass = (status) => {
                     {{ page.props.flash.error }}
                 </div>
 
+                <div
+                    v-if="page.props.auth?.user?.pending_vip_requests_count > 0"
+                    class="rounded-lg bg-amber-50 border border-amber-200 p-4 text-amber-800 flex items-center gap-2"
+                >
+                    <span class="text-lg">🔔</span>
+                    <span>มีคำขอ VIP รออนุมัติ <strong>{{ page.props.auth.user.pending_vip_requests_count }}</strong> รายการ</span>
+                </div>
+
                 <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -61,8 +69,8 @@ const statusClass = (status) => {
                                         {{ new Date(r.created_at).toLocaleString('th-TH') }}
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-700">
-                                        {{ r.user?.name }}<br />
-                                        <span class="text-xs text-gray-500">{{ r.user?.email }}</span>
+                                        {{ r.customer?.name }}<br />
+                                        <span class="text-xs text-gray-500">{{ r.customer?.email }}</span>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-700">
                                         {{ r.amount ? r.amount.toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '-' }}

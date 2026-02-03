@@ -11,41 +11,33 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class AuthenticatedSessionController extends Controller
+/**
+ * Login สำหรับ admin/staff (Backoffice) ใช้ guard web + users table
+ */
+class BackofficeAuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
     public function create(): Response
     {
-        return Inertia::render('Auth/Login', [
+        return Inertia::render('Auth/BackofficeLogin', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
         ]);
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        // ลูกค้า login จากเมนู → ไปหน้าแรก; แอดมินเข้า /backoffice แล้วถูกส่งมา login → ไป backoffice (intended)
-        return redirect()->intended('/');
+        return redirect()->intended(route('backoffice.dashboard', absolute: false));
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

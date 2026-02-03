@@ -13,7 +13,7 @@ class VipRequestAdminController extends Controller
     public function index()
     {
         $requests = VipRequest::query()
-            ->with(['user', 'approver'])
+            ->with(['customer', 'approver'])
             ->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
             ->orderByDesc('created_at')
             ->paginate(20);
@@ -25,10 +25,15 @@ class VipRequestAdminController extends Controller
 
     public function show(VipRequest $vipRequest)
     {
-        $vipRequest->load(['user', 'approver']);
+        $vipRequest->load(['customer', 'approver']);
+
+        $requestData = $vipRequest->toArray();
+        $requestData['slip_url'] = $vipRequest->slip_path
+            ? asset('storage/' . $vipRequest->slip_path)
+            : null;
 
         return Inertia::render('Admin/VipRequests/Show', [
-            'request' => $vipRequest,
+            'request' => $requestData,
         ]);
     }
 
@@ -42,12 +47,12 @@ class VipRequestAdminController extends Controller
             'days' => ['required', 'integer', 'min:1', 'max:365'],
         ]);
 
-        $user = $vipRequest->user;
+        $customer = $vipRequest->customer;
 
         $now = now();
 
-        // สร้างหรือขยาย subscription VIP
-        $currentSub = $user->subscriptions()
+        // สร้างหรือขยาย subscription VIP (ลูกค้า)
+        $currentSub = $customer->subscriptions()
             ->where('status', 'active')
             ->where('ends_at', '>', $now)
             ->first();
@@ -59,7 +64,7 @@ class VipRequestAdminController extends Controller
             ]);
         } else {
             Subscription::create([
-                'user_id' => $user->id,
+                'customer_id' => $customer->id,
                 'plan' => 'vip',
                 'amount' => $vipRequest->amount ?? 0,
                 'starts_at' => $now,

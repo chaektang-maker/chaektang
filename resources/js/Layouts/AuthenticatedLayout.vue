@@ -107,8 +107,15 @@ const showingNavigationDropdown = ref(false);
                                     v-if="$page.props.auth.user?.is_admin"
                                     :href="route('backoffice.vip-requests.index')"
                                     :active="route().current('backoffice.vip-requests.*')"
+                                    class="inline-flex items-center gap-1.5"
                                 >
                                     VIP
+                                    <span
+                                        v-if="$page.props.auth.user?.pending_vip_requests_count > 0"
+                                        class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-bold text-white bg-red-600 rounded-full"
+                                    >
+                                        {{ $page.props.auth.user.pending_vip_requests_count }}
+                                    </span>
                                 </NavLink>
                                 <!-- <NavLink
                                     :href="route('lucky-numbers.index')"

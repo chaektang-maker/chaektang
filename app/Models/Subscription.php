@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Subscription extends Model
 {
     protected $fillable = [
-        'user_id',
+        'customer_id',
         'plan',
         'amount',
         'starts_at',
@@ -24,9 +24,9 @@ class Subscription extends Model
         'ends_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
     public function isActive(): bool

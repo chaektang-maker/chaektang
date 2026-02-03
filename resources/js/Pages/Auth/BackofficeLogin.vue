@@ -23,7 +23,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('login'), {
+    form.post(route('backoffice.login'), {
         onFinish: () => form.reset('password'),
     });
 };
@@ -31,26 +31,21 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="เข้าสู่ระบบ" />
+        <Head title="เข้าสู่ระบบหลังบ้าน" />
 
         <div class="w-full max-w-md">
-            <!-- Header -->
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ</h1>
-                <p class="text-gray-600">เข้าสู่ระบบสมาชิกเพื่อใช้บริการ</p>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบหลังบ้าน</h1>
+                <p class="text-gray-600">สำหรับ Admin / Staff</p>
             </div>
 
-            <!-- Status Message -->
             <div v-if="status" class="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-sm font-medium text-green-700">
                 {{ status }}
             </div>
 
-            <!-- Login Form -->
             <form @submit.prevent="submit" class="space-y-6">
-                <!-- Email Field -->
                 <div>
                     <InputLabel for="email" value="อีเมล" class="text-gray-700 font-medium" />
-
                     <TextInput
                         id="email"
                         type="email"
@@ -61,14 +56,11 @@ const submit = () => {
                         autocomplete="username"
                         placeholder="กรุณากรอกอีเมล"
                     />
-
                     <InputError class="mt-2" :message="form.errors.email" />
                 </div>
 
-                <!-- Password Field -->
                 <div>
                     <InputLabel for="password" value="รหัสผ่าน" class="text-gray-700 font-medium" />
-
                     <TextInput
                         id="password"
                         type="password"
@@ -78,17 +70,14 @@ const submit = () => {
                         autocomplete="current-password"
                         placeholder="กรุณากรอกรหัสผ่าน"
                     />
-
                     <InputError class="mt-2" :message="form.errors.password" />
                 </div>
 
-                <!-- Remember Me & Forgot Password -->
                 <div class="flex items-center justify-between">
                     <label class="flex items-center">
                         <Checkbox name="remember" v-model:checked="form.remember" />
                         <span class="ms-2 text-sm text-gray-600">จดจำการเข้าสู่ระบบ</span>
                     </label>
-
                     <Link
                         v-if="canResetPassword"
                         :href="route('password.request')"
@@ -98,7 +87,6 @@ const submit = () => {
                     </Link>
                 </div>
 
-                <!-- Submit Button -->
                 <div>
                     <PrimaryButton
                         class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"

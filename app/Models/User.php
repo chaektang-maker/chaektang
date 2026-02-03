@@ -50,11 +50,6 @@ class User extends Authenticatable
         ];
     }
 
-    public function subscriptions(): HasMany
-    {
-        return $this->hasMany(Subscription::class);
-    }
-
     /**
      * สำนักที่ user นี้เป็นเจ้าของ (ถ้ามี)
      */
@@ -71,14 +66,6 @@ class User extends Authenticatable
     public function userFollows(): HasMany
     {
         return $this->hasMany(UserFollow::class);
-    }
-
-    public function isVip(): bool
-    {
-        return $this->subscriptions()
-            ->where('status', 'active')
-            ->where('ends_at', '>', now())
-            ->exists();
     }
 
     /**

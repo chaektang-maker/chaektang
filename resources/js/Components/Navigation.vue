@@ -1,5 +1,5 @@
 <script setup>
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, usePage, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const page = usePage();
@@ -7,6 +7,10 @@ const mobileMenuOpen = ref(false);
 
 const toggleMobileMenu = () => {
     mobileMenuOpen.value = !mobileMenuOpen.value;
+};
+
+const logout = () => {
+    router.post(route('logout'));
 };
 
 defineProps({
@@ -66,29 +70,61 @@ defineProps({
                     </Link> -->
                 </div>
                 
-                <!-- ปุ่มขวาสุด -->
+                <!-- ปุ่มขวาสุด: แดชบอร์ด(admin) | ลูกค้า+ออกจากระบบ | เข้าสู่ระบบ+สมัครสมาชิก -->
                 <div class="flex items-center gap-3">
-                 <!--   <Link
-                        v-if="page.props.auth?.user"
-                        :href="route('backoffice.dashboard')"
-                        class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
-                    >
-                        แดชบอร์ด
-                    </Link>-->
-                    <!--<template v-else>
+                    <template v-if="page.props.auth?.customer">
                         <Link
+                            v-if="!page.props.auth.customer.is_vip"
+                            :href="route('vip-request.create')"
+                            class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
+                        >
+                            ขอ VIP
+                        </Link>
+                        <span class="px-2 text-gray-700 font-medium text-sm hidden sm:inline">
+                            {{ page.props.auth.customer.name }}
+                            <span
+                                v-if="page.props.auth.customer.is_vip"
+                                class="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700"
+                            >
+                                VIP
+                            </span>
+                        </span>
+                        <button
+                            type="button"
+                            @click="logout"
+                            class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
+                        >
+                            ออกจากระบบ
+                        </button>
+                    </template>
+                    <template v-else-if="page.props.auth?.user">
+                        <span class="px-2 text-gray-700 font-medium text-sm hidden sm:inline">
+                            {{ page.props.auth.user.name }}
+                        </span>
+                        <button
+                            type="button"
+                            @click="logout"
+                            class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
+                        >
+                            ออกจากระบบ
+                        </button>
+                    </template>
+                    <template v-else>
+                        <Link
+                            v-if="canLogin"
                             :href="route('login')"
                             class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
                         >
                             เข้าสู่ระบบ
                         </Link>
                         <Link
+                            v-if="canRegister"
                             :href="route('register')"
                             class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all font-medium text-sm shadow-md"
                         >
                             สมัครสมาชิก
                         </Link>
-                    </template>-->
+                    </template>
                     
                     <!-- Mobile Menu Button -->
                     <button @click="toggleMobileMenu" class="lg:hidden px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
@@ -119,19 +155,41 @@ defineProps({
                 <Link :href="route('blog.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     บทความ
                 </Link>
-                <!--<div v-if="!page.props.auth?.user" class="pt-4 border-t border-gray-200 space-y-2">
-                    <Link :href="route('login')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
+                <div v-if="page.props.auth?.customer" class="pt-4 border-t border-gray-200 space-y-2">
+                    <Link
+                        v-if="!page.props.auth.customer.is_vip"
+                        :href="route('vip-request.create')"
+                        class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2"
+                    >
+                        ขอ VIP
+                    </Link>
+                    <div class="text-gray-700 font-medium text-sm py-2">
+                        {{ page.props.auth.customer.name }}
+                        <span
+                            v-if="page.props.auth.customer.is_vip"
+                            class="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700"
+                        >
+                            VIP
+                        </span>
+                    </div>
+                    <button type="button" @click="logout" class="block w-full text-left text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
+                        ออกจากระบบ
+                    </button>
+                </div>
+                <div v-else-if="page.props.auth?.user" class="pt-4 border-t border-gray-200 space-y-2">
+                    <div class="text-gray-700 font-medium text-sm py-2">{{ page.props.auth.user.name }}</div>
+                    <button type="button" @click="logout" class="block w-full text-left text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
+                        ออกจากระบบ
+                    </button>
+                </div>
+                <div v-else class="pt-4 border-t border-gray-200 space-y-2">
+                    <Link v-if="canLogin" :href="route('login')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                         เข้าสู่ระบบ
                     </Link>
                     <Link v-if="canRegister" :href="route('register')" class="block px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all font-medium text-sm text-center">
                         สมัครสมาชิก
                     </Link>
-                </div>-->
-                    <!--<div v-else class="pt-4 border-t border-gray-200">
-                    <Link :href="route('backoffice.dashboard')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
-                        แดชบอร์ด
-                    </Link>
-                </div>       -->
+                </div>
             </div>
         </div>
     </nav>

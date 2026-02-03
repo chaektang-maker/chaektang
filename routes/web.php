@@ -31,15 +31,21 @@ Route::get('/recheck', [ResultsController::class, 'index'])->name('results.index
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
+// ลูกค้าขอ VIP (ต้องล็อกอิน)
+Route::middleware('auth:customer')->group(function () {
+    Route::get('/request-vip', [\App\Http\Controllers\Customer\VipRequestController::class, 'create'])->name('vip-request.create');
+    Route::post('/request-vip', [\App\Http\Controllers\Customer\VipRequestController::class, 'store'])->name('vip-request.store');
+});
+
 // ถ้าเข้าที่ /backoffice:
-// - ถ้ายังไม่ login → ไปหน้า login (/backoffice/login)
+// - ถ้ายังไม่ login → ไปหน้า login และจำ intended เป็น backoffice (หลัง login ไปแดชบอร์ด)
 // - ถ้า login แล้ว → ไปหน้า dashboard หลังบ้าน
 Route::get('/backoffice', function () {
     if (auth()->check()) {
         return redirect()->route('backoffice.dashboard');
     }
 
-    return redirect()->route('login');
+    return redirect()->route('backoffice.login')->with('url.intended', route('backoffice.dashboard'));
 });
 
 Route::middleware('auth')->group(function () {

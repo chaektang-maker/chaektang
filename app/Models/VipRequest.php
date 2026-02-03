@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class VipRequest extends Model
 {
     protected $fillable = [
-        'user_id',
+        'customer_id',
+        'slip_path',
         'amount',
         'bank_account_name',
         'bank_account_number',
@@ -23,9 +24,9 @@ class VipRequest extends Model
         'approved_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
     public function approver(): BelongsTo
