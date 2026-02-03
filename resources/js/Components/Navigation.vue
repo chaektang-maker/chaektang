@@ -62,6 +62,9 @@ defineProps({
                     <!-- <Link :href="route('accuracy.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         ตารางคะแนน
                     </Link> -->
+                    <!-- <Link :href="route('dream-interpretation.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
+                        ทำนายฝัน
+                    </Link> -->
                     <Link :href="route('blog.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         บทความ
                     </Link>
@@ -70,63 +73,65 @@ defineProps({
                     </Link> -->
                 </div>
                 
-                <!-- ปุ่มขวาสุด: แดชบอร์ด(admin) | ลูกค้า+ออกจากระบบ | เข้าสู่ระบบ+สมัครสมาชิก -->
+                <!-- ปุ่มขวาสุด: PC = แดชบอร์ด/ลูกค้า/เข้าสู่ระบบ | Mobile = แค่ปุ่มเมนู (auth อยู่ใน dropdown) -->
                 <div class="flex items-center gap-3">
-                    <template v-if="page.props.auth?.customer">
-                        <Link
-                            v-if="!page.props.auth.customer.is_vip"
-                            :href="route('vip-request.create')"
-                            class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
-                        >
-                            ขอ VIP
-                        </Link>
-                        <span class="px-2 text-gray-700 font-medium text-sm hidden sm:inline">
-                            {{ page.props.auth.customer.name }}
-                            <span
-                                v-if="page.props.auth.customer.is_vip"
-                                class="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700"
+                    <!-- บล็อก auth แสดงบน PC เท่านั้น (มือถือใช้เมนู dropdown ด้านล่าง) -->
+                    <div class="hidden lg:flex items-center gap-3">
+                        <template v-if="page.props.auth?.customer">
+                            <Link
+                                v-if="!page.props.auth.customer.is_vip"
+                                :href="route('vip-request.create')"
+                                class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
                             >
-                                VIP
+                                ขอ VIP
+                            </Link>
+                            <span class="px-2 text-gray-700 font-medium text-sm">
+                                {{ page.props.auth.customer.name }}
+                                <span
+                                    v-if="page.props.auth.customer.is_vip"
+                                    class="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-700"
+                                >
+                                    VIP
+                                </span>
                             </span>
-                        </span>
-                        <button
-                            type="button"
-                            @click="logout"
-                            class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
-                        >
-                            ออกจากระบบ
-                        </button>
-                    </template>
-                    <template v-else-if="page.props.auth?.user">
-                        <span class="px-2 text-gray-700 font-medium text-sm hidden sm:inline">
-                            {{ page.props.auth.user.name }}
-                        </span>
-                        <button
-                            type="button"
-                            @click="logout"
-                            class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
-                        >
-                            ออกจากระบบ
-                        </button>
-                    </template>
-                    <template v-else>
-                        <Link
-                            v-if="canLogin"
-                            :href="route('login')"
-                            class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
-                        >
-                            เข้าสู่ระบบ
-                        </Link>
-                        <Link
-                            v-if="canRegister"
-                            :href="route('register')"
-                            class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all font-medium text-sm shadow-md"
-                        >
-                            สมัครสมาชิก
-                        </Link>
-                    </template>
-                    
-                    <!-- Mobile Menu Button -->
+                            <button
+                                type="button"
+                                @click="logout"
+                                class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
+                            >
+                                ออกจากระบบ
+                            </button>
+                        </template>
+                        <template v-else-if="page.props.auth?.user">
+                            <span class="px-2 text-gray-700 font-medium text-sm">
+                                {{ page.props.auth.user.name }}
+                            </span>
+                            <button
+                                type="button"
+                                @click="logout"
+                                class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
+                            >
+                                ออกจากระบบ
+                            </button>
+                        </template>
+                        <template v-else>
+                            <Link
+                                v-if="canLogin"
+                                :href="route('login')"
+                                class="px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm"
+                            >
+                                เข้าสู่ระบบ
+                            </Link>
+                            <Link
+                                v-if="canRegister"
+                                :href="route('register')"
+                                class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all font-medium text-sm shadow-md"
+                            >
+                                สมัครสมาชิก
+                            </Link>
+                        </template>
+                    </div>
+                    <!-- ปุ่มเมนูมือถือ -->
                     <button @click="toggleMobileMenu" class="lg:hidden px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         {{ mobileMenuOpen ? 'ปิด' : 'เมนู' }}
                     </button>
@@ -151,6 +156,9 @@ defineProps({
                 </Link>
                 <!-- <Link :href="route('accuracy.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     ตารางคะแนน
+                </Link> -->
+                <!-- <Link :href="route('dream-interpretation.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
+                    ทำนายฝัน
                 </Link> -->
                 <Link :href="route('blog.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     บทความ
@@ -183,10 +191,10 @@ defineProps({
                     </button>
                 </div>
                 <div v-else class="pt-4 border-t border-gray-200 space-y-2">
-                    <Link v-if="canLogin" :href="route('login')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
+                    <Link  :href="route('login')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                         เข้าสู่ระบบ
                     </Link>
-                    <Link v-if="canRegister" :href="route('register')" class="block px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all font-medium text-sm text-center">
+                    <Link  :href="route('register')" class="block px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all font-medium text-sm text-center">
                         สมัครสมาชิก
                     </Link>
                 </div>

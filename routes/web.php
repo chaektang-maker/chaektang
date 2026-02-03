@@ -14,6 +14,7 @@ use App\Http\Controllers\Public\LuckyNumbersController;
 use App\Http\Controllers\Public\ResultsController;
 use App\Http\Controllers\Public\StatisticsController;
 use App\Http\Controllers\Public\BlogController;
+use App\Http\Controllers\Public\DreamInterpretationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,6 +31,10 @@ Route::get('/statistics', [StatisticsController::class, 'index'])->name('statist
 Route::get('/recheck', [ResultsController::class, 'index'])->name('results.index');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+// ทำนายฝัน (ใช้ AI จาก Google AI Studio)
+Route::get('/dream-interpretation', [DreamInterpretationController::class, 'index'])->name('dream-interpretation.index');
+Route::post('/dream-interpretation', [DreamInterpretationController::class, 'interpret'])->name('dream-interpretation.interpret');
 
 // ลูกค้าขอ VIP (ต้องล็อกอิน)
 Route::middleware('auth:customer')->group(function () {
