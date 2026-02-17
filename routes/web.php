@@ -15,6 +15,7 @@ use App\Http\Controllers\Public\ResultsController;
 use App\Http\Controllers\Public\StatisticsController;
 use App\Http\Controllers\Public\BlogController;
 use App\Http\Controllers\Public\DreamInterpretationController;
+use App\Http\Controllers\Public\VoteController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -31,6 +32,12 @@ Route::get('/statistics', [StatisticsController::class, 'index'])->name('statist
 Route::get('/recheck', [ResultsController::class, 'index'])->name('results.index');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+// Vote routes
+Route::post('/vote', [VoteController::class, 'store'])->name('vote.store');
+Route::get('/vote/check', [VoteController::class, 'check'])->name('vote.check');
+Route::get('/vote/counts', [VoteController::class, 'getVoteCounts'])->name('vote.counts');
+Route::get('/vote/leaderboard', [VoteController::class, 'leaderboard'])->name('vote.leaderboard');
 
 // ทำนายฝัน (ใช้ AI จาก Google AI Studio)
 Route::get('/dream-interpretation', [DreamInterpretationController::class, 'index'])->name('dream-interpretation.index');

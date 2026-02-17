@@ -56,6 +56,9 @@ defineProps({
                     <Link :href="route('lucky-numbers.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         เลขเด็ด
                     </Link>
+                    <Link :href="route('vote.leaderboard')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
+                        คะแนนโหวต
+                    </Link>
                     <Link :href="route('statistics.index')" class="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm">
                         สถิติหวย
                     </Link>
@@ -150,6 +153,9 @@ defineProps({
                 </Link>
                 <Link :href="route('lucky-numbers.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     เลขเด็ด
+                </Link>
+                <Link :href="route('vote.leaderboard')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
+                    คะแนนโหวต
                 </Link>
                 <Link :href="route('statistics.index')" class="block text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                     สถิติหวย

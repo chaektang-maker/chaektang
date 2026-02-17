@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
+import VoteButton from '@/Components/VoteButton.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, reactive } from 'vue';
 
@@ -112,7 +113,16 @@ const getCardColor = (index) => {
                     <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
                         <span class="text-red-600">เลขเด็ด งวดนี้</span> — รวมเลขเด็ดจากหลายสำนัก
                     </h1>
-                    <p class="text-xl text-gray-600">เลขเด็ด อัปเดตรายงวด เลขเด็ด 2 ตัว 3 ตัว เลขวิ่ง เลือกดูตามงวดและการเรียง</p>
+                    <p class="text-xl text-gray-600 mb-4">เลขเด็ด อัปเดตรายงวด เลขเด็ด 2 ตัว 3 ตัว เลขวิ่ง เลือกดูตามงวดและการเรียง</p>
+                    <Link 
+                        :href="route('vote.leaderboard')" 
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm shadow-md"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                        </svg>
+                        ดูคะแนนโหวตรวม
+                    </Link>
                 </div>
 
                 <!-- Filters -->
@@ -223,6 +233,17 @@ const getCardColor = (index) => {
                                 <div class="text-sm font-bold text-red-600 truncate" :title="fmtRunning(n.running_numbers)">
                                     {{ fmtRunning(n.running_numbers) }}
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Vote Button (แสดงทุกสำนัก) -->
+                        <div class="pt-4 border-t border-gray-300">
+                            <div class="flex items-center justify-center">
+                                <VoteButton 
+                                    :source-id="n.source_id"
+                                    :draw-date="n.draw_date"
+                                    :initial-vote-count="n.vote_count || 0"
+                                />
                             </div>
                         </div>
 

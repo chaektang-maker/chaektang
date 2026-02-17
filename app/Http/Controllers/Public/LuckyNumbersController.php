@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\LotteryNumber;
 use App\Models\LottoData;
 use App\Models\Source;
+use App\Models\UserVote;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class LuckyNumbersController extends Controller
@@ -72,6 +74,23 @@ class LuckyNumbersController extends Controller
         }
 
         $numbers = $query->paginate(24)->withQueryString();
+
+        // ดึง source_ids ทั้งหมดในงวดนี้
+        $sourceIds = $numbers->pluck('source_id')->unique()->toArray();
+
+        // ดึงจำนวนโหวตสำหรับแต่ละสำนัก
+        $voteCounts = UserVote::whereIn('source_id', $sourceIds)
+            ->where('draw_date', $drawDate)
+            ->selectRaw('source_id, COUNT(*) as count')
+            ->groupBy('source_id')
+            ->pluck('count', 'source_id')
+            ->toArray();
+
+        // เพิ่มข้อมูล vote count ให้กับแต่ละ number
+        $numbers->getCollection()->transform(function ($number) use ($voteCounts) {
+            $number->vote_count = $voteCounts[$number->source_id] ?? 0;
+            return $number;
+        });
 
         // คำนวณเลขเด็ดมาแรง 2 ตัว (เลขที่ออกบ่อยที่สุดจากทุกสำนัก)
         $hotNumbers = LotteryNumber::query()
