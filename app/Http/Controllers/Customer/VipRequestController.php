@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\VipRequest;
+use App\Services\MediaStorageService;
+use App\Services\TelegramNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -15,11 +17,37 @@ class VipRequestController extends Controller
     /**
      * แสดงฟอร์มขอเป็น VIP (แนบสลิปชำระเงิน)
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $customer = $request->user('customer');
+
+        if (! $customer) {
+            // จำหน้า /request-vip ไว้เพื่อให้หลังล็อกอินหรือสมัครสมาชิกเสร็จ เด้งกลับมาหน้านี้ทันที
+            $request->session()->put('url.intended', route('vip-request.create'));
+        }
+
+        $activeSubscription = $customer?->subscriptions()
+            ->where('status', 'active')
+            ->where('ends_at', '>', now())
+            ->orderByDesc('ends_at')
+            ->first();
+
+        $recentRequests = $customer?->vipRequests()
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get(['id', 'amount', 'status', 'note', 'created_at', 'approved_at'])
+            ?? collect();
+
         return Inertia::render('VipRequest/Create', [
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
+            'isLoggedIn' => (bool) $customer,
+            'paymentConfig' => config('services.vip_payment'),
+            'activeSubscription' => $activeSubscription ? [
+                'plan' => $activeSubscription->plan,
+                'ends_at' => $activeSubscription->ends_at?->toIso8601String(),
+            ] : null,
+            'recentRequests' => $recentRequests,
         ]);
     }
 
@@ -37,9 +65,9 @@ class VipRequestController extends Controller
         ]);
 
         $file = $request->file('slip');
-        $path = $file->store('vip-slips', 'public');
+        $path = MediaStorageService::store($file, 'vip-slips', 'slip');
 
-        VipRequest::create([
+        $vipRequest = VipRequest::create([
             'customer_id' => $request->user('customer')->id,
             'slip_path' => $path,
             'amount' => $validated['amount'] ?? null,
@@ -48,6 +76,9 @@ class VipRequestController extends Controller
             'note' => $validated['note'] ?? null,
             'status' => 'pending',
         ]);
+
+        // ส่งแจ้งเตือนพร้อมรูปสลิปเข้า Telegram ของแอดมินทันที (ถ้าตั้งค่า TELEGRAM_BOT_TOKEN และ TELEGRAM_CHAT_ID ไว้)
+        app(TelegramNotificationService::class)->sendVipRequestNotification($vipRequest);
 
         return redirect()->route('vip-request.create')
             ->with('success', 'ส่งคำขอ VIP เรียบร้อยแล้ว ทีมงานจะตรวจสอบและแจ้งผลให้คุณ');

@@ -61,13 +61,17 @@ class LottoSeeder extends Seeder
 
         // เลขเด็ดของแต่ละสำนัก (เฉพาะ active จะไปโชว์หน้า public)
         foreach ($sources as $source) {
-            LotteryNumber::create([
-                'source_id' => $source->id,
-                'draw_date' => $drawDate,
-                'two_digit' => str_pad((string)random_int(0, 99), 2, '0', STR_PAD_LEFT),
-                'three_digit' => str_pad((string)random_int(0, 999), 3, '0', STR_PAD_LEFT),
-                'running_numbers' => collect(range(0, 9))->shuffle()->take(3)->values()->map(fn ($n) => (string)$n)->all(),
-            ]);
+            LotteryNumber::firstOrCreate(
+                [
+                    'source_id' => $source->id,
+                    'draw_date' => $drawDate,
+                ],
+                [
+                    'two_digit' => str_pad((string)random_int(0, 99), 2, '0', STR_PAD_LEFT),
+                    'three_digit' => str_pad((string)random_int(0, 999), 3, '0', STR_PAD_LEFT),
+                    'running_numbers' => collect(range(0, 9))->shuffle()->take(3)->values()->map(fn ($n) => (string)$n)->all(),
+                ]
+            );
         }
     }
 }

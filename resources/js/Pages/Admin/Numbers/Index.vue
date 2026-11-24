@@ -52,11 +52,16 @@ const fmtRunning = (arr) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">จัดการเลขสำนัก</h2>
-                <Link :href="route('backoffice.numbers.create')">
-                    <PrimaryButton>+ เพิ่มเลข</PrimaryButton>
-                </Link>
+                <div class="flex flex-wrap items-center gap-2">
+                    <Link :href="route('backoffice.numbers.bulk', { draw_date: localFilters.draw_date || undefined })">
+                        <SecondaryButton>⚡ กรอกเลขด่วนทั้งงวด (ตารางเดียว)</SecondaryButton>
+                    </Link>
+                    <Link :href="route('backoffice.numbers.create')">
+                        <PrimaryButton>+ เพิ่มเลขรายสำนัก</PrimaryButton>
+                    </Link>
+                </div>
             </div>
         </template>
 

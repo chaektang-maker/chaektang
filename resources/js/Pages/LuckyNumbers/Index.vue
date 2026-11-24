@@ -5,6 +5,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import VoteButton from '@/Components/VoteButton.vue';
+import ShareButtons from '@/Components/ShareButtons.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, reactive } from 'vue';
 
@@ -13,6 +14,10 @@ const props = defineProps({
     availableDrawDates: Array,
     numbers: Object,
     hotNumbers: Array,
+    canViewVip: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const localFilters = reactive({
@@ -114,15 +119,22 @@ const getCardColor = (index) => {
                         <span class="text-red-600">เลขเด็ด งวดนี้</span> — รวมเลขเด็ดจากหลายสำนัก
                     </h1>
                     <p class="text-xl text-gray-600 mb-4">เลขเด็ด อัปเดตรายงวด เลขเด็ด 2 ตัว 3 ตัว เลขวิ่ง เลือกดูตามงวดและการเรียง</p>
-                    <Link 
-                        :href="route('vote.leaderboard')" 
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm shadow-md"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                        </svg>
-                        ดูคะแนนโหวตรวม
-                    </Link>
+                    <div class="flex flex-wrap items-center justify-center gap-3">
+                        <Link 
+                            :href="route('vote.leaderboard')" 
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm shadow-md"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                            </svg>
+                            ดูคะแนนโหวตรวม
+                        </Link>
+                        <ShareButtons
+                            title="รวมเลขเด็ดงวดนี้จากทุกสำนักดัง - เว็บแจกตัง"
+                            text="🔥 มัดรวมเลขเด็ดงวดนี้จากทุกสำนักดัง + 10 อันดับเลขมาแรงชนกันทุกสำนัก! เข้ามาส่องฟรีที่เว็บแจกตัง"
+                            label="แชร์หน้าเลขเด็ด:"
+                        />
+                    </div>
                 </div>
 
                 <!-- Filters -->
@@ -159,6 +171,27 @@ const getCardColor = (index) => {
                     </form>
                 </div>
 
+                <!-- แบนเนอร์เชิญชวนสมัคร VIP (เฉพาะผู้ที่ยังไม่ได้เป็น VIP) -->
+                <div v-if="!canViewVip" class="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 rounded-2xl shadow-lg p-5 text-white flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <span class="w-11 h-11 rounded-xl bg-gray-900/15 text-gray-900 flex items-center justify-center shrink-0">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">ปลดล็อกเลขเด็ดสำนัก VIP & เลขมาแรงอันดับ 1</h3>
+                            <p class="text-sm text-gray-900/90">สมาชิก VIP ดูเลขเจาะลึก 2 ตัว / 3 ตัวของสำนักแม่นยำสูงสุด และทำนายฝันตีเลขมงคลได้ไม่จำกัด</p>
+                        </div>
+                    </div>
+                    <Link
+                        :href="route('vip-request.create')"
+                        class="shrink-0 px-5 py-2.5 bg-red-600 text-white font-bold rounded-xl shadow-md hover:bg-red-700 transition-colors text-sm"
+                    >
+                        สมัครสมาชิก VIP →
+                    </Link>
+                </div>
+
                 <!-- เลขเด็ดมาแรง -->
                 <div v-if="hotNumbers && hotNumbers.length > 0" class="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl shadow-xl border-2 border-red-500 p-6">
                     <div class="flex items-center gap-3 mb-4">
@@ -170,23 +203,33 @@ const getCardColor = (index) => {
                         </h2>
                     </div>
                     <p class="text-red-100 mb-4 text-sm md:text-base">
-                        เลขที่ออกบ่อยที่สุดจากทุกสำนักในงวดนี้
+                        เลขที่ออกบ่อยที่สุดจากทุกสำนักในงวดนี้ (อันดับ 1 สำหรับสมาชิก VIP)
                     </p>
                     <div class="flex flex-wrap gap-3">
                         <div 
                             v-for="(hot, index) in hotNumbers" 
-                            :key="hot.number"
-                            class="bg-white rounded-xl px-6 py-4 shadow-lg border-2 border-yellow-300 hover:border-yellow-400 hover:scale-105 transition-all duration-200"
+                            :key="`${index}-${hot.number}`"
+                            class="bg-white rounded-xl px-6 py-4 shadow-lg border-2 border-yellow-300 hover:border-yellow-400 hover:scale-105 transition-all duration-200 relative"
                         >
                             <div class="flex items-center gap-3">
-                                <!-- <div class="flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white font-bold text-lg">
-                                    {{ index + 1 }}
-                                </div> -->
                                 <div>
-                                    <div class="text-3xl font-bold text-red-600">{{ hot.number }}</div>
-                                    <div class="text-xs text-gray-600 mt-1">
-                                        {{ hot.count }} สำนัก
+                                    <div v-if="hot.is_vip_locked" class="flex flex-col items-center">
+                                        <span class="inline-flex items-center gap-1 text-xs font-bold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full mb-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                            <span>อันดับ 1 (VIP)</span>
+                                        </span>
+                                        <Link :href="route('vip-request.create')" class="text-xs font-semibold text-red-600 hover:underline">
+                                            ปลดล็อกเลข ({{ hot.count }} สำนัก)
+                                        </Link>
                                     </div>
+                                    <template v-else>
+                                        <div class="text-3xl font-bold text-red-600">{{ hot.number }}</div>
+                                        <div class="text-xs text-gray-600 mt-1">
+                                            {{ hot.count }} สำนัก
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -198,35 +241,81 @@ const getCardColor = (index) => {
                     <div 
                         v-for="(n, index) in numbers.data" 
                         :key="n.id" 
-                        :class="`bg-gradient-to-br ${getCardColor(index).bg} rounded-2xl shadow-lg border-2 ${getCardColor(index).border} p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1`"
+                        :class="[
+                            `bg-gradient-to-br ${getCardColor(index).bg} rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative`,
+                            n.is_currently_promoted ? 'border-4 border-yellow-400 ring-2 ring-yellow-300/60' : `border-2 ${getCardColor(index).border}`
+                        ]"
                     >
                         <!-- Header -->
                         <div class="flex items-start justify-between gap-3 mb-4">
                             <div class="flex-1">
-                                <div class="text-xs font-medium text-gray-600 mb-1">สำนัก</div>
+                                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                    <span class="text-xs font-medium text-gray-600">สำนัก</span>
+                                    <span
+                                        v-if="n.is_currently_promoted"
+                                        class="inline-flex items-center gap-1 rounded-full bg-yellow-400 px-2.5 py-0.5 text-xs font-bold text-gray-900 shadow-sm"
+                                    >
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                        </svg>
+                                        <span>สำนักแนะนำ</span>
+                                    </span>
+                                    <span
+                                        v-if="n.is_vip_source"
+                                        class="inline-flex items-center gap-1 rounded-full bg-amber-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm"
+                                    >
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                                        </svg>
+                                        <span>VIP</span>
+                                    </span>
+                                </div>
                                 <div class="text-xl font-bold text-gray-900">{{ n.source?.name }}</div>
+                                <p
+                                    v-if="n.source?.description"
+                                    class="mt-1 text-xs text-gray-700 bg-white/60 rounded-lg px-2.5 py-1.5 border border-white/80 line-clamp-2"
+                                    :title="n.source.description"
+                                >
+                                    {{ n.source.description }}
+                                </p>
                             </div>
-                            <!-- <div :class="`${getCardColor(index).accent} text-white rounded-lg px-3 py-1 text-xs font-semibold`">
-                                งวด
-                            </div> -->
                         </div>
                         
-                        <!-- Date -->
-                        <div class="mb-4 pb-4 border-b border-gray-300">
+                        <!-- Date & View Count -->
+                        <div class="mb-4 pb-4 border-b border-gray-300 flex items-center justify-between gap-2">
                             <div class="text-sm font-medium text-gray-700">
                                 {{ formatThaiDate(n.draw_date) }}
                             </div>
+                            <span class="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 bg-white/70 px-2.5 py-0.5 rounded-full border border-white">
+                                <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <span>{{ (n.source?.view_count || 0).toLocaleString() }} ครั้ง</span>
+                            </span>
                         </div>
 
                         <!-- Numbers -->
                         <div class="grid grid-cols-3 gap-3 mb-4">
                             <div class="rounded-xl bg-white/80 backdrop-blur-sm p-4 border-2 border-white shadow-md text-center">
                                 <div class="text-xs font-medium text-gray-600 mb-1">2 ตัว</div>
-                                <div class="text-2xl font-bold text-red-600">{{ n.two_digit || '-' }}</div>
+                                <div v-if="n.is_vip_locked" class="inline-flex items-center justify-center gap-1 text-xs font-bold text-amber-700 py-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    <span>VIP</span>
+                                </div>
+                                <div v-else class="text-2xl font-bold text-red-600">{{ n.two_digit || '-' }}</div>
                             </div>
                             <div class="rounded-xl bg-white/80 backdrop-blur-sm p-4 border-2 border-white shadow-md text-center">
                                 <div class="text-xs font-medium text-gray-600 mb-1">3 ตัว</div>
-                                <div class="text-2xl font-bold text-red-600">{{ n.three_digit || '-' }}</div>
+                                <div v-if="n.is_vip_locked" class="inline-flex items-center justify-center gap-1 text-xs font-bold text-amber-700 py-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    <span>VIP</span>
+                                </div>
+                                <div v-else class="text-2xl font-bold text-red-600">{{ n.three_digit || '-' }}</div>
                             </div>
                             <div class="rounded-xl bg-white/80 backdrop-blur-sm p-4 border-2 border-white shadow-md text-center">
                                 <div class="text-xs font-medium text-gray-600 mb-1">วิ่ง</div>
@@ -234,6 +323,19 @@ const getCardColor = (index) => {
                                     {{ fmtRunning(n.running_numbers) }}
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- ปุ่มปลดล็อก VIP สำหรับการ์ดที่ถูกล็อก -->
+                        <div v-if="n.is_vip_locked" class="mb-4">
+                            <Link
+                                :href="route('vip-request.create')"
+                                class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 font-bold text-xs shadow hover:from-amber-600 hover:to-yellow-600 transition-all"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                </svg>
+                                <span>สมัคร VIP เพื่อเปิดดูเลข 2 ตัว / 3 ตัว</span>
+                            </Link>
                         </div>
 
                         <!-- Vote Button (แสดงทุกสำนัก) -->
@@ -247,9 +349,17 @@ const getCardColor = (index) => {
                             </div>
                         </div>
 
-                        <!-- Footer -->
-                        <div class="pt-4 border-t border-gray-300">
-                            <div class="text-xs text-gray-600">
+                        <!-- Footer & Share -->
+                        <div class="pt-4 border-t border-gray-300 flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs text-gray-600 font-medium">ส่งต่อเลขสำนักนี้:</span>
+                                <ShareButtons
+                                    compact
+                                    :title="`เลขเด็ดสำนัก ${n.source?.name}`"
+                                    :text="`🎯 แนวทางเลขเด็ดสำนัก '${n.source?.name}' งวด ${formatThaiDate(n.draw_date)} | 2 ตัว: ${n.is_vip_locked ? '🔒VIP' : (n.two_digit || '-')} | 3 ตัว: ${n.is_vip_locked ? '🔒VIP' : (n.three_digit || '-')} | วิ่ง: ${fmtRunning(n.running_numbers)}`"
+                                />
+                            </div>
+                            <div class="text-[11px] text-gray-500">
                                 <span class="font-medium">อัปเดตล่าสุด:</span> {{ formatThaiDateTime(n.updated_at) }}
                             </div>
                         </div>
@@ -268,6 +378,27 @@ const getCardColor = (index) => {
                             : 'bg-white text-gray-700 border-red-200 hover:bg-red-50 hover:border-red-300'"
                         v-html="link.label"
                     />
+                </div>
+
+                <!-- แบนเนอร์เชิญชวนสำนักหวยลงโปรโมท -->
+                <div class="mt-8 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 border-2 border-yellow-400 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 text-white">
+                    <div>
+                        <div class="inline-flex items-center gap-1 rounded-full bg-yellow-400 px-3 py-0.5 text-xs font-bold text-gray-900 mb-2">
+                            ⭐ สำหรับเจ้าของสำนักหวย & เพจใบ้หวย
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold">
+                            ต้องการปักหมุดสำนักของคุณขึ้นแถวแรกสุด + แสดงบนหน้าแรกของเว็บ?
+                        </h3>
+                        <p class="text-sm text-gray-300 mt-1">
+                            เปิดโชว์เลขครบ 100% พร้อมใส่ชื่อเพจ / Line ID บนการ์ดเพื่อดึงคนเข้ากลุ่มของคุณโดยตรง
+                        </p>
+                    </div>
+                    <Link
+                        :href="route('advertise.index')"
+                        class="shrink-0 px-6 py-3 rounded-xl bg-yellow-400 text-gray-900 font-extrabold text-sm shadow-lg hover:bg-yellow-300 transition-all"
+                    >
+                        ดูเรทราคาโปรโมทสำนัก →
+                    </Link>
                 </div>
             </div>
         </div>

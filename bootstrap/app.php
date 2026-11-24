@@ -16,7 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        // แยก Path Login ชัดเจน: ถ้าเข้า /backoffice/* ให้เด้งไป /backoffice/login เท่านั้น ส่วนหน้าบ้านไป /login
+        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if ($request->is('backoffice') || $request->is('backoffice/*')) {
+                return route('backoffice.login');
+            }
+
+            return route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // จัดการ 404 errors สำหรับ Inertia

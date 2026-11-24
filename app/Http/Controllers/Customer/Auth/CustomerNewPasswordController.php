@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Customer\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
+use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +19,7 @@ use Inertia\Response;
 class CustomerNewPasswordController extends Controller
 {
     /**
-     * แสดงฟอร์มรีเซ็ตรหัสผ่านสำหรับลูกค้า
+     * แสดงฟอร์มรีเซ็ตรหัสผ่าน (รองรับทั้งลูกค้าและผู้ใช้หลังบ้าน)
      */
     public function create(Request $request): Response
     {
@@ -38,20 +40,25 @@ class CustomerNewPasswordController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $status = Password::broker('customers')->reset(
+        $email = $request->input('email');
+        $isCustomer = Customer::where('email', $email)->exists();
+        $broker = $isCustomer ? 'customers' : (User::where('email', $email)->exists() ? 'users' : 'customers');
+
+        $status = Password::broker($broker)->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($customer) use ($request) {
-                $customer->forceFill([
+            function ($account) use ($request) {
+                $account->forceFill([
                     'password' => Hash::make($request->password),
                     'remember_token' => Str::random(60),
                 ])->save();
 
-                event(new PasswordReset($customer));
+                event(new PasswordReset($account));
             }
         );
 
         if ($status == Password::PASSWORD_RESET) {
-            return redirect()->route('login')->with('status', __($status));
+            $loginRoute = ($broker === 'users') ? 'backoffice.login' : 'login';
+            return redirect()->route($loginRoute)->with('status', __($status));
         }
 
         throw ValidationException::withMessages([

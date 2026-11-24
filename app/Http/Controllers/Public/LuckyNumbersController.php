@@ -7,6 +7,7 @@ use App\Models\LotteryNumber;
 use App\Models\LottoData;
 use App\Models\Source;
 use App\Models\UserVote;
+use App\Services\SourceTrackRecordService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -57,26 +58,63 @@ class LuckyNumbersController extends Controller
             $drawDate = count($availableDrawDates) > 0 ? $availableDrawDates[0]['value'] : now()->toDateString();
         }
 
+        $canViewVip = ($request->user('customer') && $request->user('customer')->isVip())
+            || ($request->user('web') && $request->user('web')->isAdmin());
+
         $query = LotteryNumber::query()
             ->with(['source'])
-            ->where('draw_date', $drawDate)
-            ->whereHas('source', function (Builder $q) {
-                $q->where('status', 'active');
-            });
+            ->join('sources', 'sources.id', '=', 'lottery_numbers.source_id')
+            ->where('lottery_numbers.draw_date', $drawDate)
+            ->where('sources.status', 'active')
+            ->whereNull('sources.deleted_at')
+            // สำนักที่กำลังโปรโมท (is_promoted = true และยังไม่หมดอายุ promoted_until) แสดงขึ้นก่อนเสมอ
+            ->orderByRaw('CASE WHEN sources.is_promoted = 1 AND (sources.promoted_until IS NULL OR DATE(sources.promoted_until) >= CURDATE()) THEN 1 ELSE 0 END DESC');
 
         if ($sort === 'popular') {
-            $query->join('sources', 'sources.id', '=', 'lottery_numbers.source_id')
-                ->orderByDesc('sources.popularity_score')
-                ->select('lottery_numbers.*');
+            $query->orderByDesc('sources.popularity_score')
+                ->orderByDesc('lottery_numbers.updated_at');
         } else {
             // latest
-            $query->orderByDesc('updated_at');
+            $query->orderByDesc('lottery_numbers.updated_at')
+                ->orderByDesc('sources.popularity_score');
         }
+
+        $query->select('lottery_numbers.*');
 
         $numbers = $query->paginate(24)->withQueryString();
 
+        // ดึงรายการสำนักแม่นยำแนะนำ (3 งวดติด) + สำนักคะแนนความนิยมสูงสุดในงวดนี้ เพื่อกำหนดเป็นสำนัก VIP
+        $trackRanking = app(SourceTrackRecordService::class)->getTrackRecordRanking(10);
+        $vipSourceIds = collect($trackRanking['recommended_source_ids'] ?? []);
+
+        // หากในงวดนี้มีมากกว่า 1 สำนัก ให้สำนักที่ได้ความนิยมสูงสุดอันดับ 1 ของงวด (ที่ไม่ได้กำลังโปรโมทสปอนเซอร์) เป็น VIP ด้วยเสมอ
+        $topPopularSourceIds = LotteryNumber::query()
+            ->join('sources', 'sources.id', '=', 'lottery_numbers.source_id')
+            ->where('lottery_numbers.draw_date', $drawDate)
+            ->where('sources.status', 'active')
+            ->whereNull('sources.deleted_at')
+            ->whereRaw('NOT (sources.is_promoted = 1 AND (sources.promoted_until IS NULL OR DATE(sources.promoted_until) >= CURDATE()))')
+            ->orderByDesc('sources.popularity_score')
+            ->pluck('sources.id')
+            ->unique()
+            ->values();
+
+        if ($topPopularSourceIds->count() > 1) {
+            $vipSourceIds->push($topPopularSourceIds->first());
+        }
+        $vipSourceIds = $vipSourceIds->unique()->values()->all();
+
         // ดึง source_ids ทั้งหมดในงวดนี้
         $sourceIds = $numbers->pluck('source_id')->unique()->toArray();
+
+        // นับยอดการมองเห็น (Impression) ของสำนักที่แสดงในหน้านี้ (1 ครั้งต่อ Session ต่องวด)
+        $sessionKey = 'viewed_lucky_sources_' . $drawDate;
+        $viewedSources = $request->session()->get($sessionKey, []);
+        $newViewedIds = array_values(array_diff($sourceIds, $viewedSources));
+        if (!empty($newViewedIds)) {
+            Source::whereIn('id', $newViewedIds)->increment('view_count');
+            $request->session()->put($sessionKey, array_values(array_unique(array_merge($viewedSources, $newViewedIds))));
+        }
 
         // ดึงจำนวนโหวตสำหรับแต่ละสำนัก
         $voteCounts = UserVote::whereIn('source_id', $sourceIds)
@@ -86,9 +124,22 @@ class LuckyNumbersController extends Controller
             ->pluck('count', 'source_id')
             ->toArray();
 
-        // เพิ่มข้อมูล vote count ให้กับแต่ละ number
-        $numbers->getCollection()->transform(function ($number) use ($voteCounts) {
+        // เพิ่มข้อมูล vote count, สถานะโปรโมท และซ่อนเลข 2 ตัว / 3 ตัวในฝั่ง Backend สำหรับผู้ที่ไม่ได้เป็น VIP
+        // (ยกเว้นสำนักที่กำลังโปรโมทสปอนเซอร์ จะเปิดเลขให้เห็นครบ 100% เพื่อความคุ้มค่าของสปอนเซอร์)
+        $numbers->getCollection()->transform(function ($number) use ($voteCounts, $vipSourceIds, $canViewVip, $newViewedIds) {
             $number->vote_count = $voteCounts[$number->source_id] ?? 0;
+            if ($number->source && in_array($number->source_id, $newViewedIds, true)) {
+                $number->source->view_count = (int) ($number->source->view_count ?? 0) + 1;
+            }
+            $number->is_currently_promoted = $number->source ? $number->source->isCurrentlyPromoted() : false;
+            $number->is_vip_source = !$number->is_currently_promoted && in_array($number->source_id, $vipSourceIds, true);
+            $number->is_vip_locked = $number->is_vip_source && !$canViewVip;
+
+            if ($number->is_vip_locked) {
+                $number->two_digit = '••';
+                $number->three_digit = '•••';
+            }
+
             return $number;
         });
 
@@ -106,10 +157,14 @@ class LuckyNumbersController extends Controller
             ->orderBy('two_digit')
             ->limit(10)
             ->get()
-            ->map(function ($item) {
+            ->values()
+            ->map(function ($item, $index) use ($canViewVip) {
+                $isLocked = ($index === 0) && !$canViewVip;
                 return [
-                    'number' => $item->two_digit,
+                    'rank' => $index + 1,
+                    'number' => $isLocked ? '••' : $item->two_digit,
                     'count' => $item->count,
+                    'is_vip_locked' => $isLocked,
                 ];
             })
             ->toArray();
@@ -123,6 +178,7 @@ class LuckyNumbersController extends Controller
             'availableDrawDates' => $availableDrawDates,
             'numbers' => $numbers,
             'hotNumbers' => $hotNumbers,
+            'canViewVip' => $canViewVip,
         ]);
     }
 

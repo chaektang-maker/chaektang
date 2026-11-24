@@ -27,6 +27,14 @@ class Source extends Model
         'view_count' => 'integer',
     ];
 
+    /**
+     * ป้องกันการแปลงวันที่เป็น UTC ตอนส่ง JSON ไปยัง Inertia
+     */
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return \Carbon\Carbon::instance($date)->timezone(config('app.timezone', 'Asia/Bangkok'))->format('Y-m-d');
+    }
+
     public function lotteryNumbers(): HasMany
     {
         return $this->hasMany(LotteryNumber::class);
@@ -55,5 +63,21 @@ class Source extends Model
     public function userFollows(): HasMany
     {
         return $this->hasMany(UserFollow::class);
+    }
+
+    /**
+     * ตรวจสอบว่าสำนักนี้กำลังอยู่ในช่วงโปรโมทหรือไม่
+     */
+    public function isCurrentlyPromoted(): bool
+    {
+        if (!$this->is_promoted) {
+            return false;
+        }
+
+        if ($this->promoted_until === null) {
+            return true;
+        }
+
+        return $this->promoted_until->copy()->endOfDay()->isFuture();
     }
 }

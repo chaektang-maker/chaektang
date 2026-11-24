@@ -101,7 +101,7 @@ const submit = () => {
                 <!-- Submit Button -->
                 <div>
                     <PrimaryButton
-                        class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 justify-center"
                         :class="{ 'opacity-50 cursor-not-allowed': form.processing }"
                         :disabled="form.processing"
                     >
@@ -114,6 +114,17 @@ const submit = () => {
                             กำลังเข้าสู่ระบบ...
                         </span>
                     </PrimaryButton>
+                </div>
+
+                <!-- ลิงก์ไปหน้าสมัครสมาชิก -->
+                <div class="pt-4 border-t border-gray-200 text-center text-sm text-gray-600">
+                    ยังไม่มีบัญชีสมาชิก?
+                    <Link
+                        :href="route('register')"
+                        class="font-bold text-red-600 hover:text-red-700 hover:underline ml-1"
+                    >
+                        สมัครสมาชิกฟรีที่นี่
+                    </Link>
                 </div>
             </form>
         </div>

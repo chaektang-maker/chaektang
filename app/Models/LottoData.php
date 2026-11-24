@@ -11,6 +11,10 @@ class LottoData extends Model
 {
     protected $table = 'lotto_data';
 
+    protected $primaryKey = 'lotto_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $fillable = [
         'lotto_id',
         'url',
@@ -23,6 +27,14 @@ class LottoData extends Model
         'is_fetched' => 'boolean',
         'draw_date' => 'date',
     ];
+
+    /**
+     * ป้องกันการแปลงวันที่เป็น UTC ตอนส่ง JSON ไปยัง Inertia (ซึ่งทำให้วันที่ลดลง 1 วันใน Timezone Asia/Bangkok)
+     */
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return Carbon::instance($date)->timezone(config('app.timezone', 'Asia/Bangkok'))->format('Y-m-d');
+    }
 
     /**
      * Boot the model.

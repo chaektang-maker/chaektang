@@ -38,6 +38,6 @@ class CustomerRegisteredUserController extends Controller
 
         Auth::guard('customer')->login($customer);
 
-        return redirect('/');
+        return redirect()->intended(route('home'));
     }
 }

@@ -13,7 +13,7 @@ class VoteController extends Controller
 {
     /**
      * โหวตให้คะแนนความแม่นสำหรับสำนัก
-     * User ที่ login สามารถโหวตได้ 3 ครั้งต่องวด
+     * ลูกค้า (guard customer) หรือผู้ใช้ (guard web) ที่ login สามารถโหวตได้ 3 ครั้งต่องวด
      */
     public function store(Request $request)
     {
@@ -24,18 +24,22 @@ class VoteController extends Controller
 
         $sourceId = $request->source_id;
         $drawDate = $request->draw_date;
-        $userId = Auth::id();
+        $customerId = Auth::guard('customer')->id();
+        $userId = $customerId ? null : Auth::guard('web')->id();
 
         // ต้อง login ถึงจะโหวตได้
-        if (!$userId) {
+        if (!$customerId && !$userId) {
             return response()->json([
                 'success' => false,
                 'message' => 'กรุณาล็อกอินเพื่อโหวต',
             ], 401);
         }
 
+        $voterColumn = $customerId ? 'customer_id' : 'user_id';
+        $voterId = $customerId ?: $userId;
+
         // ตรวจสอบจำนวนครั้งที่โหวตไปแล้วในงวดนี้ (รวมทุกสำนัก)
-        $userVoteCount = UserVote::where('user_id', $userId)
+        $userVoteCount = UserVote::where($voterColumn, $voterId)
             ->where('draw_date', $drawDate)
             ->count();
 
@@ -50,11 +54,15 @@ class VoteController extends Controller
 
         // บันทึกการโหวต
         $vote = UserVote::create([
+            'customer_id' => $customerId,
             'user_id' => $userId,
             'source_id' => $sourceId,
             'draw_date' => $drawDate,
             'ip_address' => null, // ไม่ใช้ ip_address สำหรับ user ที่ login
         ]);
+
+        // เพิ่มยอดการมีส่วนร่วม (view_count) ให้สำนักเมื่อมีคนกดโหวต
+        Source::where('id', $sourceId)->increment('view_count');
 
         // นับจำนวนโหวตทั้งหมดของสำนักนี้ในงวดนี้
         $voteCount = UserVote::where('source_id', $sourceId)
@@ -82,7 +90,8 @@ class VoteController extends Controller
             'draw_date' => 'required|date',
         ]);
 
-        $userId = Auth::id();
+        $customerId = Auth::guard('customer')->id();
+        $userId = $customerId ? null : Auth::guard('web')->id();
 
         // นับจำนวนโหวตทั้งหมดของสำนักนี้ในงวดนี้
         $voteCount = UserVote::where('source_id', $request->source_id)
@@ -90,7 +99,7 @@ class VoteController extends Controller
             ->count();
 
         // ถ้าไม่ login
-        if (!$userId) {
+        if (!$customerId && !$userId) {
             return response()->json([
                 'is_logged_in' => false,
                 'vote_count' => $voteCount,
@@ -99,13 +108,16 @@ class VoteController extends Controller
             ]);
         }
 
+        $voterColumn = $customerId ? 'customer_id' : 'user_id';
+        $voterId = $customerId ?: $userId;
+
         // นับจำนวนครั้งที่ user โหวตไปแล้วในงวดนี้ (รวมทุกสำนัก)
-        $userVoteCount = UserVote::where('user_id', $userId)
+        $userVoteCount = UserVote::where($voterColumn, $voterId)
             ->where('draw_date', $request->draw_date)
             ->count();
 
         // นับจำนวนครั้งที่ user โหวตให้สำนักนี้ในงวดนี้
-        $userVoteForSource = UserVote::where('user_id', $userId)
+        $userVoteForSource = UserVote::where($voterColumn, $voterId)
             ->where('source_id', $request->source_id)
             ->where('draw_date', $request->draw_date)
             ->count();

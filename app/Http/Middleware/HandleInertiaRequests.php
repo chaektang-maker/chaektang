@@ -44,6 +44,7 @@ class HandleInertiaRequests extends Middleware
                     'results' => true,
                     'numbers' => true,
                     'lottoData' => true,
+                    'lottoDetails' => true,
                 ];
             } else {
                 $canAccess = [
@@ -51,6 +52,7 @@ class HandleInertiaRequests extends Middleware
                     'results' => $user->canAccessRoute('backoffice.results.index'),
                     'numbers' => $user->canAccessRoute('backoffice.numbers.index'),
                     'lottoData' => $user->canAccessRoute('backoffice.lotto-data.index'),
+                    'lottoDetails' => $user->canAccessRoute('backoffice.lotto-details-admin.index'),
                 ];
             }
         }
@@ -58,6 +60,19 @@ class HandleInertiaRequests extends Middleware
         $pendingVipRequestsCount = 0;
         if ($user && $isAdmin) {
             $pendingVipRequestsCount = \App\Models\VipRequest::where('status', 'pending')->count();
+        }
+
+        $activeCustomerSub = null;
+        $vipDaysLeft = 0;
+        if ($customer) {
+            $activeCustomerSub = $customer->subscriptions()
+                ->where('status', 'active')
+                ->where('ends_at', '>', now())
+                ->orderByDesc('ends_at')
+                ->first();
+            if ($activeCustomerSub && $activeCustomerSub->ends_at) {
+                $vipDaysLeft = (int) max(1, ceil(now()->diffInHours($activeCustomerSub->ends_at, false) / 24));
+            }
         }
 
         return [
@@ -74,6 +89,8 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'source_id' => $user->source_id,
+                    'is_source_owner' => $user->isSourceOwner(),
                     'is_admin' => $isAdmin,
                     'can_access' => $canAccess,
                     'pending_vip_requests_count' => $pendingVipRequestsCount,
@@ -82,9 +99,12 @@ class HandleInertiaRequests extends Middleware
                     'id' => $customer->id,
                     'name' => $customer->name,
                     'email' => $customer->email,
-                    'is_vip' => $customer->isVip(),
+                    'is_vip' => (bool) $activeCustomerSub,
+                    'vip_ends_at' => $activeCustomerSub?->ends_at?->toIso8601String(),
+                    'vip_days_left' => $vipDaysLeft,
                 ] : null,
             ],
+            'contactInfo' => config('services.contact'),
         ];
     }
 }

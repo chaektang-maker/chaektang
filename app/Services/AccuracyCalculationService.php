@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\LotteryResult;
 use App\Models\LotteryNumber;
+use App\Models\LottoData;
+use App\Models\LottoPrize;
+use App\Models\LottoRunningNumber;
 use App\Models\AccuracyHistory;
 use App\Models\AccuracyScore;
 use Illuminate\Support\Facades\DB;
@@ -11,9 +14,118 @@ use Illuminate\Support\Facades\DB;
 class AccuracyCalculationService
 {
     /**
+     * ซิงค์ข้อมูลผลหวยจาก lotto_details / lotto_prizes ลงตาราง lottery_results
+     * และคำนวณความแม่นยำของสำนักในงวดนั้นอัตโนมัติ
+     */
+    public function syncFromLottoDetail(string $lottoId, bool $recalculate = true): ?LotteryResult
+    {
+        $lottoData = LottoData::where('lotto_id', $lottoId)->first();
+        if (!$lottoData || !$lottoData->draw_date) {
+            return null;
+        }
+
+        $drawDate = $lottoData->draw_date->format('Y-m-d');
+
+        $firstPrizeRow = LottoPrize::where('lotto_id', $lottoId)
+            ->where('prize_id', 'prizeFirst')
+            ->first();
+
+        $firstPrize = $firstPrizeRow->numbers[0] ?? null;
+        if (!$firstPrize) {
+            return null;
+        }
+
+        $runningRows = LottoRunningNumber::where('lotto_id', $lottoId)
+            ->get()
+            ->keyBy('running_id');
+
+        $lastTwoDigit = $runningRows->get('runningNumberBackTwo')?->numbers[0] ?? null;
+        $backThree = $runningRows->get('runningNumberBackThree')?->numbers[0] ?? null;
+        $lastThreeDigit = $backThree ?: (strlen($firstPrize) >= 3 ? substr($firstPrize, -3) : null);
+
+        if (!$lastTwoDigit || !$lastThreeDigit) {
+            return null;
+        }
+
+        // สกัดเลขวิ่ง (ตัวเลขโดด 0-9 จาก 3 ตัวท้ายรางวัลที่ 1 และ 2 ตัวล่าง)
+        $topThree = strlen($firstPrize) >= 3 ? substr($firstPrize, -3) : $firstPrize;
+        $digitsStr = preg_replace('/\D/', '', $topThree . $lastTwoDigit);
+        $runningNumbers = $digitsStr !== ''
+            ? array_values(array_unique(str_split($digitsStr)))
+            : [];
+
+        $result = LotteryResult::updateOrCreate(
+            ['draw_date' => $drawDate],
+            [
+                'first_prize' => (string) $firstPrize,
+                'last_two_digit' => (string) $lastTwoDigit,
+                'last_three_digit' => (string) $lastThreeDigit,
+                'running_numbers' => $runningNumbers,
+            ]
+        );
+
+        if ($recalculate) {
+            $this->calculateForDraw($drawDate, true);
+        }
+
+        return $result;
+    }
+
+    /**
+     * ซิงค์ผลหวยจาก lotto_details ทั้งหมดที่ดึงแล้ว ลง lottery_results
+     * และคำนวณคะแนนความแม่นยำทุกงวดที่มีเลขสำนัก
+     */
+    public function syncAllFromLottoDetails(): array
+    {
+        $fetchedLottoIds = LottoData::where('is_fetched', true)
+            ->whereNotNull('draw_date')
+            ->orderBy('draw_date')
+            ->pluck('lotto_id');
+
+        $syncedCount = 0;
+        foreach ($fetchedLottoIds as $lottoId) {
+            $res = $this->syncFromLottoDetail($lottoId, false);
+            if ($res) {
+                $syncedCount++;
+            }
+        }
+
+        // คำนวณเฉพาะงวดที่มีทั้งผลหวยใน lottery_results และมีเลขเด็ดจากสำนัก (หรือยังไม่คำนวณ)
+        $drawDatesWithNumbers = LotteryNumber::select('draw_date')
+            ->distinct()
+            ->pluck('draw_date')
+            ->map(fn ($d) => $d instanceof \Carbon\CarbonInterface ? $d->format('Y-m-d') : (string) $d)
+            ->toArray();
+
+        $resultsToCalculate = LotteryResult::where(function ($q) use ($drawDatesWithNumbers) {
+            $q->where('is_calculated', false);
+            if (!empty($drawDatesWithNumbers)) {
+                $q->orWhereIn('draw_date', $drawDatesWithNumbers);
+            }
+        })->orderBy('draw_date')->get();
+
+        $calculatedCount = 0;
+        foreach ($resultsToCalculate as $result) {
+            $drawStr = $result->draw_date instanceof \Carbon\CarbonInterface
+                ? $result->draw_date->format('Y-m-d')
+                : (string) $result->draw_date;
+            $this->calculateForDraw($drawStr, true);
+            $calculatedCount++;
+        }
+
+        // อัปเดตคะแนนรวมทุกสำนักอีกครั้ง
+        $this->updateAccuracyScores();
+
+        return [
+            'synced_count' => $syncedCount,
+            'calculated_count' => $calculatedCount,
+        ];
+    }
+
+    /**
      * คำนวณคะแนนความแม่นยำสำหรับงวดที่กำหนด
      */
-    public function calculateForDraw(string $drawDate): void
+    public function calculateForDraw(string $drawDate, bool $force = false): void
     {
         $result = LotteryResult::where('draw_date', $drawDate)->first();
         
@@ -21,7 +133,7 @@ class AccuracyCalculationService
             throw new \Exception("ไม่พบผลหวยสำหรับงวดวันที่: {$drawDate}");
         }
 
-        if ($result->is_calculated) {
+        if ($result->is_calculated && !$force) {
             return; // คำนวณไปแล้ว
         }
 

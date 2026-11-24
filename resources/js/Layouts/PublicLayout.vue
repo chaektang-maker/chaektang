@@ -1,15 +1,16 @@
 <script setup>
 import Navigation from '@/Components/Navigation.vue';
 import Footer from '@/Components/Footer.vue';
+import FloatingContactButton from '@/Components/FloatingContactButton.vue';
 
 defineProps({
     canLogin: {
         type: Boolean,
-        default: false,
+        default: true,
     },
     canRegister: {
         type: Boolean,
-        default: false,
+        default: true,
     },
 });
 </script>
@@ -26,6 +27,9 @@ defineProps({
 
         <!-- Footer -->
         <Footer />
+
+        <!-- ปุ่มลอยติดต่อแอดมิน / ลงโฆษณาทาง LINE -->
+        <FloatingContactButton />
     </div>
 </template>
 

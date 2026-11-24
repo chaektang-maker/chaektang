@@ -31,8 +31,36 @@ const showLinkDialog = ref(false);
 const linkUrl = ref('');
 const linkText = ref('');
 
+const normalizeContentImages = (html) => {
+    if (!html) return '';
+    return String(html).replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/storage\//gi, '/storage/');
+};
+
+// ขยายความสามารถของ Image extension ให้รองรับการปรับขนาด (small / medium / full) และตำแหน่ง (left / center / right)
+const CustomImage = Image.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            size: {
+                default: 'medium',
+                parseHTML: (element) => element.getAttribute('data-size') || 'medium',
+                renderHTML: (attributes) => ({
+                    'data-size': attributes.size || 'medium',
+                }),
+            },
+            align: {
+                default: 'center',
+                parseHTML: (element) => element.getAttribute('data-align') || 'center',
+                renderHTML: (attributes) => ({
+                    'data-align': attributes.align || 'center',
+                }),
+            },
+        };
+    },
+});
+
 const editor = useEditor({
-    content: props.modelValue || '',
+    content: normalizeContentImages(props.modelValue || ''),
     extensions: [
         StarterKit.configure({
             heading: { levels: [1, 2, 3] },
@@ -44,7 +72,7 @@ const editor = useEditor({
         TextAlign.configure({ types: ['heading', 'paragraph'] }),
         TextStyle,
         Color,
-        Image.configure({ inline: false, allowBase64: false }),
+        CustomImage.configure({ inline: false, allowBase64: false }),
         Link.configure({
             openOnClick: false,
             HTMLAttributes: {
@@ -87,10 +115,11 @@ const editor = useEditor({
 
 watch(() => props.modelValue, (val) => {
     if (editor.value) {
+        const normalized = normalizeContentImages(val || '');
         const currentContent = editor.value.getHTML();
         // ตรวจสอบว่า content เปลี่ยนจริงๆ หรือไม่ (เพื่อป้องกัน infinite loop)
-        if (val !== currentContent) {
-            editor.value.commands.setContent(val || '', false);
+        if (normalized !== currentContent) {
+            editor.value.commands.setContent(normalized, false);
         }
     }
 }, { immediate: true });
@@ -114,6 +143,26 @@ const applyColor = (color) => {
     showColorPicker.value = false;
 };
 
+const clearColor = () => {
+    if (!editor.value) return;
+    editor.value.chain().focus().unsetColor().run();
+    showColorPicker.value = false;
+};
+
+const applyBoldRed = () => {
+    if (!editor.value) return;
+    editor.value.chain().focus().setBold().setColor('#dc2626').run();
+};
+
+const quickColors = [
+    { label: 'ดำ', color: '#111827' },
+    { label: 'แดงเลขเด็ด', color: '#dc2626' },
+    { label: 'ส้มทอง', color: '#d97706' },
+    { label: 'เขียว', color: '#16a34a' },
+    { label: 'น้ำเงิน', color: '#2563eb' },
+    { label: 'ม่วง', color: '#7c3aed' },
+];
+
 const uploadAndInsert = async (file) => {
     if (isUploading.value) return;
     isUploading.value = true;
@@ -124,7 +173,11 @@ const uploadAndInsert = async (file) => {
         const { data } = await axios.post(route('backoffice.posts.upload-image'), formData, {
             headers: { 'X-XSRF-TOKEN': csrf, 'Accept': 'application/json' },
         });
-        editor.value?.chain().focus().setImage({ src: data.url }).run();
+        editor.value?.chain().focus().setImage({
+            src: data.url,
+            size: 'medium',
+            align: 'center',
+        }).run();
     } catch (err) {
         console.error('Upload failed:', err);
         alert('อัปโหลดรูปไม่สำเร็จ');
@@ -140,6 +193,21 @@ const onImageSelect = (e) => {
 };
 
 const addImage = () => imageInput.value?.click();
+
+const setImageSize = (size) => {
+    if (!editor.value) return;
+    editor.value.chain().focus().updateAttributes('image', { size }).run();
+};
+
+const setImageAlign = (align) => {
+    if (!editor.value) return;
+    editor.value.chain().focus().updateAttributes('image', { align }).run();
+};
+
+const deleteSelectedImage = () => {
+    if (!editor.value) return;
+    editor.value.chain().focus().deleteSelection().run();
+};
 
 const openLinkDialog = () => {
     if (!editor.value) return;
@@ -180,9 +248,9 @@ const colors = [
 </script>
 
 <template>
-    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white">
+    <div class="border border-gray-300 rounded-xl bg-white shadow-sm">
         <!-- Toolbar -->
-        <div v-if="editor" class="flex flex-wrap items-center gap-1 p-2 border-b border-gray-200 bg-gray-50">
+        <div v-if="editor" class="flex flex-wrap items-center gap-1.5 p-2.5 border-b border-gray-200 bg-gray-50 rounded-t-xl sticky top-0 z-20">
             <!-- Undo/Redo -->
             <button
                 type="button"
@@ -315,34 +383,93 @@ const colors = [
             </button>
             <span class="w-px h-6 bg-gray-300 mx-1" />
             
-            <!-- Color Picker -->
-            <div class="relative">
+            <!-- แถบเปลี่ยนสีตัวอักษรด่วน (คลิกเดียวเปลี่ยนสีทันที ไม่หลุดโฟกัส) -->
+            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-2xs">
+                <span class="text-[11px] font-bold text-gray-500 mr-0.5">สี:</span>
+                <button
+                    v-for="qc in quickColors"
+                    :key="qc.color"
+                    type="button"
+                    class="w-5 h-5 rounded-full border transition-transform hover:scale-125 flex items-center justify-center"
+                    :style="{
+                        backgroundColor: qc.color,
+                        borderColor: editor.isActive('textStyle', { color: qc.color }) ? '#000' : 'transparent',
+                    }"
+                    :class="editor.isActive('textStyle', { color: qc.color }) ? 'ring-2 ring-offset-1 ring-gray-900 scale-110' : ''"
+                    :title="`สี${qc.label}`"
+                    @mousedown.prevent="applyColor(qc.color)"
+                />
+
+                <!-- ปุ่มลัด: ตัวหนา + สีแดง (สำหรับเน้นเลขเด็ด) -->
                 <button
                     type="button"
-                    class="p-2 rounded hover:bg-gray-200"
-                    title="สีตัวอักษร"
-                    @click="showColorPicker = !showColorPicker"
+                    class="ml-1 px-2 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-600 font-extrabold text-xs border border-red-200 transition-colors"
+                    title="ทำตัวหนา + สีแดงในคลิกเดียว (เหมาะสำหรับเน้นตัวเลข)"
+                    @mousedown.prevent="applyBoldRed"
                 >
-                    <span class="text-sm">A</span>
-                    <span
-                        class="block w-4 h-0.5 -mt-0.5"
-                        :style="{ backgroundColor: editor.getAttributes('textStyle').color || '#000' }"
-                    />
+                    🔥 เน้นแดง
                 </button>
-                <div
-                    v-if="showColorPicker"
-                    class="absolute top-full left-0 mt-1 p-2 bg-white border rounded-lg shadow-lg z-20 grid grid-cols-6 gap-1"
+
+                <!-- ปุ่มล้างสี -->
+                <button
+                    type="button"
+                    class="px-1.5 py-0.5 rounded text-[11px] text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                    title="ล้างสีกลับเป็นค่าเริ่มต้น"
+                    @mousedown.prevent="clearColor"
                 >
+                    ล้างสี
+                </button>
+
+                <!-- ถาดสีเพิ่มเติม -->
+                <div class="relative">
                     <button
-                        v-for="c in colors"
-                        :key="c"
                         type="button"
-                        class="w-6 h-6 rounded border hover:scale-110 transition-transform"
-                        :style="{ backgroundColor: c, borderColor: c === '#ffffff' ? '#ccc' : c }"
-                        @click="applyColor(c)"
-                    />
+                        class="px-1.5 py-0.5 rounded hover:bg-gray-100 text-xs font-bold text-gray-700 flex items-center gap-0.5"
+                        title="เลือกสีอื่นๆ เพิ่มเติม"
+                        @mousedown.prevent="showColorPicker = !showColorPicker"
+                    >
+                        <span>🎨</span>
+                        <span
+                            class="inline-block w-3 h-3 rounded-xs border border-gray-300"
+                            :style="{ backgroundColor: editor.getAttributes('textStyle').color || '#111827' }"
+                        />
+                    </button>
+                    <div
+                        v-if="showColorPicker"
+                        class="absolute top-full left-0 mt-2 p-3 bg-white border border-gray-200 rounded-xl shadow-xl z-30 w-56 space-y-2.5"
+                    >
+                        <div class="text-xs font-bold text-gray-700">เลือกสีตัวอักษร</div>
+                        <div class="grid grid-cols-6 gap-1.5">
+                            <button
+                                v-for="c in colors"
+                                :key="c"
+                                type="button"
+                                class="w-6 h-6 rounded-md border hover:scale-110 transition-transform"
+                                :style="{ backgroundColor: c, borderColor: c === '#ffffff' ? '#d1d5db' : c }"
+                                @mousedown.prevent="applyColor(c)"
+                            />
+                        </div>
+                        <div class="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                            <label class="text-xs text-gray-600 flex items-center gap-1.5 cursor-pointer">
+                                <span>ผสมสีเอง:</span>
+                                <input
+                                    type="color"
+                                    class="w-6 h-6 p-0 border-0 rounded cursor-pointer"
+                                    :value="editor.getAttributes('textStyle').color || '#dc2626'"
+                                    @input="(e) => applyColor(e.target.value)"
+                                />
+                            </label>
+                            <button
+                                type="button"
+                                class="text-xs font-semibold text-red-600 hover:underline"
+                                @mousedown.prevent="clearColor"
+                            >
+                                รีเซ็ตสี
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="showColorPicker" class="fixed inset-0 z-10" @click="showColorPicker = false" />
                 </div>
-                <div v-if="showColorPicker" class="fixed inset-0 z-10" @click="showColorPicker = false" />
             </div>
             <span class="w-px h-6 bg-gray-300 mx-1" />
             
@@ -437,11 +564,109 @@ const colors = [
             <button
                 type="button"
                 :disabled="isUploading"
-                class="p-2 rounded hover:bg-gray-200 disabled:opacity-50"
-                title="แทรกรูป"
+                class="px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 text-xs font-bold inline-flex items-center gap-1 border border-indigo-200"
+                title="แทรกรูปภาพประกอบบทความ"
                 @click="addImage"
             >
-                {{ isUploading ? '...' : '🖼️' }}
+                <span>{{ isUploading ? '⏳ กำลังอัปโหลด...' : '🖼️ แทรกรูปภาพ' }}</span>
+            </button>
+        </div>
+
+        <!-- แถบจัดระเบียบรูปภาพ (แสดงอัตโนมัติเมื่อคลิกที่รูปภาพในบทความ) -->
+        <div
+            v-if="editor && editor.isActive('image')"
+            class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-indigo-50 border-b border-indigo-200 text-xs"
+        >
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-bold text-indigo-900">🖼️ จัดระเบียบรูปภาพที่เลือก:</span>
+
+                <!-- ขนาดรูปภาพ -->
+                <div class="inline-flex rounded-lg bg-white p-0.5 border border-indigo-200 shadow-2xs">
+                    <button
+                        type="button"
+                        :class="[
+                            'px-2.5 py-1 rounded-md font-bold transition-colors',
+                            (editor.getAttributes('image').size || 'medium') === 'small'
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-gray-700 hover:bg-gray-100',
+                        ]"
+                        @mousedown.prevent="setImageSize('small')"
+                    >
+                        เล็ก (40%)
+                    </button>
+                    <button
+                        type="button"
+                        :class="[
+                            'px-2.5 py-1 rounded-md font-bold transition-colors',
+                            (editor.getAttributes('image').size || 'medium') === 'medium'
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-gray-700 hover:bg-gray-100',
+                        ]"
+                        @mousedown.prevent="setImageSize('medium')"
+                    >
+                        ขนาดพอดี (65%)
+                    </button>
+                    <button
+                        type="button"
+                        :class="[
+                            'px-2.5 py-1 rounded-md font-bold transition-colors',
+                            editor.getAttributes('image').size === 'full'
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-gray-700 hover:bg-gray-100',
+                        ]"
+                        @mousedown.prevent="setImageSize('full')"
+                    >
+                        เต็มกรอบ (100%)
+                    </button>
+                </div>
+
+                <!-- ตำแหน่งรูปภาพ -->
+                <div class="inline-flex rounded-lg bg-white p-0.5 border border-indigo-200 shadow-2xs">
+                    <button
+                        type="button"
+                        :class="[
+                            'px-2.5 py-1 rounded-md font-bold transition-colors',
+                            editor.getAttributes('image').align === 'left'
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-gray-700 hover:bg-gray-100',
+                        ]"
+                        @mousedown.prevent="setImageAlign('left')"
+                    >
+                        ⬅️ ชิดซ้าย
+                    </button>
+                    <button
+                        type="button"
+                        :class="[
+                            'px-2.5 py-1 rounded-md font-bold transition-colors',
+                            (editor.getAttributes('image').align || 'center') === 'center'
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-gray-700 hover:bg-gray-100',
+                        ]"
+                        @mousedown.prevent="setImageAlign('center')"
+                    >
+                        ↔️ กึ่งกลาง
+                    </button>
+                    <button
+                        type="button"
+                        :class="[
+                            'px-2.5 py-1 rounded-md font-bold transition-colors',
+                            editor.getAttributes('image').align === 'right'
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-gray-700 hover:bg-gray-100',
+                        ]"
+                        @mousedown.prevent="setImageAlign('right')"
+                    >
+                        ➡️ ชิดขวา
+                    </button>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                class="px-2.5 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 font-bold"
+                @mousedown.prevent="deleteSelectedImage"
+            >
+                🗑️ ลบรูปนี้
             </button>
         </div>
 
@@ -537,10 +762,50 @@ const colors = [
     margin: 1.5rem 0;
 }
 .ProseMirror img {
-    max-width: 100%;
+    display: block;
+    max-width: 68%;
+    max-height: 460px;
+    width: auto;
     height: auto;
-    border-radius: 0.5rem;
-    margin: 1rem 0;
+    object-fit: contain;
+    border-radius: 0.75rem;
+    margin: 1.25rem auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.ProseMirror img.ProseMirror-selectednode {
+    outline: 3px solid #4f46e5;
+    outline-offset: 2px;
+}
+.ProseMirror img[data-size="small"] {
+    max-width: 40%;
+    max-height: 320px;
+}
+.ProseMirror img[data-size="medium"] {
+    max-width: 68%;
+    max-height: 460px;
+}
+.ProseMirror img[data-size="full"] {
+    max-width: 100%;
+    max-height: 640px;
+}
+.ProseMirror img[data-align="left"] {
+    margin-left: 0;
+    margin-right: auto;
+}
+.ProseMirror img[data-align="center"] {
+    margin-left: auto;
+    margin-right: auto;
+}
+.ProseMirror img[data-align="right"] {
+    margin-left: auto;
+    margin-right: 0;
+}
+.ProseMirror strong {
+    color: inherit;
+    font-weight: 700;
 }
 .ProseMirror a {
     color: #2563eb;

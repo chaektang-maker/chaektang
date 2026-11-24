@@ -40,6 +40,11 @@ class Customer extends Authenticatable
         return $this->hasMany(Subscription::class);
     }
 
+    public function userVotes(): HasMany
+    {
+        return $this->hasMany(UserVote::class);
+    }
+
     public function isVip(): bool
     {
         return $this->subscriptions()

@@ -63,7 +63,15 @@ class SourceController extends Controller
     public function edit(Source $source)
     {
         return Inertia::render('Admin/Sources/Edit', [
-            'source' => $source,
+            'source' => [
+                'id' => $source->id,
+                'name' => $source->name,
+                'description' => $source->description,
+                'status' => $source->status,
+                'popularity_score' => $source->popularity_score,
+                'is_promoted' => (bool) $source->is_promoted,
+                'promoted_until' => $source->promoted_until?->format('Y-m-d'),
+            ],
         ]);
     }
 

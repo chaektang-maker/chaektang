@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\LotteryNumberController;
 use App\Http\Controllers\Admin\LotteryResultController;
-use App\Http\Controllers\Admin\LottoDataController;
 use App\Http\Controllers\Admin\LottoDetailsController;
 use App\Http\Controllers\Admin\SourceController;
 use App\Http\Controllers\ProfileController;
@@ -21,15 +20,35 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
 Route::post('/check-lottery', [HomeController::class, 'checkLottery'])->name('check-lottery');
 
 // Sitemap
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 
+// รองรับการเปิดไฟล์รูปภาพใน storage/app/public ได้เสมอ แม้ยังไม่ได้รัน storage:link หรือรันบน Windows
+Route::get('/storage/{path}', function (string $path) {
+    if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+    \App\Services\MediaStorageService::syncToPublicDirectory($path);
+    return response()->file(\Illuminate\Support\Facades\Storage::disk('public')->path($path));
+})->where('path', '.*')->withoutMiddleware(['web'])->name('storage.local');
+
 Route::get('/lucky-numbers', [LuckyNumbersController::class, 'index'])->name('lucky-numbers.index');
+Route::get('/advertise', fn () => Inertia::render('Public/Advertise'))->name('advertise.index');
 Route::get('/accuracy', [AccuracyController::class, 'index'])->name('accuracy.index');
 Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
 Route::get('/recheck', [ResultsController::class, 'index'])->name('results.index');
+
+// Lotto Analyzer (วิเคราะห์เลขนำโชค)
+Route::get('/lotto-analyzer', [\App\Http\Controllers\Public\LottoAnalyzerController::class, 'index'])->name('lotto-analyzer.index');
+Route::post('/lotto-analyzer/analyze', [\App\Http\Controllers\Public\LottoAnalyzerController::class, 'analyze'])->name('lotto-analyzer.analyze');
+
+// Phone Analyzer (วิเคราะห์เบอร์มงคล & ถอดรหัสเลขนำโชคจากเบอร์มือถือ)
+Route::get('/phone-analyzer', [\App\Http\Controllers\Public\PhoneAnalyzerController::class, 'index'])->name('phone-analyzer.index');
+Route::post('/phone-analyzer/analyze', [\App\Http\Controllers\Public\PhoneAnalyzerController::class, 'analyze'])->name('phone-analyzer.analyze');
+Route::get('/undrawn-first-prizes', [\App\Http\Controllers\Public\UndrawnFirstPrizeController::class, 'index'])->name('undrawn-first-prizes.index');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
@@ -41,56 +60,60 @@ Route::get('/vote/leaderboard', [VoteController::class, 'leaderboard'])->name('v
 
 // ทำนายฝัน (ใช้ AI จาก Google AI Studio)
 Route::get('/dream-interpretation', [DreamInterpretationController::class, 'index'])->name('dream-interpretation.index');
-Route::post('/dream-interpretation', [DreamInterpretationController::class, 'interpret'])->name('dream-interpretation.interpret');
+Route::post('/dream-interpretation', [DreamInterpretationController::class, 'interpret'])
+    ->middleware('throttle:10,1')
+    ->name('dream-interpretation.interpret');
 
-// ลูกค้าขอ VIP (ต้องล็อกอิน)
+// หน้าแนะนำสิทธิพิเศษและแพ็กเกจ VIP (เปิดให้ทุกคนเข้าดูข้อเสนอก่อนตัดสินใจได้ทันที)
+Route::get('/request-vip', [\App\Http\Controllers\Customer\VipRequestController::class, 'create'])->name('vip-request.create');
+
+// ลูกค้าส่งสลิปขอเปิดสิทธิ์ VIP (ต้องล็อกอิน)
 Route::middleware('auth:customer')->group(function () {
-    Route::get('/request-vip', [\App\Http\Controllers\Customer\VipRequestController::class, 'create'])->name('vip-request.create');
     Route::post('/request-vip', [\App\Http\Controllers\Customer\VipRequestController::class, 'store'])->name('vip-request.store');
 });
 
 // ถ้าเข้าที่ /backoffice:
-// - ถ้ายังไม่ login → ไปหน้า login และจำ intended เป็น backoffice (หลัง login ไปแดชบอร์ด)
-// - ถ้า login แล้ว → ไปหน้า dashboard หลังบ้าน
+// - ถ้ายังไม่ login (guard web) → ไปหน้า /backoffice/login
+// - ถ้า login พนักงานแล้ว → ไปหน้า dashboard หลังบ้าน
 Route::get('/backoffice', function () {
-    if (auth()->check()) {
+    if (auth('web')->check()) {
         return redirect()->route('backoffice.dashboard');
     }
 
     return redirect()->route('backoffice.login')->with('url.intended', route('backoffice.dashboard'));
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:web')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-        Route::prefix('backoffice')->name('backoffice.')->middleware(['verified'])->group(function () {
-        // Dashboard - เข้าถึงได้ทุกคนที่ login แล้ว
-        Route::get('dashboard', function () {
-            return Inertia::render('Dashboard');
-        })->name('dashboard');
+    // ระบบหลังบ้าน (/backoffice/*) เข้าได้เฉพาะพนักงาน (admin / staff) เท่านั้น
+    Route::prefix('backoffice')->name('backoffice.')->middleware(['verified', \App\Http\Middleware\CheckPermission::class])->group(function () {
+        // Dashboard หลังบ้าน (เฉพาะ admin และ staff)
+        Route::get('dashboard', [\App\Http\Controllers\Backoffice\DashboardController::class, 'index'])->name('dashboard');
         
-        // Routes ที่ต้อง permission (admin/staff)
-        Route::middleware(\App\Http\Middleware\CheckPermission::class)->group(function () {
+        // Routes ที่ต้อง permission (admin/staff) - พนักงานและแอดมินสามารถลงเลขแทนสำนักได้ผ่านเมนู numbers
         Route::resource('sources', SourceController::class)->except(['show']);
-        Route::resource('results', LotteryResultController::class)->except(['show']);
         Route::get('results/import', [LotteryResultController::class, 'importForm'])->name('results.import');
         Route::post('results/import', [LotteryResultController::class, 'importFromApi'])->name('results.import.store');
+        Route::post('results/sync-from-details', [LotteryResultController::class, 'syncFromDetails'])->name('results.sync');
+        Route::resource('results', LotteryResultController::class)->except(['show']);
+        Route::get('numbers/bulk', [LotteryNumberController::class, 'bulkEdit'])->name('numbers.bulk');
+        Route::post('numbers/bulk', [LotteryNumberController::class, 'bulkUpdate'])->name('numbers.bulk.store');
         Route::resource('numbers', LotteryNumberController::class)->except(['show']);
         
-        // Lotto Data Admin Interface (หน้า admin เหมือน lottodataBack/admin/index.php)
-        Route::get('lotto-data', [\App\Http\Controllers\Admin\LottoDataAdminController::class, 'index'])->name('lotto-data.index');
+        // Lotto Data Admin Interface (CRUD) - เปลี่ยน URI เป็น manage-lotto-data แต่ใช้ชื่อ route เดิมเพื่อไม่ให้กระทบจุดอื่น
+        Route::resource('manage-lotto-data', \App\Http\Controllers\Admin\LottoDataAdminController::class)->names('lotto-data')->parameters(['manage-lotto-data' => 'lottoData'])->except(['show']);
         
-        // Lotto Data API endpoints (เหมือนกับ lottodataBack/admin/fetch_lotto_data.php)
-        Route::post('lotto-data/fetch-all', [LottoDataController::class, 'fetchAll'])->name('lotto-data.fetch-all');
-        Route::post('lotto-data/fetch-single', [LottoDataController::class, 'fetchSingle'])->name('lotto-data.fetch-single');
+        // Lotto Details Admin Interface (CRUD)
+        Route::resource('manage-lotto-details', \App\Http\Controllers\Admin\LottoDetailsAdminController::class)->names('lotto-details-admin')->except(['show']);
         
-        // Lotto Details API endpoints (เหมือนกับ lottodataBack/admin/fetch_lotto_details.php)
+        // Lotto Details API endpoints
         Route::post('lotto-details/fetch-all-pending', [LottoDetailsController::class, 'fetchAllPending'])->name('lotto-details.fetch-all-pending');
-        // อนุญาตทั้ง GET/POST สำหรับ batch ให้เรียกจาก browser ได้ โดยไม่ error 405
         Route::match(['get', 'post'], 'lotto-details/fetch-batch', [LottoDetailsController::class, 'fetchBatch'])->name('lotto-details.fetch-batch');
         Route::post('lotto-details/fetch-single', [LottoDetailsController::class, 'fetchSingle'])->name('lotto-details.fetch-single');
+        Route::post('lotto-details/save-manual', [LottoDetailsController::class, 'saveManual'])->name('lotto-details.save-manual');
         
         // User & Permission management (เฉพาะ admin)
         Route::middleware(\App\Http\Middleware\EnsureUserIsAdmin::class)->group(function () {
@@ -98,27 +121,28 @@ Route::middleware('auth')->group(function () {
             Route::get('permissions', [\App\Http\Controllers\Backoffice\PermissionController::class, 'index'])->name('permissions.index');
             Route::put('permissions/{user}', [\App\Http\Controllers\Backoffice\PermissionController::class, 'update'])->name('permissions.update');
 
-            // แพลตฟอร์ม & สินค้าวัตถุมงคล (Affiliate)
+            // แพลตฟอร์ม & สินค้าวัตถุมงคล (Affiliate) & ตำราเบอร์มงคล
             Route::resource('platforms', \App\Http\Controllers\Backoffice\PlatformController::class);
             Route::resource('affiliate-products', \App\Http\Controllers\Backoffice\AffiliateProductController::class);
             Route::post('posts/upload-image', [\App\Http\Controllers\Backoffice\PostController::class, 'uploadImage'])->name('posts.upload-image');
+            Route::post('posts/{post}/toggle-publish', [\App\Http\Controllers\Backoffice\PostController::class, 'togglePublish'])->name('posts.toggle-publish');
             Route::resource('posts', \App\Http\Controllers\Backoffice\PostController::class);
+
+            // จัดการตำราเบอร์มงคล (00-99) แบบ Hybrid (Default + Database Override)
+            Route::get('phone-pairs', [\App\Http\Controllers\Backoffice\PhonePairAdminController::class, 'index'])->name('phone-pairs.index');
+            Route::put('phone-pairs/{pair}', [\App\Http\Controllers\Backoffice\PhonePairAdminController::class, 'update'])->name('phone-pairs.update');
+            Route::delete('phone-pairs/{pair}/reset', [\App\Http\Controllers\Backoffice\PhonePairAdminController::class, 'reset'])->name('phone-pairs.reset');
 
             // จัดการคำขอ VIP จากการโอนเงิน
             Route::get('vip-requests', [VipRequestAdminController::class, 'index'])->name('vip-requests.index');
             Route::get('vip-requests/{vipRequest}', [VipRequestAdminController::class, 'show'])->name('vip-requests.show');
             Route::post('vip-requests/{vipRequest}/approve', [VipRequestAdminController::class, 'approve'])->name('vip-requests.approve');
             Route::post('vip-requests/{vipRequest}/reject', [VipRequestAdminController::class, 'reject'])->name('vip-requests.reject');
-        });
 
-        // เจ้าของสำนักอัปเดตเลขของตัวเอง
-        Route::middleware(\App\Http\Middleware\EnsureUserIsSourceOwner::class)->group(function () {
-            Route::get('my-numbers', [MyNumbersController::class, 'index'])->name('my-numbers.index');
-            Route::get('my-numbers/create', [MyNumbersController::class, 'create'])->name('my-numbers.create');
-            Route::post('my-numbers', [MyNumbersController::class, 'store'])->name('my-numbers.store');
-            Route::get('my-numbers/{number}/edit', [MyNumbersController::class, 'edit'])->name('my-numbers.edit');
-            Route::put('my-numbers/{number}', [MyNumbersController::class, 'update'])->name('my-numbers.update');
-        });
+            // จัดการสมาชิกหน้าเว็บ (Customers)
+            Route::get('customers', [\App\Http\Controllers\Backoffice\CustomerAdminController::class, 'index'])->name('customers.index');
+            Route::post('customers/{customer}/grant-vip', [\App\Http\Controllers\Backoffice\CustomerAdminController::class, 'grantVip'])->name('customers.grant-vip');
+            Route::post('customers/{customer}/revoke-vip', [\App\Http\Controllers\Backoffice\CustomerAdminController::class, 'revokeVip'])->name('customers.revoke-vip');
         });
     });
 });

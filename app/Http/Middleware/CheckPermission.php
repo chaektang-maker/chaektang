@@ -16,10 +16,11 @@ class CheckPermission
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = $request->user('web');
 
-        if (!$user) {
-            abort(403, 'Unauthorized');
+        // อนุญาตเฉพาะพนักงาน (admin หรือ staff) ในตาราง users เท่านั้น ห้ามลูกค้าหรือบทบาทอื่นเข้าหลังบ้าน
+        if (!$user || (!$user->isAdmin() && !$user->isStaff())) {
+            abort(403, 'เฉพาะผู้ดูแลระบบและพนักงานเท่านั้นที่สามารถเข้าใช้งานระบบหลังบ้านได้');
         }
 
         // Admin เข้าถึงได้ทุกอย่าง
@@ -27,7 +28,7 @@ class CheckPermission
             return $next($request);
         }
 
-        // Dashboard เข้าถึงได้ทุกคนที่ login แล้ว
+        // Dashboard เข้าถึงได้เฉพาะพนักงาน (admin/staff) ที่ login แล้ว
         $routeName = Route::currentRouteName();
         if ($routeName === 'backoffice.dashboard') {
             return $next($request);
@@ -35,7 +36,7 @@ class CheckPermission
 
         // Staff ต้องเช็ค permission จาก route name
         if ($routeName && !$user->canAccessRoute($routeName)) {
-            abort(403, 'You do not have permission to access this page.');
+            abort(403, 'คุณไม่มีสิทธิ์เข้าถึงเมนูนี้ กรุณาติดต่อผู้ดูแลระบบ');
         }
 
         return $next($request);

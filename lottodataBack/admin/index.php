@@ -352,7 +352,7 @@ if ($conn) {
                     <div class="input-group">
                         <label for="page-number">หมายเลขหน้า (1-23):</label>
                         <select id="page-number">
-                            <?php for ($i = 23; $i >= 1; $i--): ?>
+                            <?php for ($i = 25; $i >= 1; $i--): ?>
                                 <option value="<?php echo $i; ?>">หน้า <?php echo $i; ?></option>
                             <?php endfor; ?>
                         </select>

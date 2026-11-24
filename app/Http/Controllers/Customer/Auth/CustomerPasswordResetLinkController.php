@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Customer\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -13,7 +15,7 @@ use Inertia\Response;
 class CustomerPasswordResetLinkController extends Controller
 {
     /**
-     * แสดงฟอร์มขอลิงก์รีเซ็ตรหัสผ่าน (ลูกค้า)
+     * แสดงฟอร์มขอลิงก์รีเซ็ตรหัสผ่าน (รองรับทั้งลูกค้าและผู้ใช้หลังบ้าน)
      */
     public function create(): Response
     {
@@ -31,7 +33,12 @@ class CustomerPasswordResetLinkController extends Controller
             'email' => 'required|email',
         ]);
 
-        $status = Password::broker('customers')->sendResetLink(
+        $email = $request->input('email');
+        $broker = Customer::where('email', $email)->exists()
+            ? 'customers'
+            : (User::where('email', $email)->exists() ? 'users' : 'customers');
+
+        $status = Password::broker($broker)->sendResetLink(
             $request->only('email')
         );
 

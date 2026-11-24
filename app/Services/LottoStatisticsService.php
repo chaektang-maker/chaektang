@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\LottoData;
 use App\Models\LottoPrize;
 use App\Models\LottoRunningNumber;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class LottoStatisticsService
@@ -24,11 +25,14 @@ class LottoStatisticsService
         $counts = [];
         foreach ($runningNumbers as $running) {
             if (is_array($running->numbers) && !empty($running->numbers)) {
-                $number = $running->numbers[0];
-                if (isset($counts[$number])) {
-                    $counts[$number]++;
-                } else {
-                    $counts[$number] = 1;
+                foreach ($running->numbers as $number) {
+                    if ($number !== null && $number !== '') {
+                        if (isset($counts[$number])) {
+                            $counts[$number]++;
+                        } else {
+                            $counts[$number] = 1;
+                        }
+                    }
                 }
             }
         }
@@ -59,11 +63,14 @@ class LottoStatisticsService
         $counts = [];
         foreach ($runningNumbers as $running) {
             if (is_array($running->numbers) && !empty($running->numbers)) {
-                $number = $running->numbers[0];
-                if (isset($counts[$number])) {
-                    $counts[$number]++;
-                } else {
-                    $counts[$number] = 1;
+                foreach ($running->numbers as $number) {
+                    if ($number !== null && $number !== '') {
+                        if (isset($counts[$number])) {
+                            $counts[$number]++;
+                        } else {
+                            $counts[$number] = 1;
+                        }
+                    }
                 }
             }
         }
@@ -264,18 +271,21 @@ class LottoStatisticsService
     {
         $totalLottos = LottoData::where('is_fetched', 1)->count();
         $totalPrizes = LottoPrize::where('prize_id', 'prizeFirst')->count();
+        $cacheKey = "lotto_all_stats:{$totalLottos}:{$totalPrizes}";
 
-        return [
-            'total_lottos' => $totalLottos,
-            'total_prizes' => $totalPrizes,
-            'top_last_two_digits' => $this->getTopLastTwoDigits(20),
-            'top_last_three_digits' => $this->getTopLastThreeDigits(20),
-            'top_front_three_digits' => $this->getTopFrontThreeDigits(20),
-            'top_first_prize_first_digits' => $this->getTopFirstPrizeFirstDigits(10),
-            'top_first_prize_last_digits' => $this->getTopFirstPrizeLastDigits(10),
-            'top_first_prize_last_two_digits' => $this->getTopFirstPrizeLastTwoDigits(20),
-            'top_first_prize_last_three_digits' => $this->getTopFirstPrizeLastThreeDigits(20),
-        ];
+        return Cache::remember($cacheKey, 3600, function () use ($totalLottos, $totalPrizes) {
+            return [
+                'total_lottos' => $totalLottos,
+                'total_prizes' => $totalPrizes,
+                'top_last_two_digits' => $this->getTopLastTwoDigits(20),
+                'top_last_three_digits' => $this->getTopLastThreeDigits(20),
+                'top_front_three_digits' => $this->getTopFrontThreeDigits(20),
+                'top_first_prize_first_digits' => $this->getTopFirstPrizeFirstDigits(10),
+                'top_first_prize_last_digits' => $this->getTopFirstPrizeLastDigits(10),
+                'top_first_prize_last_two_digits' => $this->getTopFirstPrizeLastTwoDigits(20),
+                'top_first_prize_last_three_digits' => $this->getTopFirstPrizeLastThreeDigits(20),
+            ];
+        });
     }
 
     /**
@@ -336,9 +346,11 @@ class LottoStatisticsService
         $counts = [];
         foreach ($runningNumbers as $running) {
             if (is_array($running->numbers)) {
-                $numbers = $type === 'front_three' ? $running->numbers : [$running->numbers[0] ?? null];
+                $numbers = in_array($type, ['front_three', 'last_three'], true)
+                    ? $running->numbers
+                    : [$running->numbers[0] ?? null];
                 foreach ($numbers as $number) {
-                    if ($number !== null) {
+                    if ($number !== null && $number !== '') {
                         if (isset($counts[$number])) {
                             $counts[$number]++;
                         } else {

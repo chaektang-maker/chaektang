@@ -3,17 +3,20 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\LotteryNumber;
 use App\Models\LottoData;
 use App\Models\LottoPrize;
 use App\Models\LottoRunningNumber;
 use App\Models\Platform;
+use App\Models\Post;
+use App\Models\Source;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // ดึงงวดล่าสุด (ไม่จำเป็นต้อง fetched แล้ว)
         $latestLotto = LottoData::query()
@@ -116,12 +119,99 @@ class HomeController extends Controller
             ->values()
             ->all();
 
+        // ดึงเลขเด็ดสำนักแนะนำ (Sponsored Sources) ของงวดล่าสุดที่มีการลงเลข
+        $latestNumberDrawDate = LotteryNumber::query()
+            ->whereHas('source', function ($q) {
+                $q->where('status', 'active')
+                    ->where('is_promoted', true)
+                    ->where(function ($sub) {
+                        $sub->whereNull('promoted_until')
+                            ->orWhereDate('promoted_until', '>=', now()->toDateString());
+                    });
+            })
+            ->max('draw_date');
+
+        $promotedNumbers = [];
+        if ($latestNumberDrawDate) {
+            $promotedCollection = LotteryNumber::query()
+                ->with('source')
+                ->join('sources', 'sources.id', '=', 'lottery_numbers.source_id')
+                ->where('lottery_numbers.draw_date', $latestNumberDrawDate)
+                ->where('sources.status', 'active')
+                ->whereNull('sources.deleted_at')
+                ->where('sources.is_promoted', true)
+                ->where(function ($q) {
+                    $q->whereNull('sources.promoted_until')
+                        ->orWhereDate('sources.promoted_until', '>=', now()->toDateString());
+                })
+                ->orderByDesc('sources.popularity_score')
+                ->orderByDesc('lottery_numbers.updated_at')
+                ->select('lottery_numbers.*')
+                ->limit(6)
+                ->get();
+
+            // นับยอดการมองเห็น (Impression) สำหรับสำนักสปอนเซอร์บนหน้าแรก (1 ครั้งต่อ Session)
+            $promotedSourceIds = $promotedCollection->pluck('source_id')->unique()->values()->all();
+            $viewedHomeSources = $request->session()->get('viewed_home_sources', []);
+            $newViewedIds = array_values(array_diff($promotedSourceIds, $viewedHomeSources));
+            if (!empty($newViewedIds)) {
+                Source::whereIn('id', $newViewedIds)->increment('view_count');
+                $request->session()->put('viewed_home_sources', array_values(array_unique(array_merge($viewedHomeSources, $newViewedIds))));
+            }
+
+            $promotedNumbers = $promotedCollection
+                ->map(fn ($n) => [
+                    'id' => $n->id,
+                    'draw_date' => $n->draw_date instanceof \DateTimeInterface
+                        ? $n->draw_date->format('Y-m-d')
+                        : (string) $n->draw_date,
+                    'two_digit' => $n->two_digit,
+                    'three_digit' => $n->three_digit,
+                    'running_numbers' => $n->running_numbers,
+                    'source' => [
+                        'id' => $n->source?->id,
+                        'name' => $n->source?->name,
+                        'description' => $n->source?->description,
+                        'view_count' => (int) ($n->source?->view_count ?? 0) + (in_array($n->source_id, $newViewedIds, true) ? 1 : 0),
+                    ],
+                ])
+                ->values()
+                ->all();
+        }
+
+        // ดึงบทความล่าสุด 3 บทความเพื่อแสดงบนหน้าแรก (ช่วยดัน SEO และยอดคนอ่าน)
+        $latestPosts = Post::query()
+            ->where('is_published', true)
+            ->where(function ($q) {
+                $q->whereNull('published_at')
+                    ->orWhere('published_at', '<=', now());
+            })
+            ->with('author:id,name')
+            ->orderByDesc('published_at')
+            ->orderByDesc('created_at')
+            ->limit(3)
+            ->get()
+            ->map(fn (Post $p) => [
+                'id' => $p->id,
+                'title' => $p->title,
+                'slug' => $p->slug,
+                'excerpt' => $p->excerpt,
+                'cover_image_url' => \App\Services\MediaStorageService::url($p->cover_image),
+                'author_name' => $p->author?->name ?? 'ทีมงานแจกตัง',
+                'published_at' => ($p->published_at ?? $p->created_at)?->format('d/m/Y'),
+                'view_count' => (int) ($p->view_count ?? 0),
+            ])
+            ->values()
+            ->all();
+
         return Inertia::render('Welcome', [
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
             'latestResult' => $latestResult,
             'availableDraws' => $availableDraws,
             'affiliateSections' => $affiliateSections,
+            'promotedNumbers' => $promotedNumbers,
+            'latestPosts' => $latestPosts,
         ]);
     }
 

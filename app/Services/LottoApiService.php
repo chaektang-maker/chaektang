@@ -54,25 +54,42 @@ class LottoApiService
     public function fetchLotteryDetail(string $lotteryId): ?array
     {
         try {
-            $url = self::BASE_URL . self::DETAIL_ENDPOINT . '/' . $lotteryId;
-            $response = Http::timeout(30)->get($url);
+            if (!preg_match('/^[0-9]{8}$/', $lotteryId)) {
+                Log::warning("Invalid lotteryId format for GLO fetch: {$lotteryId}");
+                return null;
+            }
+
+            $day = substr($lotteryId, 0, 2);
+            $month = substr($lotteryId, 2, 2);
+            $yearBE = (int)substr($lotteryId, 4, 4);
+            $yearAD = $yearBE - 543;
+
+            $payload = [
+                'date' => $day,
+                'month' => $month,
+                'year' => (string)$yearAD
+            ];
+
+            $response = Http::timeout(30)
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->post('https://www.glo.or.th/api/checking/getLotteryResult', $payload);
 
             if ($response->successful()) {
                 $data = $response->json();
                 
-                if (isset($data['status']) && $data['status'] === 'success' && isset($data['response'])) {
-                    return $data['response'];
+                if (isset($data['status']) && $data['status'] === true && isset($data['response'])) {
+                    return $this->parseGloResultToLegacyFormat($data['response'], $lotteryId);
                 }
             }
 
-            Log::warning("Failed to fetch lottery detail for ID {$lotteryId}", [
+            Log::warning("Failed to fetch lottery detail for ID {$lotteryId} from GLO API", [
                 'status' => $response->status(),
                 'body' => $response->body()
             ]);
 
             return null;
         } catch (\Exception $e) {
-            Log::error("Error fetching lottery detail for ID {$lotteryId}: " . $e->getMessage());
+            Log::error("Error fetching lottery detail for ID {$lotteryId} from GLO API: " . $e->getMessage());
             return null;
         }
     }
@@ -320,5 +337,100 @@ class LottoApiService
         }
 
         return $summary;
+    }
+
+    /**
+     * แปลงข้อมูลจาก GLO API ไปเป็นโครงสร้างรูปแบบเดิมเพื่อบันทึกลง Database
+     */
+    private function parseGloResultToLegacyFormat(array $gloResponse, string $lottoId): array
+    {
+        $result = $gloResponse['result'] ?? null;
+        if (!$result) {
+            return [];
+        }
+
+        $dateStr = $result['date'] ?? ''; // e.g. "2010-03-01"
+        $formattedDate = $this->formatToThaiDate($dateStr);
+
+        $gloPrizes = $result['data'] ?? [];
+        $prizes = [];
+        $runningNumbers = [];
+
+        // 1. แผนผังการแปลงรางวัล
+        $prizeMapping = [
+            'first' => ['id' => 'prizeFirst', 'name' => 'รางวัลที่ 1'],
+            'near1' => ['id' => 'prizeFirstNear', 'name' => 'รางวัลข้างเคียงรางวัลที่ 1'],
+            'second' => ['id' => 'prizeSecond', 'name' => 'รางวัลที่ 2'],
+            'third' => ['id' => 'prizeThird', 'name' => 'รางวัลที่ 3'],
+            'fourth' => ['id' => 'prizeForth', 'name' => 'รางวัลที่ 4'],
+            'fifth' => ['id' => 'prizeFifth', 'name' => 'รางวัลที่ 5'],
+        ];
+
+        foreach ($prizeMapping as $gloKey => $meta) {
+            if (isset($gloPrizes[$gloKey])) {
+                $item = $gloPrizes[$gloKey];
+                $prizes[] = [
+                    'id' => $meta['id'],
+                    'name' => $meta['name'],
+                    'reward' => (string)intval($item['price'] ?? 0),
+                    'amount' => count($item['number'] ?? []),
+                    'number' => array_column($item['number'] ?? [], 'value')
+                ];
+            }
+        }
+
+        // 2. แผนผังการแปลงเลขวิ่ง
+        $runningMapping = [
+            'last3f' => ['id' => 'runningNumberFrontThree', 'name' => 'รางวัลเลขหน้า 3 ตัว'],
+            'last3b' => ['id' => 'runningNumberBackThree', 'name' => 'รางวัลเลขท้าย 3 ตัว'],
+            'last2' => ['id' => 'runningNumberBackTwo', 'name' => 'รางวัลเลขท้าย 2 ตัว'],
+        ];
+
+        foreach ($runningMapping as $gloKey => $meta) {
+            if (isset($gloPrizes[$gloKey])) {
+                $item = $gloPrizes[$gloKey];
+                if (!empty($item['number'])) {
+                    $runningNumbers[] = [
+                        'id' => $meta['id'],
+                        'name' => $meta['name'],
+                        'reward' => (string)intval($item['price'] ?? 0),
+                        'amount' => count($item['number'] ?? []),
+                        'number' => array_column($item['number'] ?? [], 'value')
+                    ];
+                }
+            }
+        }
+
+        return [
+            'date' => $formattedDate,
+            'endpoint' => 'https://www.glo.or.th/api/checking/getLotteryResult',
+            'prizes' => $prizes,
+            'runningNumbers' => $runningNumbers
+        ];
+    }
+
+    /**
+     * ช่วยแปลงวันที่ YYYY-MM-DD เป็นไทยเท็กซ์ เช่น "1 มีนาคม 2553"
+     */
+    private function formatToThaiDate(string $dateStr): string
+    {
+        if (empty($dateStr)) return '';
+        try {
+            $time = strtotime($dateStr);
+            $day = (int)date('d', $time);
+            $month = (int)date('m', $time);
+            $yearBE = (int)date('Y', $time) + 543;
+            
+            $thaiMonths = [
+                1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม',
+                4 => 'เมษายน', 5 => 'พฤษภาคม', 6 => 'มิถุนายน',
+                7 => 'กรกฎาคม', 8 => 'สิงหาคม', 9 => 'กันยายน',
+                10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม',
+            ];
+            
+            return $day . ' ' . ($thaiMonths[$month] ?? '') . ' ' . $yearBE;
+        } catch (\Exception $e) {
+            return $dateStr;
+        }
     }
 }

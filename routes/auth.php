@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // ========== ลูกค้า (customers table, guard customer) ==========
-Route::middleware('guest')->group(function () {
+Route::middleware('guest:customer')->group(function () {
     Route::get('register', [CustomerRegisteredUserController::class, 'create'])->name('register');
     Route::post('register', [CustomerRegisteredUserController::class, 'store']);
 
@@ -31,11 +31,11 @@ Route::post('logout', function (\Illuminate\Http\Request $request) {
     }
     $request->session()->invalidate();
     $request->session()->regenerateToken();
-    return redirect('/');
+    return redirect()->route('home');
 })->name('logout')->middleware('auth:customer,web');
 
 // ========== Backoffice (users table, guard web) ==========
-Route::middleware('guest')->group(function () {
+Route::middleware('guest:web')->group(function () {
     Route::get('backoffice/login', [BackofficeAuthenticatedSessionController::class, 'create'])->name('backoffice.login');
     Route::post('backoffice/login', [BackofficeAuthenticatedSessionController::class, 'store']);
 });

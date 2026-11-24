@@ -2,14 +2,17 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
+import ShareButtons from '@/Components/ShareButtons.vue';
 import axios from 'axios';
 
 const props = defineProps({
     canLogin: {
         type: Boolean,
+        default: true,
     },
     canRegister: {
         type: Boolean,
+        default: true,
     },
     latestResult: {
         type: Object,
@@ -23,7 +26,20 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    promotedNumbers: {
+        type: Array,
+        default: () => [],
+    },
+    latestPosts: {
+        type: Array,
+        default: () => [],
+    },
 });
+
+const fmtRunning = (arr) => {
+    if (!arr || !Array.isArray(arr) || arr.length === 0) return '-';
+    return arr.join(', ');
+};
 
 const scrollY = ref(0);
 const selectedLottoId = ref(props.latestResult?.lotto_id || '');
@@ -51,7 +67,7 @@ const checkLottery = async () => {
     checkResult.value = null;
 
     try {
-        const response = await axios.post('/check-lottery', {
+        const response = await axios.post(route('check-lottery'), {
             lotto_id: selectedLottoId.value,
             number: numberToCheck.value,
         });
@@ -91,7 +107,7 @@ const formatNumber = (num) => {
     <Head>
         <title>เลขเด็ด เลขเด็ดงวดนี้ - แจกตัง | ตรวจหวย ตรวจผลสลากกินแบ่งรัฐบาล</title>
         <meta name="description" content="เลขเด็ด เลขเด็ดงวดนี้ อัปเดตผลหวยล่าสุด ตรวจหวยออนไลน์ ตรวจผลสลากกินแบ่งรัฐบาล หวยเลขเด็ด สินค้าสายมู สินค้ามงคล ของนำโชค สถิติหวยย้อนหลัง ตารางคะแนนความแม่นยำ" />
-        <meta name="keywords" content="เลขเด็ด, เลขเด็ดงวดนี้, หวยเลขเด็ด, สินค้าสายมู, สินค้ามงคล, ของนำโชค, ตรวจหวย, ผลหวย, สลากกินแบ่ง, สถิติหวย, ตารางคะแนน, หวยออนไลน์, แจกตัง" />
+        <meta name="keywords" content="เลขเด็ด, เลขเด็ดงวดนี้, หวยเลขเด็ด, สินค้าสายมู, สินค้ามงคล, ของนำโชค, ตรวจหวย, ผลหวย, สลากกินแบ่งรัฐบาล, สถิติหวย, ตารางคะแนน, ตรวจหวยออนไลน์, แจกตัง" />
         <meta property="og:title" content="เลขเด็ด เลขเด็ดงวดนี้ - แจกตัง | ตรวจหวย ตรวจผลหวย" />
         <meta property="og:description" content="เลขเด็ด เลขเด็ดงวดนี้ ตรวจหวยออนไลน์ สินค้าสายมู สินค้ามงคล ของนำโชค หวยเลขเด็ด สถิติหวยย้อนหลัง" />
         <meta property="og:type" content="website" />
@@ -116,8 +132,12 @@ const formatNumber = (num) => {
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- ผลหวยล่าสุด -->
                 <div class="bg-white rounded-2xl shadow-2xl p-6 border-4 border-yellow-400">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="text-2xl">🏆</span>
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            </svg>
+                        </span>
                         <h3 class="text-xl font-bold text-gray-900">ผลหวยล่าสุด</h3>
                     </div>
                     
@@ -161,6 +181,16 @@ const formatNumber = (num) => {
                                 {{ latestResult.last_three_digit?.join(' ') || '---' }}
                             </div>
                         </div>
+
+                        <!-- ปุ่มแชร์ผลหวยงวดล่าสุด -->
+                        <div class="pt-3 border-t border-gray-100 flex items-center justify-between flex-wrap gap-2">
+                            <span class="text-xs font-semibold text-gray-600">แชร์ผลหวยงวดนี้:</span>
+                            <ShareButtons
+                                compact
+                                :title="`ผลสลากกินแบ่งรัฐบาล ${latestResult.date_text}`"
+                                :text="`🏆 ผลหวยงวด ${latestResult.date_text} | รางวัลที่ 1: ${latestResult.first_prize || 'xxxxxx'} | เลขท้าย 2 ตัว: ${latestResult.last_two_digit || 'xx'} | ตรวจหวยและดูเลขเด็ดฟรีที่เว็บแจกตัง`"
+                            />
+                        </div>
                     </div>
                     <div v-else class="text-center text-gray-500 py-8">
                         ไม่พบข้อมูลผลหวย
@@ -169,8 +199,12 @@ const formatNumber = (num) => {
 
                 <!-- ฟอร์มตรวจหวย -->
                 <div class="bg-white rounded-2xl shadow-2xl p-6">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="text-2xl">🔍</span>
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <span class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </span>
                         <h3 class="text-xl font-bold text-gray-900">ตรวจสลากของคุณ</h3>
                     </div>
 
@@ -216,7 +250,12 @@ const formatNumber = (num) => {
                                 </svg>
                                 กำลังตรวจสอบ...
                             </span>
-                            <span v-else>🎰 ตรวจหวย</span>
+                            <span v-else class="inline-flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>ตรวจหวย</span>
+                            </span>
                         </button>
 
                         <!-- Error Message -->
@@ -227,7 +266,11 @@ const formatNumber = (num) => {
                         <!-- ผลการตรวจ -->
                         <div v-if="checkResult" class="mt-4">
                             <div v-if="checkResult.is_winner" class="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl p-6 text-center">
-                                <div class="text-5xl mb-2">🎉</div>
+                                <div class="w-14 h-14 rounded-full bg-white/90 text-amber-600 flex items-center justify-center mx-auto mb-3 shadow">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
                                 <div class="text-2xl font-bold text-yellow-900 mb-2">ยินดีด้วย! คุณถูกรางวัล!</div>
                                 <div class="text-lg text-yellow-800 mb-4">หมายเลข {{ checkResult.number }} งวด {{ checkResult.draw_date }}</div>
                                 
@@ -245,10 +288,100 @@ const formatNumber = (num) => {
                             </div>
 
                             <div v-else class="bg-gray-100 rounded-xl p-6 text-center">
-                                <div class="text-5xl mb-2">😔</div>
+                                <div class="w-12 h-12 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center mx-auto mb-3">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
                                 <div class="text-xl font-bold text-gray-700 mb-2">ไม่ถูกรางวัล</div>
                                 <div class="text-gray-500">หมายเลข {{ checkResult.number }} งวด {{ checkResult.draw_date }}</div>
                                 <div class="text-sm text-gray-400 mt-2">ขอให้โชคดีในงวดหน้านะครับ!</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- เลขเด็ดสำนักแนะนำประจำงวดนี้ (Sponsored Sources) -->
+    <section v-if="promotedNumbers.length" class="py-12 bg-gradient-to-b from-amber-50 to-white border-t border-amber-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-gray-900 shadow-sm mb-2">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                        <span>สำนักแนะนำพิเศษ</span>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900">
+                        เลขเด็ดสำนักแนะนำประจำงวดนี้
+                    </h2>
+                    <p class="text-sm text-gray-600 mt-1">
+                        คัดสรรแนวทางเลขเด็ดจากสำนักดัง เปิดให้ดูครบทั้งเลข 2 ตัว 3 ตัว และเลขวิ่ง
+                    </p>
+                </div>
+                <Link
+                    :href="route('lucky-numbers.index')"
+                    class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold shadow hover:bg-red-700 transition-colors"
+                >
+                    ดูเลขเด็ดทุกสำนัก →
+                </Link>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    v-for="item in promotedNumbers"
+                    :key="item.id"
+                    class="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-2xl shadow-lg p-6 border-4 border-yellow-400 ring-2 ring-yellow-300/60 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                >
+                    <div class="flex items-start justify-between gap-2 mb-3">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <span class="text-xs font-medium text-gray-600">สำนัก</span>
+                                <span class="inline-flex items-center gap-1 rounded-full bg-yellow-400 px-2.5 py-0.5 text-xs font-bold text-gray-900 shadow-sm">
+                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                    </svg>
+                                    <span>สำนักแนะนำ</span>
+                                </span>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900">{{ item.source?.name }}</h3>
+                            <p
+                                v-if="item.source?.description"
+                                class="mt-1 text-xs text-gray-700 bg-white/70 rounded-lg px-2.5 py-1.5 border border-yellow-200 line-clamp-2"
+                                :title="item.source.description"
+                            >
+                                {{ item.source.description }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="text-xs font-medium text-gray-600 mb-3 pb-3 border-b border-yellow-200 flex items-center justify-between gap-2">
+                        <span>งวดวันที่ {{ formatThaiDate(item.draw_date) }}</span>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 text-gray-700 font-semibold border border-yellow-200">
+                            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>{{ formatNumber(item.source?.view_count || 0) }} ครั้ง</span>
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="rounded-xl bg-white/90 p-3 border border-yellow-200 shadow-sm text-center">
+                            <div class="text-xs font-medium text-gray-600 mb-1">2 ตัว</div>
+                            <div class="text-2xl font-bold text-red-600">{{ item.two_digit || '-' }}</div>
+                        </div>
+                        <div class="rounded-xl bg-white/90 p-3 border border-yellow-200 shadow-sm text-center">
+                            <div class="text-xs font-medium text-gray-600 mb-1">3 ตัว</div>
+                            <div class="text-2xl font-bold text-red-600">{{ item.three_digit || '-' }}</div>
+                        </div>
+                        <div class="rounded-xl bg-white/90 p-3 border border-yellow-200 shadow-sm text-center">
+                            <div class="text-xs font-medium text-gray-600 mb-1">วิ่ง</div>
+                            <div class="text-sm font-bold text-red-600 truncate" :title="fmtRunning(item.running_numbers)">
+                                {{ fmtRunning(item.running_numbers) }}
                             </div>
                         </div>
                     </div>
@@ -323,6 +456,83 @@ const formatNumber = (num) => {
                         </span>
                     </div>
                 </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- บทความหวย & คลังความรู้สายมู (SEO Articles Section บนหน้าแรก) -->
+    <section v-if="latestPosts.length" class="py-12 bg-gray-50 border-t border-gray-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 rounded-full bg-red-100 text-red-700 px-3 py-1 text-xs font-bold mb-2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                        </svg>
+                        <span>บทความ & เคล็ดลับสายมู</span>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900">
+                        บทความหวย & วิเคราะห์สถิติน่ารู้
+                    </h2>
+                    <p class="text-sm text-gray-600 mt-1">
+                        อัปเดตเรื่องราวสถิติหวย ตำราเลขมงคล และแนวทางเสริมโชคลาภ
+                    </p>
+                </div>
+                <Link
+                    :href="route('blog.index')"
+                    class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-white border-2 border-red-600 text-red-600 text-sm font-bold hover:bg-red-50 transition-colors"
+                >
+                    อ่านบทความทั้งหมด →
+                </Link>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Link
+                    v-for="post in latestPosts"
+                    :key="post.id"
+                    :href="route('blog.show', post.slug)"
+                    class="group bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-red-200 transition-all duration-300 flex flex-col justify-between"
+                >
+                    <div>
+                        <div class="aspect-video bg-gray-100 overflow-hidden relative">
+                            <img
+                                v-if="post.cover_image_url"
+                                :src="post.cover_image_url"
+                                :alt="post.title"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div
+                                v-else
+                                class="w-full h-full bg-gradient-to-br from-red-50 to-amber-50 flex items-center justify-center text-red-400"
+                            >
+                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <span class="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1 rounded-full bg-black/70 text-white px-2.5 py-0.5 text-[11px] font-semibold">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <span>{{ formatNumber(post.view_count || 0) }}</span>
+                            </span>
+                        </div>
+                        <div class="p-5">
+                            <div class="text-xs text-gray-400 mb-1.5">
+                                {{ post.published_at }} · {{ post.author_name }}
+                            </div>
+                            <h3 class="font-bold text-gray-900 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                {{ post.title }}
+                            </h3>
+                            <p v-if="post.excerpt" class="text-sm text-gray-500 mt-2 line-clamp-2">
+                                {{ post.excerpt }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="px-5 pb-4 pt-3 border-t border-gray-100 text-right">
+                        <span class="text-xs font-bold text-red-600 group-hover:underline">อ่านต่อ →</span>
+                    </div>
+                </Link>
             </div>
         </div>
     </section>

@@ -125,6 +125,23 @@ class User extends Authenticatable
             return true;
         }
 
+        // อนุญาตให้ staff ที่มีสิทธิ์ manage-lotto-details เรียก API ดึงรายละเอียดหวย (backoffice.lotto-details.*) ได้ด้วย
+        if (str_starts_with($routeName, 'backoffice.lotto-details.')) {
+            if ($this->hasPermission('manage-lotto-details') || $this->hasPermission('manage-lotto-data')) {
+                return true;
+            }
+        }
+
+        if ($routeName === 'backoffice.results.sync') {
+            if (
+                $this->hasPermission('manage-results') ||
+                $this->hasPermission('manage-lotto-details') ||
+                $this->hasPermission('manage-lotto-data')
+            ) {
+                return true;
+            }
+        }
+
         // Staff ต้องเช็คจาก permissions ที่มี route_name ตรงกัน
         // เช็คทั้ง exact match และ wildcard match (เช่น backoffice.sources.*)
         return $this->permissions()

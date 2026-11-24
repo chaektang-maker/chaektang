@@ -44,8 +44,9 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            $message = trans('auth.failed');
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => $message === 'auth.failed' ? 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' : $message,
             ]);
         }
 

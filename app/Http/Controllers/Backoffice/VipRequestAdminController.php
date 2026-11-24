@@ -10,16 +10,50 @@ use Inertia\Inertia;
 
 class VipRequestAdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $requests = VipRequest::query()
-            ->with(['customer', 'approver'])
+        $status = $request->string('status')->toString();
+        $search = $request->string('q')->toString();
+
+        $query = VipRequest::query()
+            ->with(['customer', 'approver']);
+
+        if (in_array($status, ['pending', 'approved', 'rejected'], true)) {
+            $query->where('status', $status);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('bank_account_name', 'like', "%{$search}%")
+                    ->orWhere('bank_account_number', 'like', "%{$search}%")
+                    ->orWhere('note', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $requests = $query
             ->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
+
+        $stats = [
+            'total' => VipRequest::count(),
+            'pending' => VipRequest::where('status', 'pending')->count(),
+            'approved' => VipRequest::where('status', 'approved')->count(),
+            'rejected' => VipRequest::where('status', 'rejected')->count(),
+        ];
 
         return Inertia::render('Admin/VipRequests/Index', [
             'requests' => $requests,
+            'filters' => [
+                'status' => $status,
+                'q' => $search,
+            ],
+            'stats' => $stats,
         ]);
     }
 
@@ -27,10 +61,30 @@ class VipRequestAdminController extends Controller
     {
         $vipRequest->load(['customer', 'approver']);
 
+        $amount = (float) ($vipRequest->amount ?? 0);
+        if ($amount >= 450) {
+            $recommendedDays = 90;
+            $packageLabel = 'แพ็กเกจ 3 เดือน (90 วัน)';
+        } elseif ($amount >= 179) {
+            $recommendedDays = 30;
+            $packageLabel = 'แพ็กเกจรายเดือน (30 วัน)';
+        } else {
+            $recommendedDays = 15;
+            $packageLabel = 'แพ็กเกจรายงวด (15 วัน)';
+        }
+
+        $activeSub = $vipRequest->customer?->subscriptions()
+            ->where('status', 'active')
+            ->where('ends_at', '>', now())
+            ->orderByDesc('ends_at')
+            ->first();
+
         $requestData = $vipRequest->toArray();
-        $requestData['slip_url'] = $vipRequest->slip_path
-            ? asset('storage/' . $vipRequest->slip_path)
-            : null;
+        $requestData['slip_url'] = \App\Services\MediaStorageService::url($vipRequest->slip_path);
+        $requestData['recommended_days'] = $recommendedDays;
+        $requestData['package_label'] = $packageLabel;
+        $requestData['customer_is_vip'] = $activeSub !== null;
+        $requestData['customer_vip_ends_at'] = $activeSub?->ends_at?->toIso8601String();
 
         return Inertia::render('Admin/VipRequests/Show', [
             'request' => $requestData,
@@ -55,12 +109,14 @@ class VipRequestAdminController extends Controller
         $currentSub = $customer->subscriptions()
             ->where('status', 'active')
             ->where('ends_at', '>', $now)
+            ->orderByDesc('ends_at')
             ->first();
 
         if ($currentSub) {
             $endsAt = $currentSub->ends_at->copy()->addDays($data['days']);
             $currentSub->update([
                 'ends_at' => $endsAt,
+                'amount' => (float) $currentSub->amount + (float) ($vipRequest->amount ?? 0),
             ]);
         } else {
             Subscription::create([
@@ -82,7 +138,7 @@ class VipRequestAdminController extends Controller
         ]);
 
         return redirect()->route('backoffice.vip-requests.index')
-            ->with('success', 'อนุมัติ VIP สำเร็จ');
+            ->with('success', "อนุมัติ VIP ให้ {$customer->name} จำนวน {$data['days']} วัน สำเร็จ");
     }
 
     public function reject(Request $request, VipRequest $vipRequest)
@@ -101,4 +157,3 @@ class VipRequestAdminController extends Controller
             ->with('success', 'ปฏิเสธคำขอ VIP เรียบร้อยแล้ว');
     }
 }
-

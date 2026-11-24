@@ -149,15 +149,17 @@ const topScores = computed(() => {
                         <!-- Chart -->
                         <div v-if="histories && histories.length > 0">
                             <h3 class="text-base font-semibold text-gray-900 mb-3">กราฟความแม่นยำย้อนหลัง (10 งวดล่าสุด) — {{ typeLabels[type] }}</h3>
-                            <div class="h-48 flex items-end gap-2">
-                                <div v-for="(item, index) in histories" :key="index" class="flex-1 flex flex-col items-center">
-                                    <div class="w-full bg-gray-200 rounded-t relative" :style="{ height: `${item.percentage}%` }">
-                                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-600 whitespace-nowrap">
-                                            {{ item.percentage }}%
+                            <div class="overflow-x-auto pt-8 pb-2">
+                                <div class="h-48 min-w-[480px] flex items-end gap-2">
+                                    <div v-for="(item, index) in histories" :key="index" class="flex-1 flex flex-col items-center">
+                                        <div class="w-full bg-red-200 rounded-t relative" :style="{ height: `${Math.max(item.percentage, 4)}%` }">
+                                            <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-gray-700 whitespace-nowrap">
+                                                {{ item.percentage }}%
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="text-xs text-gray-500 mt-2 text-center" style="writing-mode: vertical-rl; text-orientation: mixed;">
-                                        {{ item.draw_date }}
+                                        <div class="text-xs text-gray-500 mt-2 text-center" style="writing-mode: vertical-rl; text-orientation: mixed;">
+                                            {{ item.draw_date }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

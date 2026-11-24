@@ -57,7 +57,7 @@ class LotteryResultController extends Controller
 
         // คำนวณคะแนนอัตโนมัติ
         try {
-            app(AccuracyCalculationService::class)->calculateForDraw($result->draw_date);
+            app(AccuracyCalculationService::class)->calculateForDraw($result->draw_date, true);
         } catch (\Exception $e) {
             // ถ้าคำนวณไม่สำเร็จ ให้บันทึกผลหวยไว้ก่อน (อาจจะยังไม่มีเลขจากสำนัก)
         }
@@ -103,13 +103,11 @@ class LotteryResultController extends Controller
             'is_calculated' => (bool)($data['is_calculated'] ?? false),
         ]);
 
-        // ถ้ายังไม่ได้คำนวณ หรือแก้ไขผลหวย ให้คำนวณใหม่
-        if (!$result->is_calculated || !$oldCalculated) {
-            try {
-                app(AccuracyCalculationService::class)->calculateForDraw($result->draw_date);
-            } catch (\Exception $e) {
-                // ถ้าคำนวณไม่สำเร็จ ให้บันทึกผลหวยไว้ก่อน
-            }
+        // คำนวณความแม่นยำใหม่เสมอเมื่อมีการแก้ไขผลหวย
+        try {
+            app(AccuracyCalculationService::class)->calculateForDraw($result->draw_date, true);
+        } catch (\Exception $e) {
+            // ถ้าคำนวณไม่สำเร็จ ให้บันทึกผลหวยไว้ก่อน
         }
 
         return redirect()->route('backoffice.results.index')->with('success', 'บันทึกสำเร็จ');
@@ -165,13 +163,30 @@ class LotteryResultController extends Controller
             );
 
             return redirect()
-                ->route('admin.results.index')
+                ->route('backoffice.results.index')
                 ->with('success', $message)
                 ->with('import_summary', $summary);
         } catch (\Exception $e) {
             return back()->withErrors([
                 'error' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * ซิงค์ผลหวยจาก lotto_details ลง lottery_results และคำนวณความแม่นยำทุกงวด
+     */
+    public function syncFromDetails(AccuracyCalculationService $accuracyService)
+    {
+        try {
+            $summary = $accuracyService->syncAllFromLottoDetails();
+
+            return redirect()->back()->with(
+                'success',
+                "ซิงค์ผลหวยสำเร็จ {$summary['synced_count']} งวด และคำนวณคะแนนความแม่นยำสำนักสำเร็จ {$summary['calculated_count']} งวด"
+            );
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาดในการซิงค์และคำนวณ: ' . $e->getMessage());
         }
     }
 }

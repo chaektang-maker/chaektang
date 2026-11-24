@@ -15,40 +15,67 @@ class ResultsController extends Controller
     {
         $lottoId = $request->string('lotto_id')->toString();
 
-        // ดึงรายการงวดทั้งหมด
+        // ดึงรายการงวดทั้งหมด (รวมงวดปัจจุบันที่อาจยังไม่ออกผล เพื่อให้เลือกดูสถานะได้)
         $availableDraws = LottoData::query()
-            ->where('is_fetched', 1)
             ->whereNotNull('draw_date')
             ->orderByDesc('draw_date')
+            ->limit(60)
             ->get()
             ->map(function ($item) {
                 return [
                     'value' => $item->lotto_id,
-                    'label' => $this->formatDateText($item->date_text),
+                    'label' => $this->formatDateText($item->date_text ?? ''),
                     'draw_date' => $item->draw_date?->format('Y-m-d'),
+                    'is_fetched' => (bool) $item->is_fetched,
                 ];
             })
             ->toArray();
 
-        // ถ้าไม่ได้เลือกงวด ให้ใช้งวดล่าสุด
+        // ถ้าไม่ได้เลือกงวด ให้ใช้งวดล่าสุดที่มีผลรางวัลแล้ว (หรือถ้าไม่มี ให้ใช้งวดบนสุด)
         if (!$lottoId && count($availableDraws) > 0) {
-            $lottoId = $availableDraws[0]['value'];
+            $firstFetched = collect($availableDraws)->firstWhere('is_fetched', true);
+            $lottoId = $firstFetched['value'] ?? $availableDraws[0]['value'];
         }
 
         // ดึงข้อมูลผลรางวัลของงวดที่เลือก
         $result = null;
         if ($lottoId) {
             $lotto = LottoData::where('lotto_id', $lottoId)->first();
-            if ($lotto) {
-                $prizes = LottoPrize::where('lotto_id', $lottoId)->get();
-                $runningNumbers = LottoRunningNumber::where('lotto_id', $lottoId)->get();
+            $prizes = $lotto ? LottoPrize::where('lotto_id', $lottoId)->get() : collect();
+            $runningNumbers = $lotto ? LottoRunningNumber::where('lotto_id', $lottoId)->get() : collect();
+
+            $formattedPrizes = $this->formatPrizes($prizes);
+            $formattedRunning = $this->formatRunningNumbers($runningNumbers);
+            $hasPrizeData = !empty($formattedPrizes) || !empty($formattedRunning);
+
+            // หาวันที่ของงวด (จากฐานข้อมูล หรือแปลงจากรหัสงวด DDMMYYYY พ.ศ.)
+            $drawDateObj = $lotto?->draw_date ? \Carbon\Carbon::parse($lotto->draw_date) : $this->parseLottoIdToDate($lottoId);
+
+            if ($lotto || $drawDateObj) {
+                $status = 'ready';
+                $daysUntilDraw = 0;
+
+                if (!$hasPrizeData) {
+                    if ($drawDateObj && $drawDateObj->isToday()) {
+                        $status = 'drawing_today';
+                    } elseif ($drawDateObj && $drawDateObj->copy()->startOfDay()->isFuture()) {
+                        $status = 'upcoming';
+                        $daysUntilDraw = (int) now()->startOfDay()->diffInDays($drawDateObj->copy()->startOfDay());
+                    } else {
+                        $status = 'pending_update';
+                    }
+                }
 
                 $result = [
-                    'lotto_id' => $lotto->lotto_id,
-                    'draw_date' => $lotto->draw_date?->format('Y-m-d'),
-                    'date_text' => $this->formatDateText($lotto->date_text),
-                    'prizes' => $this->formatPrizes($prizes),
-                    'running_numbers' => $this->formatRunningNumbers($runningNumbers),
+                    'lotto_id' => $lottoId,
+                    'draw_date' => $drawDateObj?->format('Y-m-d'),
+                    'date_text' => $lotto?->date_text
+                        ? $this->formatDateText($lotto->date_text)
+                        : ($drawDateObj ? $this->formatCarbonThaiDate($drawDateObj) : $lottoId),
+                    'status' => $status,
+                    'days_until_draw' => $daysUntilDraw,
+                    'prizes' => $formattedPrizes,
+                    'running_numbers' => $formattedRunning,
                 ];
             }
         }
@@ -185,5 +212,39 @@ class ResultsController extends Controller
         $dateText = str_replace('ประจำวันที่', '', $dateText);
         $dateText = str_replace('-', ' ', $dateText);
         return trim($dateText);
+    }
+
+    /**
+     * แปลงรหัสงวด DDMMYYYY (พ.ศ.) เป็น Carbon Date
+     */
+    private function parseLottoIdToDate(string $lottoId): ?\Carbon\Carbon
+    {
+        if (!preg_match('/^(\d{2})(\d{2})(\d{4})$/', $lottoId, $m)) {
+            return null;
+        }
+
+        $day = (int) $m[1];
+        $month = (int) $m[2];
+        $year = (int) $m[3];
+        if ($year > 2400) {
+            $year -= 543;
+        }
+
+        if (!checkdate($month, $day, $year)) {
+            return null;
+        }
+
+        return \Carbon\Carbon::createFromDate($year, $month, $day)->startOfDay();
+    }
+
+    private function formatCarbonThaiDate(\Carbon\Carbon $date): string
+    {
+        $thaiMonths = [
+            1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
+            5 => 'พฤษภาคม', 6 => 'มิถุนายน', 7 => 'กรกฎาคม', 8 => 'สิงหาคม',
+            9 => 'กันยายน', 10 => 'ตุลาคม', 11 => 'พฤศจิกายน', 12 => 'ธันวาคม',
+        ];
+
+        return $date->day . ' ' . ($thaiMonths[$date->month] ?? '') . ' ' . ($date->year + 543);
     }
 }

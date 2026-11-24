@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LotteryNumber;
 use App\Models\LottoData;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class MyNumbersController extends Controller
@@ -68,10 +69,17 @@ class MyNumbersController extends Controller
         $user = $request->user();
 
         $data = $request->validate([
-            'draw_date' => ['required', 'date', 'exists:lotto_data,draw_date'],
+            'draw_date' => [
+                'required',
+                'date',
+                'exists:lotto_data,draw_date',
+                Rule::unique('lottery_numbers', 'draw_date')->where('source_id', $user->source_id),
+            ],
             'two_digit' => ['nullable', 'string', 'max:10'],
             'three_digit' => ['nullable', 'string', 'max:10'],
             'running_numbers' => ['nullable', 'string'],
+        ], [
+            'draw_date.unique' => 'คุณได้บันทึกเลขเด็ดของงวดนี้ไปแล้ว กรุณาใช้เมนูแก้ไขแทน',
         ]);
 
         $running = null;
@@ -90,6 +98,13 @@ class MyNumbersController extends Controller
             'three_digit' => $data['three_digit'] ?? null,
             'running_numbers' => $running,
         ]);
+
+        try {
+            if (\App\Models\LotteryResult::where('draw_date', $data['draw_date'])->exists()) {
+                app(\App\Services\AccuracyCalculationService::class)->calculateForDraw($data['draw_date'], true);
+            }
+        } catch (\Exception $e) {
+        }
 
         return redirect()->route('backoffice.my-numbers.index')
             ->with('success', 'บันทึกเลขของสำนักสำเร็จ');
@@ -128,10 +143,19 @@ class MyNumbersController extends Controller
         }
 
         $data = $request->validate([
-            'draw_date' => ['required', 'date', 'exists:lotto_data,draw_date'],
+            'draw_date' => [
+                'required',
+                'date',
+                'exists:lotto_data,draw_date',
+                Rule::unique('lottery_numbers', 'draw_date')
+                    ->where('source_id', $user->source_id)
+                    ->ignore($number->id),
+            ],
             'two_digit' => ['nullable', 'string', 'max:10'],
             'three_digit' => ['nullable', 'string', 'max:10'],
             'running_numbers' => ['nullable', 'string'],
+        ], [
+            'draw_date.unique' => 'คุณได้บันทึกเลขเด็ดของงวดนี้ไปแล้ว กรุณาใช้เมนูแก้ไขแทน',
         ]);
 
         $running = null;
@@ -149,6 +173,13 @@ class MyNumbersController extends Controller
             'three_digit' => $data['three_digit'] ?? null,
             'running_numbers' => $running,
         ]);
+
+        try {
+            if (\App\Models\LotteryResult::where('draw_date', $data['draw_date'])->exists()) {
+                app(\App\Services\AccuracyCalculationService::class)->calculateForDraw($data['draw_date'], true);
+            }
+        } catch (\Exception $e) {
+        }
 
         return redirect()->route('backoffice.my-numbers.index')
             ->with('success', 'บันทึกเลขของสำนักสำเร็จ');

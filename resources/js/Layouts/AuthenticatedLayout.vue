@@ -32,7 +32,7 @@ const showingNavigationDropdown = ref(false);
 
                             <!-- Navigation Links -->
                             <div
-                                class="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-x-1 sm:gap-y-0 sm:ms-6"
+                                class="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-1 sm:ms-6"
                             >
                                 <NavLink
                                     :href="route('backoffice.dashboard')"
@@ -40,6 +40,7 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Dashboard
                                 </NavLink>
+
                                 <NavLink
                                     v-if="$page.props.auth.user?.can_access?.sources"
                                     :href="route('backoffice.sources.index')"
@@ -47,69 +48,124 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     สำนัก
                                 </NavLink>
-                                <!-- <NavLink
-                                    v-if="$page.props.auth.user?.can_access?.results"
-                                    :href="route('backoffice.results.index')"
-                                    :active="route().current('backoffice.results.*')"
-                                >
-                                    ผลหวย
-                                </NavLink> -->
+
                                 <NavLink
                                     v-if="$page.props.auth.user?.can_access?.numbers"
                                     :href="route('backoffice.numbers.index')"
-                                    :active="route().current('backoffice.numbers.*')"
+                                    :active="route().current('backoffice.numbers.index') || route().current('backoffice.numbers.create') || route().current('backoffice.numbers.edit')"
                                 >
                                     เลขสำนัก
                                 </NavLink>
+
                                 <NavLink
-                                    v-if="$page.props.auth.user?.is_source_owner"
-                                    :href="route('backoffice.my-numbers.index')"
-                                    :active="route().current('backoffice.my-numbers.*')"
+                                    v-if="$page.props.auth.user?.can_access?.numbers"
+                                    :href="route('backoffice.numbers.bulk')"
+                                    :active="route().current('backoffice.numbers.bulk')"
                                 >
-                                    เลขของฉัน
+                                    ⚡ กรอกเลขด่วน
                                 </NavLink>
-                                <NavLink
-                                    v-if="$page.props.auth.user?.can_access?.lottoData"
-                                    :href="route('backoffice.lotto-data.index')"
-                                    :active="route().current('backoffice.lotto-data.*')"
+
+                                <!-- Dropdown: ข้อมูลผลหวย -->
+                                <div
+                                    v-if="$page.props.auth.user?.can_access?.lottoData || $page.props.auth.user?.can_access?.lottoDetails || $page.props.auth.user?.can_access?.results"
+                                    class="relative"
                                 >
-                                    ข้อมูลหวย
-                                </NavLink>
-                                <NavLink
-                                    v-if="$page.props.auth.user?.is_admin"
-                                    :href="route('backoffice.platforms.index')"
-                                    :active="route().current('backoffice.platforms.*')"
-                                >
-                                    แพลตฟอร์ม
-                                </NavLink>
-                                <NavLink
-                                    v-if="$page.props.auth.user?.is_admin"
-                                    :href="route('backoffice.affiliate-products.index')"
-                                    :active="route().current('backoffice.affiliate-products.*')"
-                                >
-                                    วัตถุมงคล
-                                </NavLink>
-                                <NavLink
-                                    v-if="$page.props.auth.user?.is_admin"
-                                    :href="route('backoffice.posts.index')"
-                                    :active="route().current('backoffice.posts.*')"
-                                >
-                                    บทความ
-                                </NavLink>
-                                <NavLink
-                                    v-if="$page.props.auth.user?.is_admin"
-                                    :href="route('backoffice.users.index')"
-                                    :active="route().current('backoffice.users.*') || route().current('backoffice.permissions.*')"
-                                >
-                                    ผู้ใช้
-                                </NavLink>
+                                    <Dropdown align="left" width="48">
+                                        <template #trigger>
+                                            <button
+                                                type="button"
+                                                class="inline-flex items-center px-2 py-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
+                                                :class="route().current('backoffice.lotto-data.*') || route().current('backoffice.lotto-details-admin.*') || route().current('backoffice.results.*') ? 'text-gray-900 font-bold border-b-2 border-indigo-500' : 'text-gray-500 hover:text-gray-700'"
+                                            >
+                                                <span>ข้อมูลผลหวย</span>
+                                                <svg class="ms-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <template #content>
+                                            <DropdownLink
+                                                v-if="$page.props.auth.user?.can_access?.lottoData"
+                                                :href="route('backoffice.lotto-data.index')"
+                                            >
+                                                📅 จัดการงวด & ดึงผลหวย
+                                            </DropdownLink>
+                                            <DropdownLink
+                                                v-if="$page.props.auth.user?.can_access?.results"
+                                                :href="route('backoffice.results.index')"
+                                            >
+                                                🎯 ตารางผลหวย & คำนวณความแม่น
+                                            </DropdownLink>
+                                        </template>
+                                    </Dropdown>
+                                </div>
+
+                                <!-- Dropdown: คอนเทนต์ & สายมู (Admin) -->
+                                <div v-if="$page.props.auth.user?.is_admin" class="relative">
+                                    <Dropdown align="left" width="48">
+                                        <template #trigger>
+                                            <button
+                                                type="button"
+                                                class="inline-flex items-center px-2 py-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
+                                                :class="route().current('backoffice.platforms.*') || route().current('backoffice.affiliate-products.*') || route().current('backoffice.posts.*') || route().current('backoffice.phone-pairs.*') ? 'text-gray-900 font-bold border-b-2 border-indigo-500' : 'text-gray-500 hover:text-gray-700'"
+                                            >
+                                                <span>คอนเทนต์ & สายมู</span>
+                                                <svg class="ms-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <template #content>
+                                            <DropdownLink :href="route('backoffice.phone-pairs.index')">
+                                                📱 ตำราเบอร์มงคล (00-99)
+                                            </DropdownLink>
+                                            <DropdownLink :href="route('backoffice.affiliate-products.index')">
+                                                🧿 สินค้าวัตถุมงคล (Affiliate)
+                                            </DropdownLink>
+                                            <DropdownLink :href="route('backoffice.platforms.index')">
+                                                🛒 แพลตฟอร์มร้านค้า
+                                            </DropdownLink>
+                                            <DropdownLink :href="route('backoffice.posts.index')">
+                                                📝 บทความ SEO
+                                            </DropdownLink>
+                                        </template>
+                                    </Dropdown>
+                                </div>
+
+                                <!-- Dropdown: สมาชิก & ทีมงาน (Admin) -->
+                                <div v-if="$page.props.auth.user?.is_admin" class="relative">
+                                    <Dropdown align="left" width="48">
+                                        <template #trigger>
+                                            <button
+                                                type="button"
+                                                class="inline-flex items-center px-2 py-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
+                                                :class="route().current('backoffice.customers.*') || route().current('backoffice.users.*') || route().current('backoffice.permissions.*') ? 'text-gray-900 font-bold border-b-2 border-indigo-500' : 'text-gray-500 hover:text-gray-700'"
+                                            >
+                                                <span>สมาชิก & ทีมงาน</span>
+                                                <svg class="ms-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <template #content>
+                                            <DropdownLink :href="route('backoffice.customers.index')">
+                                                👥 สมาชิกหน้าเว็บ (Customers)
+                                            </DropdownLink>
+                                            <DropdownLink :href="route('backoffice.users.index')">
+                                                🛡️ ทีมงานหลังบ้าน (Staff/Admin)
+                                            </DropdownLink>
+                                        </template>
+                                    </Dropdown>
+                                </div>
+
+                                <!-- ปุ่ม VIP แสดงเด่นพร้อมตัวเลขแจ้งเตือน -->
                                 <NavLink
                                     v-if="$page.props.auth.user?.is_admin"
                                     :href="route('backoffice.vip-requests.index')"
                                     :active="route().current('backoffice.vip-requests.*')"
                                     class="inline-flex items-center gap-1.5"
                                 >
-                                    VIP
+                                    👑 VIP
                                     <span
                                         v-if="$page.props.auth.user?.pending_vip_requests_count > 0"
                                         class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-bold text-white bg-red-600 rounded-full"
@@ -117,12 +173,6 @@ const showingNavigationDropdown = ref(false);
                                         {{ $page.props.auth.user.pending_vip_requests_count }}
                                     </span>
                                 </NavLink>
-                                <!-- <NavLink
-                                    :href="route('lucky-numbers.index')"
-                                    :active="route().current('lucky-numbers.*')"
-                                >
-                                    เลขเด็ด
-                                </NavLink> -->
                             </div>
                         </div>
 
@@ -155,17 +205,20 @@ const showingNavigationDropdown = ref(false);
                                     </template>
 
                                     <template #content>
+                                        <DropdownLink href="/">
+                                            🌐 หน้าเว็บไซต์หลัก
+                                        </DropdownLink>
                                         <DropdownLink
                                             :href="route('profile.edit')"
                                         >
-                                            Profile
+                                            ข้อมูลส่วนตัว
                                         </DropdownLink>
                                         <DropdownLink
                                             :href="route('logout')"
                                             method="post"
                                             as="button"
                                         >
-                                            Log Out
+                                            ออกจากระบบ
                                         </DropdownLink>
                                     </template>
                                 </Dropdown>
@@ -226,9 +279,101 @@ const showingNavigationDropdown = ref(false);
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
                             :href="route('backoffice.dashboard')"
-                            :active="route().current('dashboard')"
+                            :active="route().current('backoffice.dashboard')"
                         >
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.can_access?.sources"
+                            :href="route('backoffice.sources.index')"
+                            :active="route().current('backoffice.sources.*')"
+                        >
+                            สำนัก
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.can_access?.numbers"
+                            :href="route('backoffice.numbers.index')"
+                            :active="route().current('backoffice.numbers.index') || route().current('backoffice.numbers.create') || route().current('backoffice.numbers.edit')"
+                        >
+                            เลขสำนัก
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.can_access?.numbers"
+                            :href="route('backoffice.numbers.bulk')"
+                            :active="route().current('backoffice.numbers.bulk')"
+                        >
+                            ⚡ กรอกเลขด่วน
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.can_access?.lottoData"
+                            :href="route('backoffice.lotto-data.index')"
+                            :active="route().current('backoffice.lotto-data.*')"
+                        >
+                            📅 จัดการงวด & ดึงผลหวย
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.can_access?.results"
+                            :href="route('backoffice.results.index')"
+                            :active="route().current('backoffice.results.*')"
+                        >
+                            🎯 ตารางผลหวย & ความแม่น
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.is_admin"
+                            :href="route('backoffice.phone-pairs.index')"
+                            :active="route().current('backoffice.phone-pairs.*')"
+                        >
+                            📱 ตำราเบอร์มงคล (00-99)
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.is_admin"
+                            :href="route('backoffice.platforms.index')"
+                            :active="route().current('backoffice.platforms.*')"
+                        >
+                            แพลตฟอร์ม
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.is_admin"
+                            :href="route('backoffice.affiliate-products.index')"
+                            :active="route().current('backoffice.affiliate-products.*')"
+                        >
+                            วัตถุมงคล
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.is_admin"
+                            :href="route('backoffice.posts.index')"
+                            :active="route().current('backoffice.posts.*')"
+                        >
+                            บทความ
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.is_admin"
+                            :href="route('backoffice.customers.index')"
+                            :active="route().current('backoffice.customers.*')"
+                        >
+                            สมาชิก
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.is_admin"
+                            :href="route('backoffice.users.index')"
+                            :active="route().current('backoffice.users.*') || route().current('backoffice.permissions.*')"
+                        >
+                            ทีมงาน
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.is_admin"
+                            :href="route('backoffice.vip-requests.index')"
+                            :active="route().current('backoffice.vip-requests.*')"
+                        >
+                            <span class="inline-flex items-center gap-2">
+                                <span>VIP</span>
+                                <span
+                                    v-if="$page.props.auth.user?.pending_vip_requests_count > 0"
+                                    class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-bold text-white bg-red-600 rounded-full"
+                                >
+                                    {{ $page.props.auth.user.pending_vip_requests_count }}
+                                </span>
+                            </span>
                         </ResponsiveNavLink>
                     </div>
 
@@ -248,15 +393,18 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="mt-3 space-y-1">
+                            <ResponsiveNavLink href="/">
+                                🌐 หน้าเว็บไซต์หลัก
+                            </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('profile.edit')">
-                                Profile
+                                ข้อมูลส่วนตัว
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
                                 :href="route('logout')"
                                 method="post"
                                 as="button"
                             >
-                                Log Out
+                                ออกจากระบบ
                             </ResponsiveNavLink>
                         </div>
                     </div>

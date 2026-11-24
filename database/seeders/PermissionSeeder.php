@@ -41,6 +41,13 @@ class PermissionSeeder extends Seeder
                 'description' => 'สามารถจัดการข้อมูลหวยย้อนหลังได้',
                 'order' => 4,
             ],
+            [
+                'name' => 'จัดการรายละเอียดหวย',
+                'slug' => 'manage-lotto-details',
+                'route_name' => 'backoffice.lotto-details-admin.*',
+                'description' => 'สามารถจัดการรายละเอียดผลรางวัลหวยได้',
+                'order' => 5,
+            ],
         ];
 
         foreach ($permissions as $permission) {

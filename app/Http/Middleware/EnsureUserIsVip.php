@@ -15,9 +15,15 @@ class EnsureUserIsVip
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $customer = $request->user('customer');
+        $adminUser = $request->user('web');
 
-        if (!$user || !$user->isVip()) {
+        // อนุญาตให้แอดมิน (guard web) เข้าดูได้ หรือลูกค้า (guard customer) ที่เป็นสมาชิก VIP
+        if ($adminUser && $adminUser->isAdmin()) {
+            return $next($request);
+        }
+
+        if (!$customer || !$customer->isVip()) {
             abort(403, 'ต้องเป็นสมาชิก VIP เท่านั้นจึงจะเข้าถึงได้');
         }
 

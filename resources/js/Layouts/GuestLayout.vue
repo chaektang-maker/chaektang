@@ -13,9 +13,9 @@ import { Link } from '@inertiajs/vue3';
 
         <!-- Logo -->
         <div class="relative z-10 mb-8">
-            <Link href="/" class="flex items-center gap-3 group">
+            <Link :href="route('home')" class="flex items-center gap-3 group">
                 <img 
-                    src="/logo-29012026.jpg" 
+                    :src="`${route('home').replace(/\/$/, '')}/logo-29012026.jpg`" 
                     alt="แจกตัง" 
                     class="h-16 w-16 md:h-20 md:w-20 object-contain rounded-lg shadow-lg group-hover:shadow-xl transition-shadow"
                 />

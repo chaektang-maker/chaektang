@@ -14,6 +14,10 @@ const destroyResult = (id) => {
     if (!confirm('ยืนยันลบผลหวยนี้?')) return;
     router.delete(route('backoffice.results.destroy', id));
 };
+
+const syncFromDetails = () => {
+    router.post(route('backoffice.results.sync'));
+};
 </script>
 
 <template>
@@ -21,9 +25,12 @@ const destroyResult = (id) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between gap-4">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">บันทึกผลหวย</h2>
-                <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">บันทึกผลหวย & คำนวณความแม่นยำ</h2>
+                <div class="flex flex-wrap items-center gap-2">
+                    <SecondaryButton type="button" @click="syncFromDetails">
+                        🔄 ซิงค์จากรายละเอียดหวย & คำนวณใหม่
+                    </SecondaryButton>
                     <Link :href="route('backoffice.results.import')">
                         <SecondaryButton>📥 ดึงข้อมูลย้อนหลัง</SecondaryButton>
                     </Link>

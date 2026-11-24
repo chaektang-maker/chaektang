@@ -80,6 +80,7 @@ const destroySource = (id) => {
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สำนัก</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ยอดการมองเห็น (Views)</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ความนิยม</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">โปรโมท</th>
                                     <th class="px-6 py-3"></th>
@@ -95,9 +96,14 @@ const destroySource = (id) => {
                                         <span v-if="s.status === 'active'" class="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 border border-green-200">เปิดใช้งาน</span>
                                         <span v-else class="inline-flex items-center rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-700 border border-yellow-200">ระงับ</span>
                                     </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-200">
+                                            👁️ {{ (s.view_count || 0).toLocaleString() }} ครั้ง
+                                        </span>
+                                    </td>
                                     <td class="px-6 py-4 text-sm text-gray-700">{{ s.popularity_score }}</td>
                                     <td class="px-6 py-4">
-                                        <span v-if="s.is_promoted" class="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 border border-indigo-200">แนะนำ</span>
+                                        <span v-if="s.is_promoted" class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800 border border-amber-300">⭐ สำนักแนะนำ</span>
                                         <span v-else class="text-sm text-gray-400">-</span>
                                     </td>
                                     <td class="px-6 py-4 text-right text-sm">
@@ -106,7 +112,7 @@ const destroySource = (id) => {
                                     </td>
                                 </tr>
                                 <tr v-if="!sources.data?.length">
-                                    <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="5">ยังไม่มีข้อมูล</td>
+                                    <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="6">ยังไม่มีข้อมูล</td>
                                 </tr>
                             </tbody>
                         </table>

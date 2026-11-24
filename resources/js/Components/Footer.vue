@@ -9,7 +9,7 @@ import { Link } from '@inertiajs/vue3';
                 <div>
                     <div class="flex items-center gap-2 mb-4">
                         <img
-                            src="/logo-29012026.jpg" 
+                            :src="`${route('home').replace(/\/$/, '')}/logo-29012026.jpg`" 
                             alt="แจกตัง" 
                             class="h-20 md:h-24 w-auto object-contain"
                         />
@@ -31,6 +31,7 @@ import { Link } from '@inertiajs/vue3';
                     <ul class="space-y-2 text-sm">
                         <li><Link :href="route('lucky-numbers.index')" class="hover:text-white transition-colors">รวมเลขเด็ด</Link></li>
                         <li><Link :href="route('statistics.index')" class="hover:text-white transition-colors">สถิติหวย</Link></li>
+                        <li><Link :href="route('advertise.index')" class="text-yellow-400 hover:text-yellow-300 font-medium transition-colors">⭐ ลงโฆษณา / โปรโมทสำนัก</Link></li>
                         <!-- <li><Link :href="route('accuracy.index')" class="hover:text-white transition-colors">ตารางคะแนน</Link></li> -->
                     </ul>
                 </div>
@@ -43,8 +44,14 @@ import { Link } from '@inertiajs/vue3';
                     </ul>
                 </div>
             </div>
-            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-                <p>&copy; 2026 chaektang.com สงวนลิขสิทธิ์</p>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-xs text-gray-400 space-y-3">
+                <div class="bg-gray-800/70 rounded-xl p-4 border border-gray-700/80 text-gray-300 leading-relaxed">
+                    <strong class="text-yellow-400">ข้อตกลงและคำเตือน (Disclaimer):</strong>
+                    เว็บไซต์ chaektang.com จัดทำขึ้นเพื่อให้บริการตรวจผลสลากกินแบ่งรัฐบาล ประมวลผลสถิติย้อนหลัง และรวบรวมแนวทางตัวเลขเชิงสถิติเท่านั้น
+                    <strong>ทางเว็บไซต์ไม่มีระบบรับแทงหวย และไม่สนับสนุนการพนันหรือสิ่งผิดกฎหมายทุกชนิด</strong>
+                    ข้อมูลตัวเลขและการวิเคราะห์ทั้งหมดเป็นเพียงแนวทางทางสถิติและความเชื่อส่วนบุคคล โปรดใช้วิจารณญาณในการรับชม
+                </div>
+                <p class="text-center text-sm">&copy; 2026 chaektang.com สงวนลิขสิทธิ์</p>
             </div>
         </div>
     </footer>

@@ -5,6 +5,8 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import axios from 'axios';
 
 const props = defineProps({
     product: Object,
@@ -20,6 +22,28 @@ const form = useForm({
     sort_order: props.product.sort_order ?? 0,
     is_active: props.product.is_active ?? true,
 });
+
+const isUploading = ref(false);
+const uploadError = ref('');
+
+const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    isUploading.value = true;
+    uploadError.value = '';
+    try {
+        const fd = new FormData();
+        fd.append('image', file);
+        fd.append('folder', 'affiliate-products');
+        const res = await axios.post(route('backoffice.posts.upload-image'), fd);
+        form.image_url = res.data.path || res.data.url;
+    } catch (err) {
+        uploadError.value = err.response?.data?.message || 'อัปโหลดรูปภาพไม่สำเร็จ (รองรับไฟล์ภาพไม่เกิน 4MB)';
+    } finally {
+        isUploading.value = false;
+        e.target.value = '';
+    }
+};
 
 const submit = () => {
     form.put(route('backoffice.affiliate-products.update', props.product.id));
@@ -79,15 +103,27 @@ const submit = () => {
                             <InputError :message="form.errors.description" class="mt-2" />
                         </div>
 
-                        <div>
-                            <label for="image_url" class="block text-sm font-medium text-gray-700">URL รูปภาพ</label>
-                            <TextInput
-                                id="image_url"
-                                v-model="form.image_url"
-                                type="url"
-                                class="mt-1 block w-full"
-                            />
-                            <InputError :message="form.errors.image_url" class="mt-2" />
+                        <div class="space-y-2">
+                            <label for="image_url" class="block text-sm font-medium text-gray-700">รูปภาพสินค้า (วาง URL หรืออัปโหลดไฟล์จากเครื่อง)</label>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <TextInput
+                                    id="image_url"
+                                    v-model="form.image_url"
+                                    type="text"
+                                    class="block w-full flex-1"
+                                    placeholder="https://... หรือกดปุ่มอัปโหลดด้านขวา"
+                                />
+                                <label class="inline-flex items-center justify-center px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-md font-semibold text-xs text-indigo-700 hover:bg-indigo-100 cursor-pointer shrink-0 transition">
+                                    <span>{{ isUploading ? 'กำลังอัปโหลด...' : '📁 อัปโหลดรูปภาพ' }}</span>
+                                    <input type="file" accept="image/*" class="hidden" :disabled="isUploading" @change="handleFileUpload" />
+                                </label>
+                            </div>
+                            <p v-if="uploadError" class="text-xs text-red-600">{{ uploadError }}</p>
+                            <InputError :message="form.errors.image_url" class="mt-1" />
+                            <div v-if="form.image_url" class="mt-2 flex items-center gap-3 p-2 bg-gray-50 rounded-lg border border-gray-200 w-fit">
+                                <img :src="form.image_url" alt="Preview" class="h-20 w-20 object-cover rounded border border-gray-200 bg-white" />
+                                <span class="text-xs text-gray-500">ตัวอย่างรูปภาพที่จะแสดง</span>
+                            </div>
                         </div>
 
                         <div>
