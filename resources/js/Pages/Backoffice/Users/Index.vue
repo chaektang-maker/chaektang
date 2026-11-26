@@ -88,14 +88,17 @@ const getRoleLabel = (role) => {
                                             </span>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-500">
+                                            <div class="text-sm text-gray-500 space-y-1">
+                                                <div v-if="user.source_name" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                                    <span>เจ้าสำนัก: {{ user.source_name }}</span>
+                                                </div>
                                                 <div v-if="user.role === 'admin'" class="text-green-600 font-medium">
                                                     เข้าถึงได้ทุกอย่าง
                                                 </div>
-                                                <div v-else-if="user.permissions.length === 0" class="text-gray-400">
+                                                <div v-else-if="user.permissions.length === 0 && !user.source_name" class="text-gray-400">
                                                     ไม่มีสิทธิ์
                                                 </div>
-                                                <div v-else class="flex flex-wrap gap-1">
+                                                <div v-else-if="user.permissions.length > 0" class="flex flex-wrap gap-1">
                                                     <span 
                                                         v-for="permission in user.permissions" 
                                                         :key="permission.id"

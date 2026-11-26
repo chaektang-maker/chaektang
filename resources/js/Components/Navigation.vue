@@ -185,10 +185,10 @@ defineProps({
                         </template>
                         <template v-else-if="page.props.auth?.user">
                             <Link
-                                :href="route('backoffice.dashboard')"
+                                :href="(page.props.auth.user.is_source_owner && !page.props.auth.user.is_admin) ? route('backportal.index') : route('backoffice.dashboard')"
                                 class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 font-semibold text-xs"
                             >
-                                หลังบ้าน
+                                {{ (page.props.auth.user.is_source_owner && !page.props.auth.user.is_admin) ? 'พอร์ทัลเจ้าสำนัก' : 'หลังบ้าน' }}
                             </Link>
                             <span class="px-2 text-gray-700 font-medium text-sm max-w-[120px] truncate">
                                 {{ page.props.auth.user.name }}
@@ -313,8 +313,11 @@ defineProps({
                 </div>
                 <div v-else-if="page.props.auth?.user" class="pt-4 border-t border-gray-200 space-y-2">
                     <div class="text-gray-700 font-medium text-sm py-2">{{ page.props.auth.user.name }}</div>
-                    <Link :href="route('backoffice.dashboard')" class="block text-indigo-600 font-semibold text-sm py-2">
-                        เข้าสู่ระบบหลังบ้าน →
+                    <Link
+                        :href="(page.props.auth.user.is_source_owner && !page.props.auth.user.is_admin) ? route('backportal.index') : route('backoffice.dashboard')"
+                        class="block text-indigo-600 font-semibold text-sm py-2"
+                    >
+                        {{ (page.props.auth.user.is_source_owner && !page.props.auth.user.is_admin) ? 'เข้าสู่พอร์ทัลเจ้าสำนัก →' : 'เข้าสู่ระบบหลังบ้าน →' }}
                     </Link>
                     <button type="button" @click="logout" class="block w-full text-left text-gray-700 hover:text-red-600 transition-colors font-medium text-sm py-2">
                         ออกจากระบบ

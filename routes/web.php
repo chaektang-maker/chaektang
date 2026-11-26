@@ -74,24 +74,50 @@ Route::middleware('auth:customer')->group(function () {
 
 // ถ้าเข้าที่ /backoffice:
 // - ถ้ายังไม่ login (guard web) → ไปหน้า /backoffice/login
-// - ถ้า login พนักงานแล้ว → ไปหน้า dashboard หลังบ้าน
+// - ถ้า login เป็นเจ้าสำนัก → ไปหน้า /backportal
+// - ถ้า login พนักงาน/แอดมิน → ไปหน้า dashboard หลังบ้าน
 Route::get('/backoffice', function () {
     if (auth('web')->check()) {
+        $u = auth('web')->user();
+        if ($u && $u->isSourceOwner() && !$u->isAdmin()) {
+            return redirect()->route('backportal.index');
+        }
         return redirect()->route('backoffice.dashboard');
     }
 
     return redirect()->route('backoffice.login')->with('url.intended', route('backoffice.dashboard'));
 });
 
+// ทางเข้าสำหรับเจ้าสำนัก (/backportal):
+// - ถ้ายังไม่ login → ไปหน้า /backportal/login
+// - ถ้า login แล้ว → เปิดหน้าพอร์ทัลเจ้าสำนัก
+Route::get('/backportal', function (\Illuminate\Http\Request $request) {
+    if (!auth('web')->check()) {
+        return redirect()->route('backportal.login');
+    }
+    return app(\App\Http\Controllers\Backoffice\SourceOwnerPortalController::class)->index($request);
+})->name('backportal.index');
+
 Route::middleware('auth:web')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // ระบบพอร์ทัลเจ้าสำนัก (/backportal/*)
+    Route::prefix('backportal')->name('backportal.')->middleware([\App\Http\Middleware\CheckPermission::class])->group(function () {
+        Route::post('profile', [\App\Http\Controllers\Backoffice\SourceOwnerPortalController::class, 'updateProfile'])->name('profile');
+        Route::post('numbers', [\App\Http\Controllers\Backoffice\SourceOwnerPortalController::class, 'saveNumbers'])->name('numbers');
+        Route::post('products', [\App\Http\Controllers\Backoffice\SourceOwnerPortalController::class, 'saveProduct'])->name('products.save');
+        Route::delete('products/{productId}', [\App\Http\Controllers\Backoffice\SourceOwnerPortalController::class, 'deleteProduct'])->name('products.delete');
+    });
+
     // ระบบหลังบ้าน (/backoffice/*) เข้าได้เฉพาะพนักงาน (admin / staff) เท่านั้น
     Route::prefix('backoffice')->name('backoffice.')->middleware(['verified', \App\Http\Middleware\CheckPermission::class])->group(function () {
         // Dashboard หลังบ้าน (เฉพาะ admin และ staff)
         Route::get('dashboard', [\App\Http\Controllers\Backoffice\DashboardController::class, 'index'])->name('dashboard');
+
+        // Redirect /backoffice/my-portal ไปยัง /backportal
+        Route::get('my-portal', fn () => redirect()->route('backportal.index'))->name('my-portal.index');
         
         // Routes ที่ต้อง permission (admin/staff) - พนักงานและแอดมินสามารถลงเลขแทนสำนักได้ผ่านเมนู numbers
         Route::resource('sources', SourceController::class)->except(['show']);
@@ -132,6 +158,13 @@ Route::middleware('auth:web')->group(function () {
             Route::get('phone-pairs', [\App\Http\Controllers\Backoffice\PhonePairAdminController::class, 'index'])->name('phone-pairs.index');
             Route::put('phone-pairs/{pair}', [\App\Http\Controllers\Backoffice\PhonePairAdminController::class, 'update'])->name('phone-pairs.update');
             Route::delete('phone-pairs/{pair}/reset', [\App\Http\Controllers\Backoffice\PhonePairAdminController::class, 'reset'])->name('phone-pairs.reset');
+
+            // จัดการตำราทำนายฝัน (ก-ฮ) + นำเข้าจากข้อความ/ไฟล์ .txt
+            Route::get('dream-dictionary', [\App\Http\Controllers\Backoffice\DreamDictionaryAdminController::class, 'index'])->name('dream-dictionary.index');
+            Route::post('dream-dictionary/import-bulk', [\App\Http\Controllers\Backoffice\DreamDictionaryAdminController::class, 'importBulk'])->name('dream-dictionary.import-bulk');
+            Route::post('dream-dictionary/sync-file', [\App\Http\Controllers\Backoffice\DreamDictionaryAdminController::class, 'syncDefaultFile'])->name('dream-dictionary.sync-file');
+            Route::post('dream-dictionary', [\App\Http\Controllers\Backoffice\DreamDictionaryAdminController::class, 'store'])->name('dream-dictionary.store');
+            Route::delete('dream-dictionary/{id}', [\App\Http\Controllers\Backoffice\DreamDictionaryAdminController::class, 'destroy'])->name('dream-dictionary.destroy');
 
             // จัดการคำขอ VIP จากการโอนเงิน
             Route::get('vip-requests', [VipRequestAdminController::class, 'index'])->name('vip-requests.index');

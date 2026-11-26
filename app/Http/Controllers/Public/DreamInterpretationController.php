@@ -4,72 +4,132 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\AffiliateProduct;
-use App\Services\DreamInterpretationService;
+use App\Models\DreamInterpretation;
+use App\Models\LotteryNumber;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 /**
- * หน้าและ API ทำนายฝัน (ใช้ Google AI Studio / Gemini)
+ * หน้าตำราทำนายฝัน & ถอดรหัสเลขมงคล (แนวทาง A: ค้นหาฟรีไม่จำกัด + ล็อกเลข 3 ตัว & เลขฝันชนสำนักดังให้สมาชิก VIP)
  */
 class DreamInterpretationController extends Controller
 {
-    /**
-     * คำนวณโควตาทำนายฝันรายวันตามระดับผู้ใช้งาน
-     * - Guest (ไม่ล็อกอิน): 1 ครั้ง/วัน
-     * - สมาชิกฟรี (Customer): 3 ครั้ง/วัน
-     * - สมาชิก VIP / Admin: ไม่จำกัด
-     */
-    private function getQuotaStatus(Request $request): array
-    {
-        $customer = $request->user('customer');
-        $admin = $request->user('web');
-        $today = now()->toDateString();
-
-        if (($customer && $customer->isVip()) || ($admin && $admin->isAdmin())) {
-            return [
-                'tier' => 'vip',
-                'is_unlimited' => true,
-                'limit' => null,
-                'used' => 0,
-                'remaining' => null,
-                'cache_key' => null,
-            ];
-        }
-
-        if ($customer) {
-            $limit = 3;
-            $cacheKey = "dream_quota:customer:{$customer->id}:{$today}";
-            $used = (int) Cache::get($cacheKey, 0);
-
-            return [
-                'tier' => 'member',
-                'is_unlimited' => false,
-                'limit' => $limit,
-                'used' => $used,
-                'remaining' => max(0, $limit - $used),
-                'cache_key' => $cacheKey,
-            ];
-        }
-
-        $limit = 1;
-        $ip = $request->ip() ?: 'unknown';
-        $cacheKey = "dream_quota:ip:{$ip}:{$today}";
-        $used = (int) Cache::get($cacheKey, 0);
-
-        return [
-            'tier' => 'guest',
-            'is_unlimited' => false,
-            'limit' => $limit,
-            'used' => $used,
-            'remaining' => max(0, $limit - $used),
-            'cache_key' => $cacheKey,
-        ];
-    }
-
     public function index(Request $request)
     {
-        $quota = $this->getQuotaStatus($request);
+        DreamInterpretation::ensureTableExists();
+
+        $customer = $request->user('customer');
+        $admin = $request->user('web');
+        $canViewVip = ($customer && $customer->isVip()) || ($admin && $admin->isAdmin());
+
+        $query = trim((string) $request->query('q', $request->old('dream', '')));
+        $letter = trim((string) $request->query('letter', ''));
+
+        $allItems = DreamInterpretation::query()
+            ->orderBy('keyword')
+            ->get();
+
+        $availableLetters = $allItems
+            ->pluck('category_letter')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        // ดึงเลขเด็ดสำนักดังในงวดล่าสุด เพื่อนำมาจับคู่ว่า "เลขจากความฝัน ชนกับสำนักไหนบ้าง"
+        $latestDrawDate = LotteryNumber::query()->max('draw_date');
+        $currentDrawNumbers = collect();
+        if ($latestDrawDate) {
+            $currentDrawNumbers = LotteryNumber::query()
+                ->with('source:id,name,status')
+                ->where('draw_date', $latestDrawDate)
+                ->whereHas('source', fn ($q) => $q->where('status', 'active'))
+                ->get(['id', 'source_id', 'draw_date', 'two_digit', 'three_digit']);
+        }
+
+        // กรองรายการตามคำค้นหา (รองรับทั้งพิมพ์ประโยคความฝัน เช่น "เมื่อคืนฝันเห็นกุญแจกับกระต่ายน้อย" หรือพิมพ์คำสั้นๆ)
+        $matchedItems = $allItems;
+
+        if ($query !== '') {
+            $qLower = mb_strtolower($query);
+
+            // 1. เช็กว่าในประโยคความฝันที่ผู้ใช้พิมพ์ มี keyword ในตำราคำไหนปรากฏอยู่บ้าง หรือ keyword มีคำที่พิมพ์
+            $keywordMatches = $allItems->filter(function (DreamInterpretation $item) use ($qLower) {
+                $kw = mb_strtolower(trim($item->keyword));
+                if ($kw === '') {
+                    return false;
+                }
+                return mb_strpos($qLower, $kw) !== false || mb_strpos($kw, $qLower) !== false;
+            });
+
+            if ($keywordMatches->isNotEmpty()) {
+                $matchedItems = $keywordMatches->values();
+            } else {
+                // 2. ถ้าไม่ตรงกับชื่อหัวข้อโดยตรง ให้ค้นหาในเนื้อหาคำทำนายหรือตัวเลขด้วย
+                $matchedItems = $allItems->filter(function (DreamInterpretation $item) use ($qLower) {
+                    return mb_strpos(mb_strtolower($item->meaning), $qLower) !== false
+                        || mb_strpos((string) $item->two_digits, $qLower) !== false
+                        || mb_strpos((string) $item->three_digits, $qLower) !== false;
+                })->values();
+            }
+
+            // นับจำนวนการค้นหาให้กับคำที่ตรง
+            foreach ($matchedItems->take(5) as $matched) {
+                DreamInterpretation::where('id', $matched->id)->increment('search_count');
+            }
+        } elseif ($letter !== '' && $letter !== 'all') {
+            $matchedItems = $allItems->where('category_letter', $letter)->values();
+        }
+
+        // แปลงข้อมูลส่งให้หน้าบ้านตามสิทธิ์ (แนวทาง A: ฟรีคำทำนาย + เลข 2 ตัว / ล็อกเลข 3 ตัว + รายชื่อสำนักที่ชนให้ VIP)
+        $formattedItems = $matchedItems->map(function (DreamInterpretation $item) use ($canViewVip, $currentDrawNumbers) {
+            $twoDigitList = $item->two_digit_array;
+            $threeDigitList = $item->three_digit_array;
+            $allDreamNums = array_merge($twoDigitList, $threeDigitList);
+
+            $matchingSources = [];
+            if (!empty($allDreamNums) && $currentDrawNumbers->isNotEmpty()) {
+                foreach ($currentDrawNumbers as $lottoNum) {
+                    $two = trim((string) $lottoNum->two_digit);
+                    $three = trim((string) $lottoNum->three_digit);
+
+                    $matchedDigits = [];
+                    if ($two !== '' && in_array($two, $twoDigitList, true)) {
+                        $matchedDigits[] = $two;
+                    }
+                    if ($three !== '' && in_array($three, $threeDigitList, true)) {
+                        $matchedDigits[] = $three;
+                    }
+
+                    if (!empty($matchedDigits) && $lottoNum->source) {
+                        $matchingSources[] = [
+                            'source_name' => $lottoNum->source->name,
+                            'matched_numbers' => implode(', ', $matchedDigits),
+                        ];
+                    }
+                }
+            }
+
+            return [
+                'id' => $item->id,
+                'keyword' => $item->keyword,
+                'category_letter' => $item->category_letter,
+                'meaning' => $item->meaning,
+                'two_digit_list' => $twoDigitList,
+                'three_digit_count' => count($threeDigitList),
+                'three_digit_list' => $canViewVip ? $threeDigitList : [],
+                'no_number_note' => $item->no_number_note,
+                'matching_sources_count' => count($matchingSources),
+                'matching_sources' => $canViewVip ? $matchingSources : [],
+            ];
+        })->values();
+
+        // คำฝันยอดฮิต / แนะนำสำหรับคลิกด่วน
+        $popularKeywords = $allItems
+            ->sortByDesc('search_count')
+            ->take(12)
+            ->pluck('keyword')
+            ->values();
 
         $affiliateProducts = AffiliateProduct::query()
             ->with('platform:id,name,logo_url')
@@ -80,59 +140,24 @@ class DreamInterpretationController extends Controller
             ->get(['id', 'platform_id', 'title', 'description', 'image_url', 'affiliate_url']);
 
         return Inertia::render('DreamInterpretation/Index', [
-            'oldDream' => $request->old('dream'),
-            'quota' => [
-                'tier' => $quota['tier'],
-                'is_unlimited' => $quota['is_unlimited'],
-                'limit' => $quota['limit'],
-                'used' => $quota['used'],
-                'remaining' => $quota['remaining'],
-            ],
+            'searchQuery' => $query,
+            'selectedLetter' => $letter ?: 'all',
+            'availableLetters' => $availableLetters,
+            'popularKeywords' => $popularKeywords,
+            'dreamItems' => $formattedItems,
+            'totalDictionaryCount' => $allItems->count(),
+            'canViewVip' => $canViewVip,
             'affiliateProducts' => $affiliateProducts,
         ]);
     }
 
     /**
-     * รับข้อความฝันจากฟอร์ม → ตรวจสอบโควตา → เรียก AI → redirect กลับพร้อมผลทำนายใน session
+     * รองรับการกด Submit ฟอร์มค้นหาความฝันแบบ POST แล้วเปลี่ยนไปหน้าผลลัพธ์พร้อมพารามิเตอร์ q
      */
     public function interpret(Request $request)
     {
-        $request->validate([
-            'dream' => 'required|string|max:2000',
-        ], [
-            'dream.required' => 'กรุณาพิมพ์ความฝันของคุณ',
-            'dream.max' => 'ความฝันยาวเกินไป (สูงสุด 2000 ตัวอักษร)',
-        ]);
+        $q = trim((string) $request->input('dream', $request->input('q', '')));
 
-        $quota = $this->getQuotaStatus($request);
-
-        if (!$quota['is_unlimited'] && $quota['remaining'] <= 0) {
-            $msg = $quota['tier'] === 'guest'
-                ? 'คุณใช้สิทธิ์ทำนายฝันฟรีครบ 1 ครั้ง/วันแล้ว กรุณาสมัครสมาชิกฟรีเพื่อรับสิทธิ์ 3 ครั้ง/วัน หรือสมัคร VIP เพื่อใช้งานไม่จำกัด'
-                : 'คุณใช้โควตาทำนายฝันครบ 3 ครั้งสำหรับวันนี้แล้ว อัปเกรดเป็นสมาชิก VIP เพื่อทำนายฝันได้ไม่จำกัด!';
-
-            return redirect()
-                ->route('dream-interpretation.index')
-                ->withInput($request->only('dream'))
-                ->with('dream_error', $msg);
-        }
-
-        $service = app(DreamInterpretationService::class);
-        $result = $service->interpret($request->input('dream'));
-
-        if ($result['success']) {
-            if (!$quota['is_unlimited'] && $quota['cache_key']) {
-                Cache::put($quota['cache_key'], $quota['used'] + 1, now()->endOfDay());
-            }
-
-            return redirect()
-                ->route('dream-interpretation.index')
-                ->with('dream_interpretation', $result['interpretation']);
-        }
-
-        return redirect()
-            ->route('dream-interpretation.index')
-            ->withInput($request->only('dream'))
-            ->with('dream_error', $result['message'] ?? 'เกิดข้อผิดพลาด');
+        return redirect()->route('dream-interpretation.index', $q !== '' ? ['q' => $q] : []);
     }
 }

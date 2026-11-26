@@ -28,8 +28,21 @@ class CheckPermission
             return $next($request);
         }
 
-        // Dashboard เข้าถึงได้เฉพาะพนักงาน (admin/staff) ที่ login แล้ว
         $routeName = Route::currentRouteName();
+
+        // พอร์ทัลเจ้าสำนัก (backportal.* หรือ backoffice.my-portal.*) เข้าถึงได้สำหรับเจ้าสำนัก
+        if ($routeName && (str_starts_with($routeName, 'backportal.') || str_starts_with($routeName, 'backoffice.my-portal.')) && $user->isSourceOwner()) {
+            return $next($request);
+        }
+
+        // หากเป็นบัญชีเจ้าสำนัก (ที่ไม่ใช่ Admin และไม่มีสิทธิ์พนักงานอื่น) ห้ามเข้าหน้า /backoffice/dashboard ของแอดมินเด็ดขาด ให้ส่งไป /backportal ทันที
+        if ($user->isSourceOwner()) {
+            if ($routeName === 'backoffice.dashboard' || !$routeName || !$user->canAccessRoute($routeName)) {
+                return redirect()->route('backportal.index');
+            }
+        }
+
+        // Dashboard เข้าถึงได้เฉพาะพนักงาน (staff ที่ไม่ใช่เจ้าสำนักอย่างเดียว)
         if ($routeName === 'backoffice.dashboard') {
             return $next($request);
         }

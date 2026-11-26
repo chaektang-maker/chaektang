@@ -34,10 +34,13 @@ Route::post('logout', function (\Illuminate\Http\Request $request) {
     return redirect()->route('home');
 })->name('logout')->middleware('auth:customer,web');
 
-// ========== Backoffice (users table, guard web) ==========
+// ========== Backoffice (users table, guard web) & Backportal (สำหรับเจ้าสำนัก) ==========
 Route::middleware('guest:web')->group(function () {
     Route::get('backoffice/login', [BackofficeAuthenticatedSessionController::class, 'create'])->name('backoffice.login');
     Route::post('backoffice/login', [BackofficeAuthenticatedSessionController::class, 'store']);
+
+    Route::get('backportal/login', [BackofficeAuthenticatedSessionController::class, 'createPortal'])->name('backportal.login');
+    Route::post('backportal/login', [BackofficeAuthenticatedSessionController::class, 'storePortal']);
 });
 
 // ========== Password reset (สำหรับ users / backoffice) ==========

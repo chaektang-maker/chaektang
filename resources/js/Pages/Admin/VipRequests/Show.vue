@@ -147,16 +147,65 @@ const statusLabel = (status) => {
                         </div>
                     </div>
 
-                    <div v-if="request.slip_url" class="border-t pt-4 mt-4">
-                        <h3 class="text-sm font-semibold text-gray-700 mb-2">สลิปการโอนเงิน</h3>
-                        <a :href="request.slip_url" target="_blank" rel="noopener" class="inline-block">
-                            <img
-                                :src="request.slip_url"
-                                alt="สลิปโอนเงิน"
-                                class="max-w-full max-h-96 rounded-lg border border-gray-200 shadow-sm object-contain"
-                            />
-                        </a>
-                        <p class="mt-2 text-xs text-gray-500">คลิกที่รูปเพื่อเปิดขนาดเต็ม</p>
+                    <div v-if="request.all_slips?.length || request.slip_url" class="border-t pt-4 mt-4">
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <h3 class="text-sm font-bold text-gray-800">
+                                หลักฐานสลิปการโอนเงิน ({{ request.all_slips?.length || 1 }} ใบ)
+                            </h3>
+                            <span
+                                v-if="request.all_slips?.length > 1"
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-purple-100 text-purple-900 border border-purple-300"
+                            >
+                                ลูกค้าโอนเพิ่มรวม {{ request.all_slips.length }} สลิป (ยอดรวมสุทธิ ฿{{ Number(request.amount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 }) }})
+                            </span>
+                        </div>
+
+                        <div
+                            v-if="request.all_slips?.length"
+                            class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                        >
+                            <div
+                                v-for="slip in request.all_slips"
+                                :key="slip.number"
+                                class="rounded-2xl border-2 p-4 bg-gray-50 flex flex-col justify-between gap-3"
+                                :class="slip.number > 1 ? 'border-purple-300 bg-purple-50/40' : 'border-gray-200'"
+                            >
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-900">
+                                        {{ slip.label }}
+                                    </span>
+                                    <span v-if="slip.amount !== null" class="text-sm font-black text-emerald-700">
+                                        ฿{{ Number(slip.amount).toLocaleString('th-TH', { minimumFractionDigits: 2 }) }}
+                                    </span>
+                                </div>
+                                <a :href="slip.url" target="_blank" rel="noopener" class="block text-center bg-white rounded-xl p-2 border border-gray-200">
+                                    <img
+                                        :src="slip.url"
+                                        :alt="slip.label"
+                                        class="max-w-full max-h-80 mx-auto rounded-lg object-contain"
+                                    />
+                                </a>
+                                <div class="flex items-center justify-between text-[11px] text-gray-500">
+                                    <span v-if="slip.created_at">
+                                        ส่งเมื่อ: {{ new Date(slip.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) }}
+                                    </span>
+                                    <a :href="slip.url" target="_blank" rel="noopener" class="text-indigo-600 font-bold hover:underline">
+                                        คลิกเปิดรูปเต็ม ↗
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else>
+                            <a :href="request.slip_url" target="_blank" rel="noopener" class="inline-block">
+                                <img
+                                    :src="request.slip_url"
+                                    alt="สลิปโอนเงิน"
+                                    class="max-w-full max-h-96 rounded-lg border border-gray-200 shadow-sm object-contain"
+                                />
+                            </a>
+                            <p class="mt-2 text-xs text-gray-500">คลิกที่รูปเพื่อเปิดขนาดเต็ม</p>
+                        </div>
                     </div>
 
                     <!-- กรณีจัดการไปแล้ว -->

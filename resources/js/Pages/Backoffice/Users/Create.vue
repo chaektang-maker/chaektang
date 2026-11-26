@@ -9,6 +9,10 @@ import { ref } from 'vue';
 
 const props = defineProps({
     allPermissions: Array,
+    sources: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const form = useForm({
@@ -17,6 +21,8 @@ const form = useForm({
     password: '',
     password_confirmation: '',
     role: 'staff',
+    source_id: '',
+    new_source_name: '',
     permission_ids: [],
 });
 
@@ -124,6 +130,41 @@ const togglePermission = (permissionId) => {
                                 <option value="admin">Admin</option>
                             </select>
                             <InputError :message="form.errors.role" class="mt-2" />
+                        </div>
+
+                        <!-- ผูกกับสำนักหวย (สำหรับเจ้าสำนัก / พาร์ทเนอร์ที่ต้องการลงเลขเด็ดและสินค้าของตัวเอง) -->
+                        <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-3">
+                            <div>
+                                <label class="block text-sm font-bold text-amber-950">
+                                    ผูกบัญชีนี้เป็น "เจ้าสำนัก / ร้านค้าพาร์ทเนอร์" (ไม่บังคับ)
+                                </label>
+                                <p class="text-xs text-amber-800 mt-0.5">
+                                    เมื่อผูกกับสำนักแล้ว ผู้ใช้นี้จะสามารถล็อกอินเข้าเมนู <strong>"จัดการสำนัก & สินค้าของฉัน"</strong> เพื่อกรอกเลขเด็ดและลงสินค้าของสำนักตัวเองขึ้นหน้าเว็บได้ทันที
+                                </p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">เลือกจากสำนักที่มีอยู่แล้ว</label>
+                                    <select
+                                        v-model="form.source_id"
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm"
+                                    >
+                                        <option value="">-- ไม่ได้ผูกกับสำนัก (พนักงานทั่วไป) --</option>
+                                        <option v-for="s in sources" :key="s.id" :value="s.id">
+                                            {{ s.name }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div v-if="!form.source_id">
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">หรือตั้งชื่อสร้างสำนักใหม่ให้ผู้ใช้นี้เลย</label>
+                                    <TextInput
+                                        v-model="form.new_source_name"
+                                        type="text"
+                                        placeholder="เช่น สำนักอาจารย์ดัง พารวย"
+                                        class="block w-full text-sm"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         <!-- สิทธิ์ (เฉพาะ Staff) -->

@@ -26,6 +26,13 @@ const defaultPkg = packages.find((p) => p.popular) || packages[0];
 const selectedPackageId = ref(defaultPkg?.id || '');
 const selectedPackage = computed(() => packages.find((p) => p.id === selectedPackageId.value) || defaultPkg);
 const copied = ref(false);
+const showSuccessModal = ref(false);
+const lastSubmittedAmount = ref('');
+const pendingActionMode = ref(''); // '' | 'append' | 'replace'
+
+const pendingRequest = computed(() => {
+    return (props.recentRequests || []).find((r) => r.status === 'pending') || null;
+});
 
 const form = useForm({
     slip: null,
@@ -33,12 +40,45 @@ const form = useForm({
     bank_account_name: '',
     bank_account_number: '',
     note: defaultPkg ? `สมัคร ${defaultPkg.name} (${defaultPkg.days} วัน)` : '',
+    submit_mode: 'new',
 });
 
 const selectPackage = (pkg) => {
     selectedPackageId.value = pkg.id;
-    form.amount = String(pkg.price);
-    form.note = `สมัคร ${pkg.name} (${pkg.days} วัน)`;
+    if (pendingActionMode.value === 'append' && pendingRequest.value) {
+        const paid = Number(pendingRequest.value.amount || 0);
+        const diff = Math.max(0, Number(pkg.price) - paid);
+        form.amount = diff > 0 ? String(diff) : String(pkg.price);
+        form.note = `โอนเพิ่มให้ครบ ${pkg.name} (${pkg.days} วัน)`;
+    } else {
+        form.amount = String(pkg.price);
+        form.note = `สมัคร ${pkg.name} (${pkg.days} วัน)`;
+    }
+};
+
+const openAppendSlipMode = () => {
+    pendingActionMode.value = 'append';
+    form.submit_mode = 'append';
+    form.clearErrors();
+    const pkgPrice = Number(selectedPackage.value?.price || 179);
+    const paid = Number(pendingRequest.value?.amount || 0);
+    const diff = Math.max(0, pkgPrice - paid);
+    form.amount = diff > 0 ? String(diff) : '';
+    form.note = `โอนเพิ่มรอบที่ ${(pendingRequest.value?.slip_count || 1) + 1} เพื่อให้ครบแพ็กเกจ ${selectedPackage.value?.name || 'VIP'}`;
+};
+
+const openReplaceSlipMode = () => {
+    pendingActionMode.value = 'replace';
+    form.submit_mode = 'replace';
+    form.clearErrors();
+    form.amount = String(pendingRequest.value?.amount || selectedPackage.value?.price || 179);
+    form.note = `เปลี่ยนรูปสลิปใหม่ (${selectedPackage.value?.name || 'VIP'})`;
+};
+
+const cancelPendingAction = () => {
+    pendingActionMode.value = '';
+    form.submit_mode = 'new';
+    form.clearErrors();
 };
 
 /**
@@ -141,9 +181,22 @@ const formatThaiDate = (dateStr) => {
 };
 
 const submit = () => {
+    if (pendingRequest.value && !pendingActionMode.value) {
+        return;
+    }
+    if (!pendingRequest.value) {
+        form.submit_mode = 'new';
+    }
+    const submittedAmt = form.amount;
     form.post(route('vip-request.store'), {
         forceFormData: true,
-        onFinish: () => form.reset('slip'),
+        preserveScroll: true,
+        onSuccess: () => {
+            lastSubmittedAmount.value = submittedAmt;
+            showSuccessModal.value = true;
+            pendingActionMode.value = '';
+            form.reset('slip', 'bank_account_name', 'bank_account_number');
+        },
     });
 };
 </script>
@@ -153,6 +206,41 @@ const submit = () => {
     <PublicLayout :can-login="canLogin" :can-register="canRegister">
         <section class="py-10 bg-gray-50 min-h-screen">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                <!-- แบนเนอร์เด่นด้านบนสุด เมื่อส่งสลิปสำเร็จ หรือมีรายการรอตรวจสอบ -->
+                <div
+                    v-if="$page.props.flash?.success || form.recentlySuccessful || pendingRequest"
+                    class="rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 p-5 sm:p-6 text-white shadow-xl border-2 border-emerald-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                >
+                    <div class="flex items-start sm:items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-white text-emerald-600 flex items-center justify-center shrink-0 shadow-md">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-yellow-300 text-gray-950 text-xs font-extrabold mb-1">
+                                <span>สถานะ: ได้รับสลิปแล้ว รอแอดมินอนุมัติ</span>
+                            </div>
+                            <h2 class="text-lg sm:text-xl font-extrabold">
+                                {{ $page.props.flash?.success || 'เราได้รับหลักฐานการโอนเงินของคุณเรียบร้อยแล้ว!' }}
+                            </h2>
+                            <p class="text-xs sm:text-sm text-emerald-50 mt-0.5">
+                                ระบบได้ส่งสลิปแจ้งเตือนไปยังทีมงานแอดมินแล้ว
+                                <span v-if="pendingRequest">
+                                    (ยอดแจ้งโอน {{ pendingRequest.amount ? `${pendingRequest.amount} บาท` : 'ตามสลิป' }} • ส่งเมื่อ {{ formatThaiDate(pendingRequest.created_at) }})
+                                </span>
+                                คุณไม่ต้องส่งสลิปซ้ำนะครับ
+                            </p>
+                        </div>
+                    </div>
+                    <Link
+                        :href="route('lucky-numbers.index')"
+                        class="shrink-0 px-4 py-2.5 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 font-extrabold text-xs sm:text-sm shadow transition"
+                    >
+                        ไปหน้าเลขเด็ด →
+                    </Link>
+                </div>
+
                 <!-- Header & VIP Benefits -->
                 <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl shadow-xl p-6 md:p-8 text-white">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -426,116 +514,313 @@ const submit = () => {
                         </div>
                     </div>
 
-                    <!-- ฟอร์มแนบสลิป -->
+                    <!-- ฟอร์มแนบสลิป หรือ การ์ดสถานะรอตรวจสอบ (ป้องกันการส่งซ้ำ + รองรับการแนบสลิปโอนเพิ่มรอบ 2) -->
                     <div class="lg:col-span-3 bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
                         <h2 class="text-lg font-bold text-gray-900 mb-1">3. แจ้งหลักฐานการโอนเงิน</h2>
                         <p class="text-gray-600 text-sm mb-6">
                             แนบสลิปการโอนเงินและตรวจสอบยอดเงินด้านล่าง
                         </p>
 
-                        <div v-if="$page.props.flash?.success || form.recentlySuccessful" class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">
-                            {{ $page.props.flash?.success || 'ส่งคำขอ VIP เรียบร้อยแล้ว ทีมงานจะตรวจสอบและแจ้งผลให้คุณ' }}
-                        </div>
-                        <div v-if="form.hasErrors" class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
-                            กรุณาตรวจสอบข้อมูลอีกครั้ง
-                        </div>
-
-                        <form @submit.prevent="submit" class="space-y-5">
-                            <div>
-                                <InputLabel for="slip" value="สลิปการโอนเงิน *" class="font-medium text-gray-700" />
-                                <input
-                                    id="slip"
-                                    type="file"
-                                    accept="image/*"
-                                    class="mt-2 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-red-50 file:text-red-700 file:font-medium hover:file:bg-red-100"
-                                    @change="form.slip = $event.target.files[0]"
-                                />
-                                <p class="mt-1 text-xs text-gray-500">รองรับไฟล์รูป (JPG, PNG ฯลฯ ไม่เกิน 5 MB)</p>
-                                <InputError class="mt-1" :message="form.errors.slip" />
-                            </div>
-
-                            <div>
-                                <InputLabel for="amount" value="ยอดที่โอน (บาท)" class="font-medium text-gray-700" />
-                                <TextInput
-                                    id="amount"
-                                    v-model="form.amount"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    placeholder="เช่น 179"
-                                    class="mt-2 block w-full"
-                                />
-                                <InputError class="mt-1" :message="form.errors.amount" />
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <InputLabel for="bank_account_name" value="ชื่อบัญชีผู้โอน" class="font-medium text-gray-700" />
-                                    <TextInput
-                                        id="bank_account_name"
-                                        v-model="form.bank_account_name"
-                                        type="text"
-                                        placeholder="ชื่อบัญชีของคุณ"
-                                        class="mt-2 block w-full"
-                                    />
-                                    <InputError class="mt-1" :message="form.errors.bank_account_name" />
+                        <!-- กรณีมีคำขอที่กำลังรอแอดมินตรวจสอบอยู่แล้ว และยังไม่ได้กดปุ่ม "โอนเพิ่ม" หรือ "เปลี่ยนสลิป" -->
+                        <div
+                            v-if="pendingRequest && !pendingActionMode"
+                            class="rounded-2xl bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border-2 border-emerald-400 p-6 space-y-5"
+                        >
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow">
+                                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                    </svg>
                                 </div>
-                                <div>
-                                    <InputLabel for="bank_account_number" value="เลขท้ายบัญชีผู้โอน (4 ตัวท้าย)" class="font-medium text-gray-700" />
-                                    <TextInput
-                                        id="bank_account_number"
-                                        v-model="form.bank_account_number"
-                                        type="text"
-                                        placeholder="เช่น 1234"
-                                        class="mt-2 block w-full"
-                                    />
-                                    <InputError class="mt-1" :message="form.errors.bank_account_number" />
+                                <div class="space-y-1">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 text-xs font-extrabold">
+                                        กำลังรอแอดมินตรวจสอบและเปิดสิทธิ์ VIP
+                                    </span>
+                                    <h3 class="text-lg font-extrabold text-gray-900">
+                                        ระบบได้รับสลิปการโอนเงินของคุณแล้ว
+                                    </h3>
+                                    <p class="text-xs sm:text-sm text-gray-700 leading-relaxed">
+                                        เพื่อป้องกันรายการซ้ำซ้อน ระบบได้ล็อกการส่งซ้ำไว้ให้อัตโนมัติ ทีมงานกำลังตรวจสอบสลิปและเปิดสิทธิ์ VIP ให้คุณครับ
+                                    </p>
                                 </div>
                             </div>
 
-                            <div>
-                                <InputLabel for="note" value="แพ็กเกจที่เลือก / หมายเหตุ" class="font-medium text-gray-700" />
-                                <textarea
-                                    id="note"
-                                    v-model="form.note"
-                                    rows="3"
-                                    class="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
-                                    placeholder="ระบุแพ็กเกจ เวลาที่โอน หรือข้อมูลเพิ่มเติม"
-                                />
-                                <InputError class="mt-1" :message="form.errors.note" />
+                            <!-- สรุปยอดที่แจ้งโอนไว้ -->
+                            <div class="rounded-xl bg-white p-4 border border-emerald-200 grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
+                                <div>
+                                    <div class="text-[11px] text-gray-500">ยอดโอนรวมที่แจ้ง</div>
+                                    <div class="text-lg font-black text-emerald-700">
+                                        ฿{{ Number(pendingRequest.amount || 0).toFixed(2) }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] text-gray-500">จำนวนสลิปที่แนบ</div>
+                                    <div class="text-lg font-black text-gray-900">
+                                        {{ pendingRequest.slip_count || 1 }} ใบ
+                                    </div>
+                                </div>
+                                <div class="col-span-2 sm:col-span-1">
+                                    <div class="text-[11px] text-gray-500">เวลาที่ส่งล่าสุด</div>
+                                    <div class="text-xs font-bold text-gray-800 mt-1">
+                                        {{ formatThaiDate(pendingRequest.created_at) }}
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- ข้อตกลงการใช้บริการและคุ้มครองข้อมูลส่วนบุคคล (Disclaimer & PDPA) -->
-                            <div class="rounded-xl bg-amber-50/80 border border-amber-200 p-4 text-xs text-gray-700 space-y-1.5 leading-relaxed">
-                                <div class="font-bold text-gray-900">📌 เงื่อนไขการให้บริการและการคุ้มครองข้อมูลส่วนบุคคล (PDPA)</div>
-                                <p>
-                                    • <strong>ขอบเขตบริการ:</strong> ค่าสมาชิก VIP เป็นค่าบริการในการเข้าถึงระบบฐานข้อมูลสถิติและการจัดอันดับเชิงลึกของเว็บไซต์เท่านั้น ข้อมูลตัวเลขที่แสดงเป็นเพียงการวิเคราะห์เชิงสถิติและความเชื่อส่วนบุคคล ไม่มีการการันตีผลรางวัลสลากกินแบ่งรัฐบาล
-                                </p>
-                                <p>
-                                    • <strong>การคุ้มครองข้อมูล (PDPA):</strong> ข้อมูลการโอนเงินและรูปภาพสลิปของท่านถูกจัดเก็บอย่างปลอดภัย เพื่อใช้ตรวจสอบยืนยันสิทธิ์สมาชิก VIP เท่านั้น ไม่มีการนำไปเผยแพร่หรือใช้ในวัตถุประสงค์อื่น
+                            <!-- ทางเลือกสำหรับลูกค้า: โอนเพิ่มให้ครบยอด หรือ เปลี่ยนรูปสลิปที่ส่งผิด -->
+                            <div class="pt-2 border-t border-emerald-200/80 space-y-2.5">
+                                <div class="text-xs font-bold text-gray-700">
+                                    ต้องการแก้ไขหรือโอนเงินเพิ่มใช่หรือไม่? (ระบบจะรวมไว้ในคำขอเดิม ไม่สร้างรายการซ้ำ)
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <button
+                                        type="button"
+                                        @click="openAppendSlipMode"
+                                        class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-gray-950 font-extrabold text-xs sm:text-sm shadow transition"
+                                    >
+                                        <span>+ แนบสลิปโอนเพิ่ม (กรณีโอนไม่ครบยอด)</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="openReplaceSlipMode"
+                                        class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-bold text-xs sm:text-sm transition"
+                                    >
+                                        <span>เปลี่ยนรูปสลิปใหม่ (กรณีแนบรูปผิด)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ฟอร์มแนบสลิป (แสดงเมื่อยังไม่มีคำขอรอตรวจ หรือเมื่อลูกค้ากดปุ่ม "แนบสลิปโอนเพิ่ม" / "เปลี่ยนรูปสลิป") -->
+                        <template v-else>
+                            <!-- แถบแจ้งโหมดพิเศษ (โอนเพิ่มรอบ 2 หรือ เปลี่ยนสลิปเดิม) -->
+                            <div
+                                v-if="pendingRequest && pendingActionMode === 'append'"
+                                class="mb-6 p-4 rounded-xl bg-amber-50 border-2 border-amber-400 text-amber-950 space-y-1.5"
+                            >
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-extrabold text-sm text-amber-900">
+                                        โหมดแนบสลิปโอนเพิ่ม (ใบที่ {{ (pendingRequest.slip_count || 1) + 1 }})
+                                    </span>
+                                    <button
+                                        type="button"
+                                        @click="cancelPendingAction"
+                                        class="text-xs font-bold text-gray-600 hover:text-red-600 underline"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                </div>
+                                <p class="text-xs text-amber-800 leading-relaxed">
+                                    ยอดโอนเดิมของคุณคือ <strong>฿{{ Number(pendingRequest.amount || 0).toFixed(2) }}</strong> •
+                                    เมื่อแนบสลิปใบนี้ ระบบจะนำยอดที่โอนเพิ่มไป<strong>บวกรวมกับยอดเดิมในคำขอเดียวกันให้อัตโนมัติ</strong> (QR พร้อมเพย์ด้านซ้ายปรับตามยอดส่วนต่างให้แล้วครับ)
                                 </p>
                             </div>
 
-                            <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                                <PrimaryButton
-                                    type="submit"
-                                    class="w-full sm:w-auto bg-red-600 hover:bg-red-700"
-                                    :disabled="form.processing"
-                                >
-                                    <span v-if="!form.processing">ส่งคำขอเปิดสิทธิ์ VIP</span>
-                                    <span v-else>กำลังส่ง...</span>
-                                </PrimaryButton>
-                                <Link
-                                    :href="route('home')"
-                                    class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                >
-                                    กลับหน้าแรก
-                                </Link>
+                            <div
+                                v-else-if="pendingRequest && pendingActionMode === 'replace'"
+                                class="mb-6 p-4 rounded-xl bg-blue-50 border-2 border-blue-300 text-blue-950 space-y-1.5"
+                            >
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-extrabold text-sm text-blue-900">
+                                        โหมดเปลี่ยนรูปสลิปใหม่แทนใบเดิม
+                                    </span>
+                                    <button
+                                        type="button"
+                                        @click="cancelPendingAction"
+                                        class="text-xs font-bold text-gray-600 hover:text-red-600 underline"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                </div>
+                                <p class="text-xs text-blue-800 leading-relaxed">
+                                    รูปสลิปใหม่จะถูกบันทึกทับรายการเดิมของคุณที่กำลังรอตรวจ โดยไม่สร้างคำขอซ้ำซ้อนครับ
+                                </p>
                             </div>
-                        </form>
+
+                            <div v-if="form.hasErrors" class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                                กรุณาตรวจสอบข้อมูลอีกครั้ง
+                            </div>
+
+                            <form @submit.prevent="submit" class="space-y-5">
+                                <div>
+                                    <InputLabel
+                                        for="slip"
+                                        :value="pendingActionMode === 'append' ? `รูปสลิปที่โอนเพิ่ม (ใบที่ ${(pendingRequest?.slip_count || 1) + 1}) *` : 'สลิปการโอนเงิน *'"
+                                        class="font-medium text-gray-700"
+                                    />
+                                    <input
+                                        id="slip"
+                                        type="file"
+                                        accept="image/*"
+                                        class="mt-2 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-red-50 file:text-red-700 file:font-medium hover:file:bg-red-100"
+                                        @change="form.slip = $event.target.files[0]"
+                                    />
+                                    <p class="mt-1 text-xs text-gray-500">รองรับไฟล์รูป (JPG, PNG ฯลฯ ไม่เกิน 5 MB)</p>
+                                    <InputError class="mt-1" :message="form.errors.slip" />
+                                </div>
+
+                                <div>
+                                    <InputLabel
+                                        for="amount"
+                                        :value="pendingActionMode === 'append' ? 'ยอดที่โอนเพิ่มในสลิปใบนี้ (บาท)' : 'ยอดที่โอน (บาท)'"
+                                        class="font-medium text-gray-700"
+                                    />
+                                    <TextInput
+                                        id="amount"
+                                        v-model="form.amount"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="เช่น 179"
+                                        class="mt-2 block w-full"
+                                    />
+                                    <p v-if="pendingActionMode === 'append' && pendingRequest" class="mt-1 text-xs font-bold text-emerald-700">
+                                        ยอดเดิม ฿{{ Number(pendingRequest.amount || 0).toFixed(2) }} + โอนเพิ่ม ฿{{ Number(form.amount || 0).toFixed(2) }} = ยอดโอนรวมใหม่ ฿{{ (Number(pendingRequest.amount || 0) + Number(form.amount || 0)).toFixed(2) }}
+                                    </p>
+                                    <InputError class="mt-1" :message="form.errors.amount" />
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <InputLabel for="bank_account_name" value="ชื่อบัญชีผู้โอน" class="font-medium text-gray-700" />
+                                        <TextInput
+                                            id="bank_account_name"
+                                            v-model="form.bank_account_name"
+                                            type="text"
+                                            placeholder="ชื่อบัญชีของคุณ"
+                                            class="mt-2 block w-full"
+                                        />
+                                        <InputError class="mt-1" :message="form.errors.bank_account_name" />
+                                    </div>
+                                    <div>
+                                        <InputLabel for="bank_account_number" value="เลขท้ายบัญชีผู้โอน (4 ตัวท้าย)" class="font-medium text-gray-700" />
+                                        <TextInput
+                                            id="bank_account_number"
+                                            v-model="form.bank_account_number"
+                                            type="text"
+                                            placeholder="เช่น 1234"
+                                            class="mt-2 block w-full"
+                                        />
+                                        <InputError class="mt-1" :message="form.errors.bank_account_number" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <InputLabel for="note" value="แพ็กเกจที่เลือก / หมายเหตุ" class="font-medium text-gray-700" />
+                                    <textarea
+                                        id="note"
+                                        v-model="form.note"
+                                        rows="3"
+                                        class="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
+                                        placeholder="ระบุแพ็กเกจ เวลาที่โอน หรือข้อมูลเพิ่มเติม"
+                                    />
+                                    <InputError class="mt-1" :message="form.errors.note" />
+                                </div>
+
+                                <!-- ข้อตกลงการใช้บริการและคุ้มครองข้อมูลส่วนบุคคล (Disclaimer & PDPA) -->
+                                <div class="rounded-xl bg-amber-50/80 border border-amber-200 p-4 text-xs text-gray-700 space-y-1.5 leading-relaxed">
+                                    <div class="font-bold text-gray-900">เงื่อนไขการให้บริการและการคุ้มครองข้อมูลส่วนบุคคล (PDPA)</div>
+                                    <p>
+                                        • <strong>ขอบเขตบริการ:</strong> ค่าสมาชิก VIP เป็นค่าบริการในการเข้าถึงระบบฐานข้อมูลสถิติและการจัดอันดับเชิงลึกของเว็บไซต์เท่านั้น ข้อมูลตัวเลขที่แสดงเป็นเพียงการวิเคราะห์เชิงสถิติและความเชื่อส่วนบุคคล ไม่มีการการันตีผลรางวัลสลากกินแบ่งรัฐบาล
+                                    </p>
+                                    <p>
+                                        • <strong>การคุ้มครองข้อมูล (PDPA):</strong> ข้อมูลการโอนเงินและรูปภาพสลิปของท่านถูกจัดเก็บอย่างปลอดภัย เพื่อใช้ตรวจสอบยืนยันสิทธิ์สมาชิก VIP เท่านั้น ไม่มีการนำไปเผยแพร่หรือใช้ในวัตถุประสงค์อื่น
+                                    </p>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                                    <PrimaryButton
+                                        type="submit"
+                                        class="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+                                        :disabled="form.processing"
+                                    >
+                                        <span v-if="!form.processing">
+                                            {{ pendingActionMode === 'append' ? 'บันทึกสลิปโอนเพิ่ม' : pendingActionMode === 'replace' ? 'อัปเดตรูปสลิปใหม่' : 'ส่งคำขอเปิดสิทธิ์ VIP' }}
+                                        </span>
+                                        <span v-else>กำลังส่ง...</span>
+                                    </PrimaryButton>
+                                    <button
+                                        v-if="pendingActionMode"
+                                        type="button"
+                                        @click="cancelPendingAction"
+                                        class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                    <Link
+                                        v-else
+                                        :href="route('home')"
+                                        class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                    >
+                                        กลับหน้าแรก
+                                    </Link>
+                                </div>
+                            </form>
+                        </template>
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- Popup Modal แจ้งเตือนเมื่อส่งสลิปสำเร็จ (เด้งกลางหน้าจอชัดเจน 100%) -->
+        <div
+            v-if="showSuccessModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs"
+        >
+            <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl border-2 border-emerald-400 overflow-hidden text-center animate-in fade-in zoom-in duration-200">
+                <div class="bg-gradient-to-r from-emerald-600 to-green-600 px-6 py-7 text-white">
+                    <div class="w-20 h-20 rounded-full bg-white text-emerald-600 flex items-center justify-center mx-auto shadow-lg mb-4">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span class="inline-block px-3 py-0.5 rounded-full bg-yellow-300 text-gray-950 text-xs font-extrabold mb-2">
+                        ดำเนินการเสร็จสิ้น
+                    </span>
+                    <h3 class="text-2xl font-extrabold">
+                        ส่งสลิปสมัคร VIP สำเร็จ!
+                    </h3>
+                </div>
+
+                <div class="p-6 space-y-5">
+                    <div class="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-sm space-y-1.5">
+                        <div class="flex items-center justify-between text-gray-600">
+                            <span>รายการที่เลือก:</span>
+                            <strong class="text-gray-900">{{ selectedPackage?.name }} ({{ selectedPackage?.days }} วัน)</strong>
+                        </div>
+                        <div v-if="lastSubmittedAmount" class="flex items-center justify-between text-gray-600">
+                            <span>ยอดเงินที่แจ้งโอน:</span>
+                            <strong class="text-emerald-700 text-base">฿{{ Number(lastSubmittedAmount).toFixed(2) }}</strong>
+                        </div>
+                        <div class="flex items-center justify-between text-gray-600 pt-1 border-t border-emerald-200/70">
+                            <span>สถานะปัจจุบัน:</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">
+                                รอแอดมินตรวจสอบอนุมัติ
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                        ระบบได้ส่งรูปสลิปแจ้งเตือนไปยังแอดมินเรียบร้อยแล้ว เมื่อแอดมินกดอนุมัติ ป้ายสถานะด้านบนเมนูของคุณจะเปลี่ยนเป็น <strong>VIP</strong> ทันทีครับ
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
+                        <button
+                            type="button"
+                            @click="showSuccessModal = false"
+                            class="flex-1 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-lg transition"
+                        >
+                            รับทราบ
+                        </button>
+                        <Link
+                            :href="route('lucky-numbers.index')"
+                            class="flex-1 px-5 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-sm transition"
+                        >
+                            ไปหน้าเลขเด็ด →
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
     </PublicLayout>
 </template>

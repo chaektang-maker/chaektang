@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backoffice;
 use App\Http\Controllers\Controller;
 use App\Models\Subscription;
 use App\Models\VipRequest;
+use App\Services\MediaStorageService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,6 +13,8 @@ class VipRequestAdminController extends Controller
 {
     public function index(Request $request)
     {
+        VipRequest::ensureColumnsExist();
+
         $status = $request->string('status')->toString();
         $search = $request->string('q')->toString();
 
@@ -38,6 +41,12 @@ class VipRequestAdminController extends Controller
             ->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
             ->orderByDesc('created_at')
             ->paginate(20)
+            ->through(function (VipRequest $req) {
+                $data = $req->toArray();
+                $extra = is_array($req->extra_slips) ? $req->extra_slips : [];
+                $data['slip_count'] = 1 + count($extra);
+                return $data;
+            })
             ->withQueryString();
 
         $stats = [
@@ -59,6 +68,8 @@ class VipRequestAdminController extends Controller
 
     public function show(VipRequest $vipRequest)
     {
+        VipRequest::ensureColumnsExist();
+
         $vipRequest->load(['customer', 'approver']);
 
         $amount = (float) ($vipRequest->amount ?? 0);
@@ -79,8 +90,37 @@ class VipRequestAdminController extends Controller
             ->orderByDesc('ends_at')
             ->first();
 
+        // รวมรายการสลิปทั้งหมดในคำขอนี้ (สลิปใบแรก + สลิปที่ลูกค้าโอนเพิ่มใน extra_slips)
+        $extraSlips = is_array($vipRequest->extra_slips) ? $vipRequest->extra_slips : [];
+        $extraTotal = array_sum(array_map(fn ($s) => (float) ($s['amount'] ?? 0), $extraSlips));
+        $firstSlipAmount = max(0, $amount - $extraTotal);
+
+        $allSlips = [
+            [
+                'number' => 1,
+                'label' => count($extraSlips) > 0 ? 'สลิปใบที่ 1 (โอนรอบแรก)' : 'สลิปการโอนเงิน',
+                'url' => MediaStorageService::url($vipRequest->slip_path),
+                'amount' => count($extraSlips) > 0 ? $firstSlipAmount : $amount,
+                'created_at' => $vipRequest->created_at?->toIso8601String(),
+            ],
+        ];
+
+        foreach ($extraSlips as $idx => $ex) {
+            if (!empty($ex['path'])) {
+                $allSlips[] = [
+                    'number' => $idx + 2,
+                    'label' => 'สลิปใบที่ ' . ($idx + 2) . ' (โอนเพิ่มให้ครบยอด)',
+                    'url' => MediaStorageService::url($ex['path']),
+                    'amount' => isset($ex['amount']) ? (float) $ex['amount'] : null,
+                    'created_at' => $ex['created_at'] ?? null,
+                ];
+            }
+        }
+
         $requestData = $vipRequest->toArray();
-        $requestData['slip_url'] = \App\Services\MediaStorageService::url($vipRequest->slip_path);
+        $requestData['slip_url'] = MediaStorageService::url($vipRequest->slip_path);
+        $requestData['all_slips'] = $allSlips;
+        $requestData['slip_count'] = count($allSlips);
         $requestData['recommended_days'] = $recommendedDays;
         $requestData['package_label'] = $packageLabel;
         $requestData['customer_is_vip'] = $activeSub !== null;
@@ -93,6 +133,8 @@ class VipRequestAdminController extends Controller
 
     public function approve(Request $request, VipRequest $vipRequest)
     {
+        VipRequest::ensureColumnsExist();
+
         if ($vipRequest->status !== 'pending') {
             return redirect()->back()->with('error', 'คำขอนี้ถูกจัดการไปแล้ว');
         }
@@ -102,7 +144,6 @@ class VipRequestAdminController extends Controller
         ]);
 
         $customer = $vipRequest->customer;
-
         $now = now();
 
         // สร้างหรือขยาย subscription VIP (ลูกค้า)
@@ -137,12 +178,21 @@ class VipRequestAdminController extends Controller
             'approved_at' => now(),
         ]);
 
+        // เคลียร์รายการ pending อื่นๆ ที่อาจค้างซ้ำซ้อนของลูกค้าคนเดียวกันออกอัตโนมัติ เพื่อไม่ให้แอดมินเผลอกดอนุมัติเบิ้ล
+        VipRequest::query()
+            ->where('customer_id', $customer->id)
+            ->where('status', 'pending')
+            ->where('id', '!=', $vipRequest->id)
+            ->delete();
+
         return redirect()->route('backoffice.vip-requests.index')
             ->with('success', "อนุมัติ VIP ให้ {$customer->name} จำนวน {$data['days']} วัน สำเร็จ");
     }
 
     public function reject(Request $request, VipRequest $vipRequest)
     {
+        VipRequest::ensureColumnsExist();
+
         if ($vipRequest->status !== 'pending') {
             return redirect()->back()->with('error', 'คำขอนี้ถูกจัดการไปแล้ว');
         }

@@ -223,6 +223,11 @@ const recommendedPackageText = (amount) => {
                                         <div class="text-xs text-indigo-600 font-medium">
                                             แนะนำ: {{ recommendedPackageText(r.amount) }}
                                         </div>
+                                        <div v-if="r.slip_count > 1" class="mt-1">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">
+                                                แนบรวม {{ r.slip_count }} สลิป (โอนเพิ่ม)
+                                            </span>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 text-xs text-gray-600">
                                         <div>บัญชี: <strong>{{ r.bank_account_name || '-' }}</strong></div>

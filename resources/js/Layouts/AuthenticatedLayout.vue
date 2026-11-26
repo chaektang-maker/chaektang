@@ -23,7 +23,7 @@ const showingNavigationDropdown = ref(false);
                         <div class="flex flex-wrap items-center gap-x-1 gap-y-0">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('backoffice.dashboard')">
+                                <Link :href="($page.props.auth.user?.is_source_owner && !$page.props.auth.user?.is_admin) ? route('backportal.index') : route('backoffice.dashboard')">
                                     <ApplicationLogo
                                         class="block h-9 w-auto fill-current text-gray-800"
                                     />
@@ -35,10 +35,19 @@ const showingNavigationDropdown = ref(false);
                                 class="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-1 sm:ms-6"
                             >
                                 <NavLink
+                                    v-if="!$page.props.auth.user?.is_source_owner || $page.props.auth.user?.is_admin"
                                     :href="route('backoffice.dashboard')"
                                     :active="route().current('backoffice.dashboard')"
                                 >
                                     Dashboard
+                                </NavLink>
+
+                                <NavLink
+                                    v-if="$page.props.auth.user?.is_source_owner || $page.props.auth.user?.is_admin"
+                                    :href="route('backportal.index')"
+                                    :active="route().current('backportal.*') || route().current('backoffice.my-portal.*')"
+                                >
+                                    พอร์ทัลเจ้าสำนัก
                                 </NavLink>
 
                                 <NavLink
@@ -107,7 +116,7 @@ const showingNavigationDropdown = ref(false);
                                             <button
                                                 type="button"
                                                 class="inline-flex items-center px-2 py-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
-                                                :class="route().current('backoffice.platforms.*') || route().current('backoffice.affiliate-products.*') || route().current('backoffice.posts.*') || route().current('backoffice.phone-pairs.*') ? 'text-gray-900 font-bold border-b-2 border-indigo-500' : 'text-gray-500 hover:text-gray-700'"
+                                                :class="route().current('backoffice.platforms.*') || route().current('backoffice.affiliate-products.*') || route().current('backoffice.posts.*') || route().current('backoffice.phone-pairs.*') || route().current('backoffice.dream-dictionary.*') ? 'text-gray-900 font-bold border-b-2 border-indigo-500' : 'text-gray-500 hover:text-gray-700'"
                                             >
                                                 <span>คอนเทนต์ & สายมู</span>
                                                 <svg class="ms-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -116,6 +125,9 @@ const showingNavigationDropdown = ref(false);
                                             </button>
                                         </template>
                                         <template #content>
+                                            <DropdownLink :href="route('backoffice.dream-dictionary.index')">
+                                                🌙 ตำราทำนายฝัน (ก-ฮ)
+                                            </DropdownLink>
                                             <DropdownLink :href="route('backoffice.phone-pairs.index')">
                                                 📱 ตำราเบอร์มงคล (00-99)
                                             </DropdownLink>
@@ -278,10 +290,18 @@ const showingNavigationDropdown = ref(false);
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
+                            v-if="!$page.props.auth.user?.is_source_owner || $page.props.auth.user?.is_admin"
                             :href="route('backoffice.dashboard')"
                             :active="route().current('backoffice.dashboard')"
                         >
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.is_source_owner || $page.props.auth.user?.is_admin"
+                            :href="route('backportal.index')"
+                            :active="route().current('backportal.*') || route().current('backoffice.my-portal.*')"
+                        >
+                            พอร์ทัลเจ้าสำนัก
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             v-if="$page.props.auth.user?.can_access?.sources"
@@ -317,6 +337,13 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('backoffice.results.*')"
                         >
                             🎯 ตารางผลหวย & ความแม่น
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="$page.props.auth.user?.is_admin"
+                            :href="route('backoffice.dream-dictionary.index')"
+                            :active="route().current('backoffice.dream-dictionary.*')"
+                        >
+                            🌙 ตำราทำนายฝัน (ก-ฮ)
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             v-if="$page.props.auth.user?.is_admin"

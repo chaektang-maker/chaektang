@@ -19,6 +19,12 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user('web');
+        // ป้องกันเจ้าสำนักเข้าดูหน้า Dashboard รายได้ของแอดมิน
+        if ($user && $user->isSourceOwner() && !$user->isAdmin()) {
+            return redirect()->route('backportal.index');
+        }
+
         $now = now();
 
         // 1. VIP & Revenue Stats
