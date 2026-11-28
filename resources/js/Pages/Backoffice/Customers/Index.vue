@@ -43,6 +43,55 @@ const grantVipForm = useForm({
     amount: 0,
 });
 
+// Modal สำหรับรีเซ็ตรหัสผ่าน หรือ สร้างลิงก์ให้ลูกค้าตั้งรหัสผ่านใหม่เอง
+const passwordCustomer = ref(null);
+const copiedResetLink = ref(false);
+const resetPasswordForm = useForm({
+    new_password: '',
+});
+
+const openPasswordModal = (customer) => {
+    passwordCustomer.value = customer;
+    resetPasswordForm.new_password = '';
+    resetPasswordForm.clearErrors();
+};
+
+const closePasswordModal = () => {
+    passwordCustomer.value = null;
+};
+
+const generateSelfResetLink = (customer) => {
+    router.post(
+        route('backoffice.customers.reset-link', customer.id),
+        {},
+        {
+            preserveScroll: true,
+        }
+    );
+};
+
+const copyGeneratedLink = async (url) => {
+    if (!url) return;
+    try {
+        await navigator.clipboard.writeText(url);
+        copiedResetLink.value = true;
+        setTimeout(() => {
+            copiedResetLink.value = false;
+        }, 2500);
+    } catch (e) {
+    }
+};
+
+const submitDirectPasswordReset = () => {
+    if (!passwordCustomer.value) return;
+    resetPasswordForm.post(route('backoffice.customers.reset-password', passwordCustomer.value.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            closePasswordModal();
+        },
+    });
+};
+
 const openGrantVipModal = (customer) => {
     selectedCustomer.value = customer;
     grantVipForm.days = 30;
@@ -118,6 +167,40 @@ const formatDateTime = (iso) => {
                 </div>
                 <div v-if="page.props.flash?.error" class="rounded-xl bg-red-50 border border-red-200 p-4 text-red-800 font-medium">
                     ⚠️ {{ page.props.flash.error }}
+                </div>
+
+                <!-- กล่องแสดงลิงก์สำหรับส่งให้ลูกค้าไปตั้งรหัสผ่านใหม่ด้วยตัวเอง -->
+                <div
+                    v-if="page.props.flash?.generated_reset_link"
+                    class="rounded-2xl bg-indigo-50 border-2 border-indigo-400 p-5 space-y-3 shadow-md"
+                >
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-xs font-extrabold mb-1">
+                                ลิงก์ให้ลูกค้าตั้งรหัสผ่านใหม่ด้วยตัวเอง
+                            </span>
+                            <h3 class="text-base font-extrabold text-gray-900">
+                                สมาชิก: {{ page.props.flash.generated_reset_link.customer_name }} ({{ page.props.flash.generated_reset_link.customer_email }})
+                            </h3>
+                        </div>
+                        <button
+                            type="button"
+                            @click="copyGeneratedLink(page.props.flash.generated_reset_link.url)"
+                            class="shrink-0 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs sm:text-sm shadow transition"
+                        >
+                            {{ copiedResetLink ? '✓ คัดลอกลิงก์แล้ว!' : 'คัดลอกลิงก์ส่งให้ลูกค้า' }}
+                        </button>
+                    </div>
+                    <input
+                        type="text"
+                        readonly
+                        :value="page.props.flash.generated_reset_link.url"
+                        class="w-full px-3.5 py-2 rounded-xl bg-white border border-indigo-200 text-xs font-mono text-gray-800 select-all"
+                        @click="$event.target.select()"
+                    />
+                    <p class="text-xs text-indigo-800">
+                        * ก๊อปปี้ลิงก์นี้ส่งให้ลูกค้าในแชท LINE ได้เลยครับ เมื่อลูกค้าคลิกเปิดลิงก์ ลูกค้าจะสามารถพิมพ์ตั้งรหัสผ่านใหม่ด้วยตัวเองได้ทันที
+                    </p>
                 </div>
 
                 <!-- Summary Stats -->
@@ -210,10 +293,26 @@ const formatDateTime = (iso) => {
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
                                         <button
                                             type="button"
+                                            @click="generateSelfResetLink(c)"
+                                            class="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 transition"
+                                            title="สร้างลิงก์ส่งให้ลูกค้าไปตั้งรหัสผ่านใหม่ด้วยตัวเอง"
+                                        >
+                                            สร้างลิงก์รีเซ็ตรหัส
+                                        </button>
+                                        <button
+                                            type="button"
+                                            @click="openPasswordModal(c)"
+                                            class="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold border border-gray-300 transition"
+                                            title="แอดมินตั้งรหัสผ่านใหม่ให้ลูกค้าโดยตรง"
+                                        >
+                                            ตั้งรหัสใหม่
+                                        </button>
+                                        <button
+                                            type="button"
                                             @click="openGrantVipModal(c)"
                                             class="inline-flex items-center px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-sm transition"
                                         >
-                                            {{ c.is_vip ? '👑 ต่ออายุ VIP' : '👑 เปิดสิทธิ์ VIP' }}
+                                            {{ c.is_vip ? 'ต่ออายุ VIP' : 'เปิดสิทธิ์ VIP' }}
                                         </button>
                                         <button
                                             v-if="c.is_vip"
@@ -327,6 +426,49 @@ const formatDateTime = (iso) => {
                         <SecondaryButton type="button" @click="closeGrantVipModal">ยกเลิก</SecondaryButton>
                         <PrimaryButton type="submit" :disabled="grantVipForm.processing">
                             บันทึกสิทธิ์ VIP
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal ตั้งรหัสผ่านใหม่ให้ลูกค้า หรือ สร้างลิงก์ให้ลูกค้าตั้งเอง -->
+        <div
+            v-if="passwordCustomer"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            @click.self="closePasswordModal"
+        >
+            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h3 class="text-lg font-bold text-gray-900">
+                        ตั้งรหัสผ่านใหม่ให้สมาชิก
+                    </h3>
+                    <button type="button" @click="closePasswordModal" class="text-gray-400 hover:text-gray-600 text-xl leading-none">
+                        &times;
+                    </button>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm">
+                    <div class="font-bold text-gray-900">{{ passwordCustomer.name }}</div>
+                    <div class="text-gray-600 text-xs">เบอร์โทร / อีเมล: {{ passwordCustomer.email }}</div>
+                </div>
+
+                <form class="space-y-4" @submit.prevent="submitDirectPasswordReset">
+                    <div>
+                        <InputLabel value="กำหนดรหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)" />
+                        <TextInput
+                            v-model="resetPasswordForm.new_password"
+                            type="text"
+                            placeholder="เช่น เบอร์โทรของลูกค้า หรือ 12345678"
+                            class="mt-1.5 block w-full"
+                            required
+                        />
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t">
+                        <SecondaryButton type="button" @click="closePasswordModal">ยกเลิก</SecondaryButton>
+                        <PrimaryButton type="submit" :disabled="resetPasswordForm.processing">
+                            บันทึกรหัสผ่านใหม่
                         </PrimaryButton>
                     </div>
                 </form>

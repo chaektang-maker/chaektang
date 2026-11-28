@@ -61,14 +61,27 @@ class LuckyNumbersController extends Controller
         $canViewVip = ($request->user('customer') && $request->user('customer')->isVip())
             || ($request->user('web') && $request->user('web')->isAdmin());
 
+        $filterSourceId = $request->integer('source_id') ?: null;
+        $selectedSource = $filterSourceId
+            ? Source::where('status', 'active')->find($filterSourceId, ['id', 'name'])
+            : null;
+        if (!$selectedSource) {
+            $filterSourceId = null;
+        }
+
         $query = LotteryNumber::query()
             ->with(['source'])
             ->join('sources', 'sources.id', '=', 'lottery_numbers.source_id')
             ->where('lottery_numbers.draw_date', $drawDate)
             ->where('sources.status', 'active')
-            ->whereNull('sources.deleted_at')
-            // สำนักที่กำลังโปรโมท (is_promoted = true และยังไม่หมดอายุ promoted_until) แสดงขึ้นก่อนเสมอ
-            ->orderByRaw('CASE WHEN sources.is_promoted = 1 AND (sources.promoted_until IS NULL OR DATE(sources.promoted_until) >= CURDATE()) THEN 1 ELSE 0 END DESC');
+            ->whereNull('sources.deleted_at');
+
+        if ($filterSourceId) {
+            $query->where('lottery_numbers.source_id', $filterSourceId);
+        }
+
+        // สำนักที่กำลังโปรโมท (is_promoted = true และยังไม่หมดอายุ promoted_until) แสดงขึ้นก่อนเสมอ
+        $query->orderByRaw('CASE WHEN sources.is_promoted = 1 AND (sources.promoted_until IS NULL OR DATE(sources.promoted_until) >= CURDATE()) THEN 1 ELSE 0 END DESC');
 
         if ($sort === 'popular') {
             $query->orderByDesc('sources.popularity_score')
@@ -124,6 +137,21 @@ class LuckyNumbersController extends Controller
             ->pluck('count', 'source_id')
             ->toArray();
 
+        // คำนวณสิทธิ์การโหวตของผู้ใช้ปัจจุบันในงวดนี้ (ส่งไปรอบเดียว ไม่ต้องให้การ์ด 24 ใบยิง API ซ้ำ)
+        $customerId = Auth::guard('customer')->id();
+        $userId = $customerId ? null : Auth::guard('web')->id();
+        $isVoterLoggedIn = (bool) ($customerId || $userId);
+        $remainingVotes = 0;
+
+        if ($isVoterLoggedIn) {
+            $voterColumn = $customerId ? 'customer_id' : 'user_id';
+            $voterId = $customerId ?: $userId;
+            $usedVotes = UserVote::where($voterColumn, $voterId)
+                ->where('draw_date', $drawDate)
+                ->count();
+            $remainingVotes = max(0, 3 - $usedVotes);
+        }
+
         // เพิ่มข้อมูล vote count, สถานะโปรโมท และซ่อนเลข 2 ตัว / 3 ตัวในฝั่ง Backend สำหรับผู้ที่ไม่ได้เป็น VIP
         // (ยกเว้นสำนักที่กำลังโปรโมทสปอนเซอร์ จะเปิดเลขให้เห็นครบ 100% เพื่อความคุ้มค่าของสปอนเซอร์)
         $numbers->getCollection()->transform(function ($number) use ($voteCounts, $vipSourceIds, $canViewVip, $newViewedIds) {
@@ -174,11 +202,20 @@ class LuckyNumbersController extends Controller
             'filters' => [
                 'draw_date' => $drawDate,
                 'sort' => $sort,
+                'source_id' => $filterSourceId,
             ],
+            'selectedSource' => $selectedSource ? [
+                'id' => $selectedSource->id,
+                'name' => $selectedSource->name,
+            ] : null,
             'availableDrawDates' => $availableDrawDates,
             'numbers' => $numbers,
             'hotNumbers' => $hotNumbers,
             'canViewVip' => $canViewVip,
+            'voteStatus' => [
+                'is_logged_in' => $isVoterLoggedIn,
+                'remaining_votes' => $remainingVotes,
+            ],
         ]);
     }
 

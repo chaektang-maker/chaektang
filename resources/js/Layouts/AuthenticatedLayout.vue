@@ -450,6 +450,17 @@ const showingNavigationDropdown = ref(false);
 
             <!-- Page Content -->
             <main>
+                <div
+                    v-if="$page.props.flash?.error"
+                    class="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8"
+                >
+                    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-sm flex items-center gap-2">
+                        <svg class="h-5 w-5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ $page.props.flash.error }}</span>
+                    </div>
+                </div>
                 <slot />
             </main>
         </div>

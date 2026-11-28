@@ -29,13 +29,13 @@ const submit = () => {
             <div class="text-center mb-6">
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">สมัครสมาชิกฟรี</h1>
                 <p class="text-sm text-gray-600">
-                    รับสิทธิ์โหวตสำนักหวย ทำนายฝัน AI 3 ครั้ง/วัน และสมัคร VIP เพื่อดูเลขเด็ดเจาะลึก
+                    ใช้เพียงเบอร์โทรศัพท์มือถือ (หรืออีเมล) เพื่อรับสิทธิ์โหวตสำนักหวย และสมัคร VIP ดูเลขเด็ดเจาะลึก
                 </p>
             </div>
 
             <form @submit.prevent="submit" class="space-y-5">
                 <div>
-                    <InputLabel for="name" value="ชื่อที่ใช้แสดง / ชื่อ-นามสกุล" class="text-gray-700 font-medium" />
+                    <InputLabel for="name" value="ชื่อที่ใช้แสดง / ชื่อ-นามสกุล *" class="text-gray-700 font-medium" />
 
                     <TextInput
                         id="name"
@@ -52,17 +52,20 @@ const submit = () => {
                 </div>
 
                 <div>
-                    <InputLabel for="email" value="อีเมล" class="text-gray-700 font-medium" />
+                    <InputLabel for="email" value="เบอร์โทรศัพท์มือถือ 10 หลัก (หรือ อีเมล) *" class="text-gray-700 font-medium" />
 
                     <TextInput
                         id="email"
-                        type="email"
+                        type="text"
                         class="mt-1.5 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                         v-model="form.email"
                         required
                         autocomplete="username"
-                        placeholder="กรุณากรอกอีเมลของคุณ"
+                        placeholder="กรอกเบอร์มือถือ เช่น 0891234567 (หรืออีเมลของคุณ)"
                     />
+                    <p class="mt-1 text-xs text-gray-500">
+                        * หากไม่มีอีเมล สามารถใช้เบอร์โทรศัพท์มือถือ 10 หลักของคุณแทนได้เลยครับ
+                    </p>
 
                     <InputError class="mt-1.5" :message="form.errors.email" />
                 </div>

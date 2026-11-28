@@ -27,9 +27,28 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
+    }
+
+    /**
+     * แปลงเบอร์โทรศัพท์ 10 หลัก หรืออีเมล ให้ตรงกับคอลัมน์ email ในตาราง users
+     */
+    protected function prepareForValidation(): void
+    {
+        $raw = trim((string) $this->input('email', ''));
+        $digitsOnly = preg_replace('/[^0-9]/', '', $raw);
+
+        if (!str_contains($raw, '@') && preg_match('/^0[0-9]{9}$/', $digitsOnly)) {
+            $this->merge([
+                'email' => $digitsOnly,
+            ]);
+        } else {
+            $this->merge([
+                'email' => Str::lower($raw),
+            ]);
+        }
     }
 
     /**

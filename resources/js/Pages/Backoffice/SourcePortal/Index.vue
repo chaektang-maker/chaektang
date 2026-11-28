@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
@@ -43,6 +43,7 @@ const profileForm = useForm({
 });
 
 const submitProfile = () => {
+    profileForm.source_id = props.source?.id || '';
     profileForm.post(route('backportal.profile'), {
         preserveScroll: true,
     });
@@ -75,6 +76,7 @@ const loadNumberToEdit = (item) => {
 };
 
 const submitNumbers = () => {
+    numberForm.source_id = props.source?.id || '';
     numberForm.post(route('backportal.numbers'), {
         preserveScroll: true,
     });
@@ -93,7 +95,29 @@ const productForm = useForm({
     is_active: true,
 });
 
+// เมื่อแอดมินสลับดูสำนักอื่นใน Dropdown ให้ซิงค์ค่าในฟอร์มทั้งหมดตามสำนักที่เลือกใหม่ทันที
+watch(
+    () => props.source,
+    (newSource) => {
+        profileForm.source_id = newSource?.id || '';
+        profileForm.name = newSource?.name || '';
+        profileForm.description = newSource?.description || '';
+
+        const draw = numberForm.draw_date || props.availableDrawDates?.[0] || '';
+        const found = props.numbers?.find((n) => n.draw_date === draw);
+        numberForm.source_id = newSource?.id || '';
+        numberForm.draw_date = draw;
+        numberForm.two_digit = found?.two_digit || '';
+        numberForm.three_digit = found?.three_digit || '';
+        numberForm.running_numbers = found?.running_numbers || '';
+
+        productForm.source_id = newSource?.id || '';
+    },
+    { deep: true }
+);
+
 const openCreateProduct = () => {
+    productForm.source_id = props.source?.id || '';
     productForm.id = null;
     productForm.title = '';
     productForm.description = '';
@@ -106,6 +130,7 @@ const openCreateProduct = () => {
 };
 
 const openEditProduct = (p) => {
+    productForm.source_id = props.source?.id || '';
     productForm.id = p.id;
     productForm.title = p.title;
     productForm.description = p.description || '';
@@ -122,6 +147,7 @@ const onProductImageChange = (e) => {
 };
 
 const submitProduct = () => {
+    productForm.source_id = props.source?.id || '';
     productForm.post(route('backportal.products.save'), {
         preserveScroll: true,
         forceFormData: true,
@@ -187,6 +213,28 @@ const deleteProduct = (p) => {
                 </div>
 
                 <template v-else>
+                    <!-- แจ้งเตือนกรณีสำนักยังอยู่ในสถานะซ่อนไว้ / รอแอดมินกดเปิดแสดงผล -->
+                    <div
+                        v-if="source.status !== 'active'"
+                        class="p-4 sm:p-5 rounded-2xl bg-amber-50 border-2 border-amber-400 text-amber-950 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                        <div class="space-y-1">
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-950 text-xs font-extrabold">
+                                <span>⏳ สถานะสำนัก: รอแอดมินเปิดแสดงผลบนหน้าเว็บ (ซ่อนอยู่ชั่วคราว)</span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-amber-900 leading-relaxed">
+                                คุณสามารถ <strong>บันทึกข้อมูลสำนัก ลงเลขเด็ดประจำงวด และเพิ่มสินค้าสายมูไว้ล่วงหน้าได้ตามปกติ</strong> ข้อมูลทั้งหมดจะถูกเก็บไว้ในระบบและจะแสดงขึ้นหน้าเว็บทันทีที่แอดมินกดเปิดแสดงสำนักของคุณครับ
+                            </p>
+                        </div>
+                        <Link
+                            v-if="isAdmin"
+                            :href="route('backoffice.sources.index', { q: source.name })"
+                            class="shrink-0 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow transition text-center"
+                        >
+                            ไปหน้าเปิดแสดงสำนักนี้ →
+                        </Link>
+                    </div>
+
                     <!-- แถบสถานะสำนัก & ยอดคนดู -->
                     <div class="bg-gradient-to-r from-red-700 via-red-600 to-amber-600 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div class="space-y-1">

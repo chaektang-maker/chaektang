@@ -34,7 +34,7 @@ class MyNumbersController extends Controller
             ->orderByDesc('draw_date')
             ->get()
             ->pluck('draw_date')
-            ->map(fn ($d) => $d->format('Y-m-d'))
+            ->map(fn ($d) => $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : substr((string) $d, 0, 10))
             ->values();
 
         return Inertia::render('Backoffice/MyNumbers/Index', [
@@ -55,7 +55,7 @@ class MyNumbersController extends Controller
             ->orderByDesc('draw_date')
             ->get()
             ->pluck('draw_date')
-            ->map(fn ($d) => $d->format('Y-m-d'))
+            ->map(fn ($d) => $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : substr((string) $d, 0, 10))
             ->values();
 
         return Inertia::render('Backoffice/MyNumbers/Create', [
@@ -123,7 +123,7 @@ class MyNumbersController extends Controller
             ->orderByDesc('draw_date')
             ->get()
             ->pluck('draw_date')
-            ->map(fn ($d) => $d->format('Y-m-d'))
+            ->map(fn ($d) => $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : substr((string) $d, 0, 10))
             ->values();
 
         $number->load('source');

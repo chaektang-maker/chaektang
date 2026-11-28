@@ -144,6 +144,9 @@ class VipRequestAdminController extends Controller
         ]);
 
         $customer = $vipRequest->customer;
+        if (!$customer) {
+            return redirect()->back()->with('error', 'ไม่พบข้อมูลบัญชีสมาชิกของคำขอนี้ (บัญชีอาจถูกลบไปแล้ว)');
+        }
         $now = now();
 
         // สร้างหรือขยาย subscription VIP (ลูกค้า)

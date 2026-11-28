@@ -17,7 +17,7 @@ const props = defineProps({
 });
 
 const packages = props.paymentConfig?.packages || [
-    { id: 'draw_15d', name: 'แพ็กเกจรายงวด', days: 15, price: 99, badge: 'เริ่มต้น', popular: false, description: 'ปลดล็อกเลขเด็ด VIP + ทำนายฝันตีเลขมงคลไม่จำกัด นาน 15 วัน' },
+    { id: 'draw_15d', name: 'แพ็กเกจรายงวด', days: 15, price: 99, badge: 'เริ่มต้น', popular: false, description: 'ปลดล็อกเลขเด็ด VIP + เลขมาแรงอันดับ 1 + เลขฝัน 3 ตัวตรง นาน 15 วัน' },
     { id: 'monthly_30d', name: 'แพ็กเกจรายเดือน', days: 30, price: 179, badge: 'ขายดีที่สุด', popular: true, description: 'คุ้มค่า! ครอบคลุม 2 งวดเต็ม ปลดล็อกทุกฟีเจอร์ VIP นาน 30 วัน' },
     { id: 'quarterly_90d', name: 'แพ็กเกจ 3 เดือน', days: 90, price: 450, badge: 'ประหยัด 25%', popular: false, description: 'ครอบคลุม 6 งวดเต็ม เฉลี่ยงวดละ 75 บาท นาน 90 วัน' },
 ];
@@ -49,7 +49,10 @@ const selectPackage = (pkg) => {
         const paid = Number(pendingRequest.value.amount || 0);
         const diff = Math.max(0, Number(pkg.price) - paid);
         form.amount = diff > 0 ? String(diff) : String(pkg.price);
-        form.note = `โอนเพิ่มให้ครบ ${pkg.name} (${pkg.days} วัน)`;
+        form.note = `โอนเพิ่มรอบที่ ${(pendingRequest.value?.slip_count || 1) + 1} เพื่อให้ครบ ${pkg.name} (${pkg.days} วัน)`;
+    } else if (pendingActionMode.value === 'replace') {
+        form.amount = String(pkg.price);
+        form.note = `เปลี่ยนรูปสลิปใหม่ (${pkg.name} • ${pkg.days} วัน)`;
     } else {
         form.amount = String(pkg.price);
         form.note = `สมัคร ${pkg.name} (${pkg.days} วัน)`;
@@ -253,7 +256,7 @@ const submit = () => {
                             </span>
                             <h1 class="text-2xl md:text-3xl font-bold mb-2">สมัครสมาชิก VIP แจกตัง</h1>
                             <p class="text-red-100 text-sm md:text-base">
-                                ปลดล็อกเลขเด็ดสำนักแม่นยำสูงสุด เลขมาแรงอันดับ 1 และทำนายฝันตีเลขมงคลได้ไม่จำกัด
+                                ปลดล็อกเลขเด็ดสำนักแม่นยำสูงสุด เลขมาแรงอันดับ 1 และชุดเลขฝัน 3 ตัวตรงพร้อมเทียบเลขชนสำนักดัง
                             </p>
                         </div>
                         <div v-if="activeSubscription" class="bg-white/15 backdrop-blur rounded-xl p-4 border border-white/30 text-sm shrink-0">
@@ -269,9 +272,9 @@ const submit = () => {
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                                 </svg>
-                                <span>ปลดล็อกเลข VIP</span>
+                                <span>ปลดล็อกเลขสำนัก VIP</span>
                             </div>
-                            <div class="text-red-100 text-xs">ดูเลข 2 ตัว / 3 ตัว ของสำนักแม่นยำสูงสุดครบทุกสำนัก</div>
+                            <div class="text-red-100 text-xs">เปิดดูเลข 2 ตัว / 3 ตัว ของสำนักแม่นยำสูงสุดและสำนักยอดนิยมครบทุกสำนัก</div>
                         </div>
                         <div class="bg-white/10 rounded-xl p-3.5">
                             <div class="font-bold text-yellow-300 mb-1 flex items-center gap-1.5">
@@ -280,25 +283,25 @@ const submit = () => {
                                 </svg>
                                 <span>เลขมาแรงอันดับ 1</span>
                             </div>
-                            <div class="text-red-100 text-xs">เปิดดูเลขเด็ดชนกันมากที่สุดอันดับ 1 ประจำงวด</div>
+                            <div class="text-red-100 text-xs">เปิดดูเลขเด็ด 2 ตัวที่ทุกสำนักให้ตรงกันมากที่สุดอันดับ 1 ประจำงวด</div>
                         </div>
                         <div class="bg-white/10 rounded-xl p-3.5">
                             <div class="font-bold text-yellow-300 mb-1 flex items-center gap-1.5">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                 </svg>
-                                <span>ทำนายฝันไม่จำกัด</span>
+                                <span>เลขฝัน 3 ตัว & เทียบสำนัก</span>
                             </div>
-                            <div class="text-red-100 text-xs">ทำนายความฝันและถอดรหัสเลขมงคลได้ไม่จำกัดครั้ง</div>
+                            <div class="text-red-100 text-xs">ปลดล็อกชุดเลขมงคล 3 ตัวตรงในตำราทำนายฝัน และดูสำนักดังที่ให้เลขตรงกับฝัน</div>
                         </div>
                         <div class="bg-white/10 rounded-xl p-3.5">
                             <div class="font-bold text-yellow-300 mb-1 flex items-center gap-1.5">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
-                                <span>สถิติเจาะลึก</span>
+                                <span>เทียบสถิติ 10 งวดติด</span>
                             </div>
-                            <div class="text-red-100 text-xs">วิเคราะห์สถิติย้อนหลังและ Track Record แม่นยำทุกงวด</div>
+                            <div class="text-red-100 text-xs">คลิกดูเลขงวดปัจจุบันของสำนักที่เข้าเป้าต่อเนื่องจากตารางความแม่นได้ทันที</div>
                         </div>
                     </div>
                 </div>

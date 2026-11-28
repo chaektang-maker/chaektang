@@ -70,15 +70,16 @@ const togglePermission = (permissionId) => {
                             <InputError :message="form.errors.name" class="mt-2" />
                         </div>
 
-                        <!-- อีเมล -->
+                        <!-- เบอร์โทรศัพท์ หรือ อีเมล -->
                         <div>
                             <label for="email" class="block text-sm font-medium text-gray-700">
-                                อีเมล
+                                เบอร์โทรศัพท์มือถือ (10 หลัก) หรือ อีเมล (สำหรับล็อกอิน)
                             </label>
                             <TextInput
                                 id="email"
                                 v-model="form.email"
-                                type="email"
+                                type="text"
+                                placeholder="เช่น 0812345678 หรือ email@example.com"
                                 class="mt-1 block w-full"
                                 required
                             />

@@ -66,6 +66,14 @@ class Source extends Model
     }
 
     /**
+     * บัญชีผู้ใช้ที่เป็นเจ้าของสำนักนี้
+     */
+    public function owners(): HasMany
+    {
+        return $this->hasMany(User::class, 'source_id');
+    }
+
+    /**
      * ตรวจสอบว่าสำนักนี้กำลังอยู่ในช่วงโปรโมทหรือไม่
      */
     public function isCurrentlyPromoted(): bool

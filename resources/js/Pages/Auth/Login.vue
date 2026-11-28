@@ -47,19 +47,19 @@ const submit = () => {
 
             <!-- Login Form -->
             <form @submit.prevent="submit" class="space-y-6">
-                <!-- Email Field -->
+                <!-- Email or Phone Field -->
                 <div>
-                    <InputLabel for="email" value="อีเมล" class="text-gray-700 font-medium" />
+                    <InputLabel for="email" value="เบอร์โทรศัพท์มือถือ หรือ อีเมล" class="text-gray-700 font-medium" />
 
                     <TextInput
                         id="email"
-                        type="email"
-                        class="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                        type="text"
+                        class="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 transition-colors"
                         v-model="form.email"
                         required
                         autofocus
                         autocomplete="username"
-                        placeholder="กรุณากรอกอีเมล"
+                        placeholder="กรอกเบอร์มือถือ 10 หลัก (เช่น 0891234567) หรือ อีเมล"
                     />
 
                     <InputError class="mt-2" :message="form.errors.email" />

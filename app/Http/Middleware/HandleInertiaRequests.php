@@ -80,6 +80,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                'generated_reset_link' => $request->session()->get('generated_reset_link'),
                 'dream_interpretation' => $request->session()->get('dream_interpretation'),
                 'dream_error' => $request->session()->get('dream_error'),
             ],

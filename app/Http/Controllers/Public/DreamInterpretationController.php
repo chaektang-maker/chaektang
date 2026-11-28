@@ -82,7 +82,15 @@ class DreamInterpretationController extends Controller
         }
 
         // แปลงข้อมูลส่งให้หน้าบ้านตามสิทธิ์ (แนวทาง A: ฟรีคำทำนาย + เลข 2 ตัว / ล็อกเลข 3 ตัว + รายชื่อสำนักที่ชนให้ VIP)
-        $formattedItems = $matchedItems->map(function (DreamInterpretation $item) use ($canViewVip, $currentDrawNumbers) {
+        // เพิ่มระบบแบ่งหน้า (Pagination หน้าละ 20 รายการ) เพื่อรองรับข้อมูลหลักพันคำโดยไม่ทำให้หน้าเว็บช้า
+        $perPage = 20;
+        $totalMatched = $matchedItems->count();
+        $totalPages = max(1, (int) ceil($totalMatched / $perPage));
+        $currentPage = min($totalPages, max(1, $request->integer('page', 1)));
+
+        $pagedItems = $matchedItems->forPage($currentPage, $perPage)->values();
+
+        $formattedItems = $pagedItems->map(function (DreamInterpretation $item) use ($canViewVip, $currentDrawNumbers) {
             $twoDigitList = $item->two_digit_array;
             $threeDigitList = $item->three_digit_array;
             $allDreamNums = array_merge($twoDigitList, $threeDigitList);
@@ -145,6 +153,12 @@ class DreamInterpretationController extends Controller
             'availableLetters' => $availableLetters,
             'popularKeywords' => $popularKeywords,
             'dreamItems' => $formattedItems,
+            'pagination' => [
+                'current_page' => $currentPage,
+                'last_page' => $totalPages,
+                'per_page' => $perPage,
+                'total' => $totalMatched,
+            ],
             'totalDictionaryCount' => $allItems->count(),
             'canViewVip' => $canViewVip,
             'affiliateProducts' => $affiliateProducts,

@@ -10,6 +10,10 @@ const props = defineProps({
     availableLetters: { type: Array, default: () => [] },
     popularKeywords: { type: Array, default: () => [] },
     dreamItems: { type: Array, default: () => [] },
+    pagination: {
+        type: Object,
+        default: () => ({ current_page: 1, last_page: 1, per_page: 20, total: 0 }),
+    },
     totalDictionaryCount: { type: Number, default: 0 },
     canViewVip: { type: Boolean, default: false },
     affiliateProducts: { type: Array, default: () => [] },
@@ -49,6 +53,20 @@ const selectLetter = (letter) => {
 const clearSearch = () => {
     q.value = '';
     router.get(route('dream-interpretation.index'), {}, { preserveScroll: true });
+};
+
+const goToPage = (pageNum) => {
+    if (pageNum < 1 || pageNum > (props.pagination?.last_page || 1)) return;
+    const params = {};
+    if (q.value.trim()) {
+        params.q = q.value.trim();
+    } else if (props.selectedLetter && props.selectedLetter !== 'all') {
+        params.letter = props.selectedLetter;
+    }
+    if (pageNum > 1) {
+        params.page = pageNum;
+    }
+    router.get(route('dream-interpretation.index'), params, { preserveScroll: false });
 };
 </script>
 
@@ -399,6 +417,46 @@ const clearSearch = () => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- ปุ่มเปลี่ยนหน้า (Pagination) รองรับกรณีมีคำทำนายฝันหลักร้อย/หลักพันคำ -->
+                    <div
+                        v-if="pagination && pagination.last_page > 1"
+                        class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-3"
+                    >
+                        <div class="text-xs sm:text-sm text-gray-600">
+                            แสดงหน้าที่ <strong>{{ pagination.current_page }}</strong> จาก <strong>{{ pagination.last_page }}</strong>
+                            (ทั้งหมด {{ pagination.total }} คำทำนาย)
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button
+                                type="button"
+                                :disabled="pagination.current_page <= 1"
+                                @click="goToPage(pagination.current_page - 1)"
+                                class="px-3.5 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-xs font-bold text-gray-700 disabled:opacity-40 transition"
+                            >
+                                ← ก่อนหน้า
+                            </button>
+                            <button
+                                v-for="p in pagination.last_page"
+                                :key="p"
+                                v-show="Math.abs(p - pagination.current_page) <= 2 || p === 1 || p === pagination.last_page"
+                                type="button"
+                                @click="goToPage(p)"
+                                :class="p === pagination.current_page ? 'bg-red-600 text-white border-red-600 shadow' : 'bg-white text-gray-700 border-gray-200 hover:bg-red-50'"
+                                class="w-9 h-9 rounded-xl border text-xs font-extrabold transition"
+                            >
+                                {{ p }}
+                            </button>
+                            <button
+                                type="button"
+                                :disabled="pagination.current_page >= pagination.last_page"
+                                @click="goToPage(pagination.current_page + 1)"
+                                class="px-3.5 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-xs font-bold text-gray-700 disabled:opacity-40 transition"
+                            >
+                                ถัดไป →
+                            </button>
                         </div>
                     </div>
                 </div>

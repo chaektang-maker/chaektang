@@ -19,13 +19,13 @@ use Inertia\Response;
 class CustomerNewPasswordController extends Controller
 {
     /**
-     * แสดงฟอร์มรีเซ็ตรหัสผ่าน (รองรับทั้งลูกค้าและผู้ใช้หลังบ้าน)
+     * แสดงฟอร์มตั้งรหัสผ่านใหม่ด้วยตัวเอง (รองรับทั้งเบอร์โทรศัพท์และอีเมล)
      */
     public function create(Request $request): Response
     {
         return Inertia::render('Auth/ResetPassword', [
-            'email' => $request->email,
-            'token' => $request->route('token'),
+            'email' => (string) $request->query('email', $request->email ?? ''),
+            'token' => (string) $request->route('token'),
         ]);
     }
 
@@ -34,9 +34,12 @@ class CustomerNewPasswordController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $normalizedIdentifier = CustomerRegisteredUserController::normalizeLoginIdentifier((string) $request->input('email', ''));
+        $request->merge(['email' => $normalizedIdentifier]);
+
         $request->validate([
             'token' => 'required',
-            'email' => 'required|email',
+            'email' => 'required|string',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -58,7 +61,7 @@ class CustomerNewPasswordController extends Controller
 
         if ($status == Password::PASSWORD_RESET) {
             $loginRoute = ($broker === 'users') ? 'backoffice.login' : 'login';
-            return redirect()->route($loginRoute)->with('status', __($status));
+            return redirect()->route($loginRoute)->with('status', 'ตั้งรหัสผ่านใหม่เรียบร้อยแล้ว! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่ของคุณ');
         }
 
         throw ValidationException::withMessages([

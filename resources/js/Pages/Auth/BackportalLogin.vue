@@ -52,16 +52,16 @@ const submit = () => {
 
             <form @submit.prevent="submit" class="space-y-6">
                 <div>
-                    <InputLabel for="email" value="อีเมลบัญชีเจ้าสำนัก" class="text-gray-700 font-medium" />
+                    <InputLabel for="email" value="เบอร์โทรศัพท์มือถือ (10 หลัก) หรือ อีเมลเจ้าสำนัก" class="text-gray-700 font-medium" />
                     <TextInput
                         id="email"
-                        type="email"
+                        type="text"
                         class="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 transition-colors"
                         v-model="form.email"
                         required
                         autofocus
                         autocomplete="username"
-                        placeholder="กรุณากรอกอีเมลของคุณ"
+                        placeholder="เช่น 0812345678 หรือ email@example.com"
                     />
                     <InputError class="mt-2" :message="form.errors.email" />
                 </div>
@@ -98,10 +98,23 @@ const submit = () => {
                     </PrimaryButton>
                 </div>
 
-                <div class="pt-4 border-t border-gray-100 text-center">
-                    <Link :href="route('advertise.index')" class="text-xs font-semibold text-gray-500 hover:text-red-600">
-                        สนใจเปิดบัญชีเจ้าสำนักหรือโปรโมทสำนัก? ดูรายละเอียดที่นี่ →
-                    </Link>
+                <div class="pt-4 border-t border-gray-100 text-center space-y-3">
+                    <div class="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                        <div class="text-xs text-amber-900 font-medium mb-1.5">
+                            ยังไม่มีบัญชีสำหรับลงเลขเด็ดของสำนักคุณ?
+                        </div>
+                        <Link
+                            :href="route('backportal.register')"
+                            class="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-gray-950 font-extrabold text-xs sm:text-sm shadow-xs transition"
+                        >
+                            + สมัครเปิดบัญชีเจ้าสำนักใหม่ (ลงทะเบียนเอง)
+                        </Link>
+                    </div>
+                    <div>
+                        <Link :href="route('advertise.index')" class="text-xs font-semibold text-gray-500 hover:text-red-600">
+                            สนใจโปรโมทสำนักขึ้นการ์ดกรอบทองแถวแรกสุด? ดูรายละเอียดที่นี่ →
+                        </Link>
+                    </div>
                 </div>
             </form>
         </div>

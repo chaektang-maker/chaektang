@@ -124,7 +124,7 @@ class BlogController extends Controller
                 'excerpt' => $post->excerpt,
                 'content' => $this->normalizeStorageUrls($post->content),
                 'cover_image_url' => MediaStorageService::url($post->cover_image),
-                'author_name' => $post->author?->name ?? 'ทีมงานแจกตัง',
+                'author_name' => $post->author?->name ?? 'ทีมงานเช็กตัง',
                 'published_at' => ($post->published_at ?? $post->created_at)?->format('d/m/Y'),
                 'published_at_iso' => ($post->published_at ?? $post->created_at)?->toIso8601String(),
                 'view_count' => (int) ($post->view_count ?? 0) + ($isNewView ? 1 : 0),

@@ -36,7 +36,7 @@ const handleFileUpload = async (e) => {
         fd.append('image', file);
         fd.append('folder', 'affiliate-products');
         const res = await axios.post(route('backoffice.posts.upload-image'), fd);
-        form.image_url = res.data.path || res.data.url;
+        form.image_url = res.data.url || res.data.path;
     } catch (err) {
         uploadError.value = err.response?.data?.message || 'อัปโหลดรูปภาพไม่สำเร็จ (รองรับไฟล์ภาพไม่เกิน 4MB)';
     } finally {

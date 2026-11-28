@@ -21,7 +21,7 @@ class LotteryNumberController extends Controller
             ->whereNotNull('draw_date')
             ->orderByDesc('draw_date')
             ->get()
-            ->map(fn ($d) => $d->draw_date->format('Y-m-d'))
+            ->map(fn ($d) => $d->draw_date instanceof \DateTimeInterface ? $d->draw_date->format('Y-m-d') : substr((string) $d->draw_date, 0, 10))
             ->values()
             ->all();
     }

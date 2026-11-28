@@ -1,5 +1,14 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+const contact = computed(() => page.props.contactInfo || {
+    line_id: '@chaektang',
+    line_url: 'https://line.me/ti/p/~@chaektang',
+    phone: '083-487-1695',
+    email: 'chaektang@gmail.com',
+});
 </script>
 
 <template>
@@ -27,20 +36,26 @@ import { Link } from '@inertiajs/vue3';
                     </ul>
                 </div> -->
                 <div>
-                    <h3 class="text-white font-semibold mb-4">บริการ</h3>
+                    <h3 class="text-white font-semibold mb-4">บริการหลัก</h3>
                     <ul class="space-y-2 text-sm">
-                        <li><Link :href="route('lucky-numbers.index')" class="hover:text-white transition-colors">รวมเลขเด็ด</Link></li>
-                        <li><Link :href="route('statistics.index')" class="hover:text-white transition-colors">สถิติหวย</Link></li>
-                        <li><Link :href="route('advertise.index')" class="text-yellow-400 hover:text-yellow-300 font-medium transition-colors">⭐ ลงโฆษณา / โปรโมทสำนัก</Link></li>
-                        <!-- <li><Link :href="route('accuracy.index')" class="hover:text-white transition-colors">ตารางคะแนน</Link></li> -->
+                        <li><Link :href="route('lucky-numbers.index')" class="hover:text-white transition-colors">รวมเลขเด็ดสำนักดัง</Link></li>
+                        <li><Link :href="route('accuracy.index')" class="hover:text-white transition-colors">ตารางจัดอันดับความแม่น</Link></li>
+                        <li><Link :href="route('phone-analyzer.index')" class="hover:text-white transition-colors">วิเคราะห์เบอร์มงคล</Link></li>
+                        <li><Link :href="route('dream-interpretation.index')" class="hover:text-white transition-colors">ตำราทำนายฝัน & เลขมงคล</Link></li>
+                        <li><Link :href="route('statistics.index')" class="hover:text-white transition-colors">สถิติหวยย้อนหลัง</Link></li>
+                        <li><Link :href="route('advertise.index')" class="text-yellow-400 hover:text-yellow-300 font-bold transition-colors">ลงโฆษณา / โปรโมทสำนัก</Link></li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="text-white font-semibold mb-4">ติดต่อเรา</h3>
                     <ul class="space-y-2 text-sm">
-                        <li>อีเมล: chaektang@gmail.com</li>
-                        <li>โทรศัพท์: 083-487-1695</li>
-                        <!-- <li>Line: @lotto</li> -->
+                        <li>
+                            <a :href="contact.line_url" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-bold transition-colors">
+                                LINE Official: {{ contact.line_id }}
+                            </a>
+                        </li>
+                        <li>โทรศัพท์: {{ contact.phone }}</li>
+                        <li>อีเมล: {{ contact.email }}</li>
                     </ul>
                 </div>
             </div>

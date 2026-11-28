@@ -11,12 +11,20 @@ import { computed, reactive } from 'vue';
 
 const props = defineProps({
     filters: Object,
+    selectedSource: {
+        type: Object,
+        default: null,
+    },
     availableDrawDates: Array,
     numbers: Object,
     hotNumbers: Array,
     canViewVip: {
         type: Boolean,
         default: false,
+    },
+    voteStatus: {
+        type: Object,
+        default: () => ({ is_logged_in: false, remaining_votes: 0 }),
     },
 });
 
@@ -27,10 +35,14 @@ const localFilters = reactive({
 
 const apply = (e) => {
     e?.preventDefault?.();
-    router.get(route('lucky-numbers.index'), {
+    const params = {
         draw_date: localFilters.draw_date || '',
         sort: localFilters.sort || 'latest',
-    }, { preserveState: true, replace: true });
+    };
+    if (props.filters?.source_id) {
+        params.source_id = props.filters.source_id;
+    }
+    router.get(route('lucky-numbers.index'), params, { preserveState: true, replace: true });
 };
 
 const fmtRunning = (arr) => {
@@ -181,7 +193,7 @@ const getCardColor = (index) => {
                         </span>
                         <div>
                             <h3 class="text-lg font-bold text-gray-900">ปลดล็อกเลขเด็ดสำนัก VIP & เลขมาแรงอันดับ 1</h3>
-                            <p class="text-sm text-gray-900/90">สมาชิก VIP ดูเลขเจาะลึก 2 ตัว / 3 ตัวของสำนักแม่นยำสูงสุด และทำนายฝันตีเลขมงคลได้ไม่จำกัด</p>
+                            <p class="text-sm text-gray-900/90">สมาชิก VIP ดูเลขเจาะลึก 2 ตัว / 3 ตัวของสำนักแม่นยำสูงสุด และปลดล็อกชุดเลขฝัน 3 ตัวตรงพร้อมเทียบสำนักดัง</p>
                         </div>
                     </div>
                     <Link
@@ -236,8 +248,45 @@ const getCardColor = (index) => {
                     </div>
                 </div>
 
+                <!-- แถบแจ้งเมื่อเลือกดูเฉพาะสำนักมาจากหน้าตารางความแม่นหรือหน้าคะแนนโหวต -->
+                <div
+                    v-if="selectedSource"
+                    class="bg-white rounded-2xl shadow-md border-2 border-red-300 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                >
+                    <div>
+                        <div class="text-xs font-bold text-red-600 uppercase tracking-wider">
+                            กรองเฉพาะสำนักที่คุณเลือก
+                        </div>
+                        <h3 class="text-lg font-extrabold text-gray-900">
+                            แนวทางเลขเด็ดสำนัก "{{ selectedSource.name }}"
+                        </h3>
+                    </div>
+                    <Link
+                        :href="route('lucky-numbers.index', { draw_date: localFilters.draw_date })"
+                        class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-bold shadow transition"
+                    >
+                        แสดงเลขเด็ดทุกสำนักทั้งหมด →
+                    </Link>
+                </div>
+
                 <!-- Cards Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-if="numbers.data && numbers.data.length === 0" class="bg-white rounded-2xl p-8 text-center border border-gray-200 space-y-3">
+                    <div class="text-base font-bold text-gray-800">
+                        ยังไม่มีเลขเด็ดของสำนักนี้ในงวดที่เลือก
+                    </div>
+                    <p class="text-xs text-gray-500">
+                        สำนักนี้อาจยังไม่ได้ปล่อยเลขในงวดปัจจุบัน ลองกดดูเลขเด็ดของสำนักอื่นทั้งหมดในงวดนี้ได้เลยครับ
+                    </p>
+                    <div>
+                        <Link
+                            :href="route('lucky-numbers.index')"
+                            class="inline-flex px-5 py-2.5 rounded-xl bg-red-600 text-white text-xs font-extrabold shadow hover:bg-red-700"
+                        >
+                            ดูเลขเด็ดทุกสำนักในงวดนี้
+                        </Link>
+                    </div>
+                </div>
+                <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div 
                         v-for="(n, index) in numbers.data" 
                         :key="n.id" 
@@ -345,6 +394,8 @@ const getCardColor = (index) => {
                                     :source-id="n.source_id"
                                     :draw-date="n.draw_date"
                                     :initial-vote-count="n.vote_count || 0"
+                                    :initial-is-logged-in="voteStatus?.is_logged_in || false"
+                                    :initial-remaining-votes="voteStatus?.remaining_votes ?? 0"
                                 />
                             </div>
                         </div>

@@ -120,6 +120,7 @@ Route::middleware('auth:web')->group(function () {
         Route::get('my-portal', fn () => redirect()->route('backportal.index'))->name('my-portal.index');
         
         // Routes ที่ต้อง permission (admin/staff) - พนักงานและแอดมินสามารถลงเลขแทนสำนักได้ผ่านเมนู numbers
+        Route::post('sources/{source}/toggle-status', [SourceController::class, 'toggleStatus'])->name('sources.toggle-status');
         Route::resource('sources', SourceController::class)->except(['show']);
         Route::get('results/import', [LotteryResultController::class, 'importForm'])->name('results.import');
         Route::post('results/import', [LotteryResultController::class, 'importFromApi'])->name('results.import.store');
@@ -176,6 +177,8 @@ Route::middleware('auth:web')->group(function () {
             Route::get('customers', [\App\Http\Controllers\Backoffice\CustomerAdminController::class, 'index'])->name('customers.index');
             Route::post('customers/{customer}/grant-vip', [\App\Http\Controllers\Backoffice\CustomerAdminController::class, 'grantVip'])->name('customers.grant-vip');
             Route::post('customers/{customer}/revoke-vip', [\App\Http\Controllers\Backoffice\CustomerAdminController::class, 'revokeVip'])->name('customers.revoke-vip');
+            Route::post('customers/{customer}/reset-link', [\App\Http\Controllers\Backoffice\CustomerAdminController::class, 'generateResetLink'])->name('customers.reset-link');
+            Route::post('customers/{customer}/reset-password', [\App\Http\Controllers\Backoffice\CustomerAdminController::class, 'resetPassword'])->name('customers.reset-password');
         });
     });
 });

@@ -45,16 +45,16 @@ const submit = () => {
 
             <form @submit.prevent="submit" class="space-y-6">
                 <div>
-                    <InputLabel for="email" value="อีเมล" class="text-gray-700 font-medium" />
+                    <InputLabel for="email" value="เบอร์โทรศัพท์ (10 หลัก) หรือ อีเมล" class="text-gray-700 font-medium" />
                     <TextInput
                         id="email"
-                        type="email"
+                        type="text"
                         class="mt-2 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
                         v-model="form.email"
                         required
                         autofocus
                         autocomplete="username"
-                        placeholder="กรุณากรอกอีเมล"
+                        placeholder="กรุณากรอกเบอร์โทรศัพท์ หรือ อีเมล"
                     />
                     <InputError class="mt-2" :message="form.errors.email" />
                 </div>

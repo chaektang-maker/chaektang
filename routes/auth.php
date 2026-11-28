@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\BackofficeAuthenticatedSessionController;
+use App\Http\Controllers\Auth\BackportalRegisteredUserController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -41,6 +42,9 @@ Route::middleware('guest:web')->group(function () {
 
     Route::get('backportal/login', [BackofficeAuthenticatedSessionController::class, 'createPortal'])->name('backportal.login');
     Route::post('backportal/login', [BackofficeAuthenticatedSessionController::class, 'storePortal']);
+
+    Route::get('backportal/register', [BackportalRegisteredUserController::class, 'create'])->name('backportal.register');
+    Route::post('backportal/register', [BackportalRegisteredUserController::class, 'store']);
 });
 
 // ========== Password reset (สำหรับ users / backoffice) ==========

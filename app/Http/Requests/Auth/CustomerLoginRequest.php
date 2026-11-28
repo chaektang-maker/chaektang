@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Http\Controllers\Customer\Auth\CustomerRegisteredUserController;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -16,10 +17,19 @@ class CustomerLoginRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('email')) {
+            $this->merge([
+                'email' => CustomerRegisteredUserController::normalizeLoginIdentifier((string) $this->input('email', '')),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
     }
@@ -33,7 +43,7 @@ class CustomerLoginRequest extends FormRequest
 
             $message = trans('auth.failed');
             throw ValidationException::withMessages([
-                'email' => $message === 'auth.failed' ? 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' : $message,
+                'email' => $message === 'auth.failed' ? 'เบอร์โทรศัพท์/อีเมล หรือรหัสผ่านไม่ถูกต้อง' : $message,
             ]);
         }
 

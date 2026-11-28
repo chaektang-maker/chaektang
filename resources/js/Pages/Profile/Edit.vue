@@ -16,21 +16,21 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Profile" />
+    <Head title="ข้อมูลส่วนตัว & รหัสผ่าน" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
+                class="text-xl font-bold leading-tight text-gray-800"
             >
-                Profile
+                ข้อมูลส่วนตัว & เปลี่ยนรหัสผ่าน
             </h2>
         </template>
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
                 <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
+                    class="bg-white p-4 shadow sm:rounded-2xl sm:p-8 border border-gray-100"
                 >
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
@@ -40,15 +40,9 @@ defineProps({
                 </div>
 
                 <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
+                    class="bg-white p-4 shadow sm:rounded-2xl sm:p-8 border border-gray-100"
                 >
                     <UpdatePasswordForm class="max-w-xl" />
-                </div>
-
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <DeleteUserForm class="max-w-xl" />
                 </div>
             </div>
         </div>

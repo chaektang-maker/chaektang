@@ -142,10 +142,20 @@ const specialPlacements = [
                         >
                             ดูแพ็กเกจและราคาโปรโมชั่น ↓
                         </a>
+                        <Link
+                            :href="route('backportal.register')"
+                            class="px-6 py-4 rounded-xl bg-white/15 hover:bg-white/25 text-white font-extrabold text-base sm:text-lg shadow-lg border border-white/40 transition-all"
+                        >
+                            สมัครเปิดบัญชีเจ้าสำนัก (ลงเลขเอง) →
+                        </Link>
                     </div>
-                    <p class="text-xs sm:text-sm text-yellow-200 mt-4 font-medium">
-                        * รับจำกัดเพียง 3–6 สำนักต่องวดเท่านั้น เพื่อให้ทุกสปอนเซอร์ได้รับยอดการมองเห็นสูงสุด
-                    </p>
+                    <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm text-yellow-200 font-medium">
+                        <span>* รับจำกัดเพียง 3–6 สำนักต่องวดเท่านั้น เพื่อให้ทุกสปอนเซอร์ได้รับยอดการมองเห็นสูงสุด</span>
+                        <span>•</span>
+                        <Link :href="route('backportal.login')" class="underline hover:text-white font-bold">
+                            มีบัญชีเจ้าสำนักแล้ว? เข้าสู่ระบบพอร์ทัลเจ้าสำนักที่นี่
+                        </Link>
+                    </div>
                 </div>
             </section>
 

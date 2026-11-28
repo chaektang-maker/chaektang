@@ -21,6 +21,8 @@ const props = defineProps({
 const searchQuery = ref('');
 const selectedLetter = ref('all');
 const showBulkImport = ref(false);
+const currentPage = ref(1);
+const perPage = 24;
 
 const filteredItems = computed(() => {
     return props.items.filter((item) => {
@@ -38,6 +40,13 @@ const filteredItems = computed(() => {
         }
         return true;
     });
+});
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredItems.value.length / perPage)));
+const paginatedItems = computed(() => {
+    const page = Math.min(currentPage.value, totalPages.value);
+    const start = (page - 1) * perPage;
+    return filteredItems.value.slice(start, start + perPage);
 });
 
 // Bulk Import Form
@@ -317,7 +326,7 @@ const deleteItem = (item) => {
                 <!-- Dream Dictionary List -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div
-                        v-for="item in filteredItems"
+                        v-for="item in paginatedItems"
                         :key="item.id"
                         class="p-5 rounded-2xl bg-gray-900/90 border border-gray-800 hover:border-gray-700 transition flex flex-col justify-between gap-4"
                     >
@@ -384,6 +393,34 @@ const deleteItem = (item) => {
                                 <strong>งดเสี่ยงโชค:</strong> {{ item.no_number_note || 'ไม่มีเลขเสี่ยงโชค' }}
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Backoffice Pagination -->
+                <div
+                    v-if="totalPages > 1"
+                    class="p-4 rounded-2xl bg-gray-900/90 border border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-300"
+                >
+                    <div>
+                        แสดงหน้าที่ <strong>{{ currentPage }}</strong> จาก <strong>{{ totalPages }}</strong> (ทั้งหมด {{ filteredItems.length }} รายการ)
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            :disabled="currentPage <= 1"
+                            @click="currentPage--"
+                            class="px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 disabled:opacity-40 font-bold"
+                        >
+                            ← ก่อนหน้า
+                        </button>
+                        <button
+                            type="button"
+                            :disabled="currentPage >= totalPages"
+                            @click="currentPage++"
+                            class="px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 disabled:opacity-40 font-bold"
+                        >
+                            ถัดไป →
+                        </button>
                     </div>
                 </div>
             </div>

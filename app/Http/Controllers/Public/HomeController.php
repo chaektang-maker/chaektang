@@ -18,11 +18,19 @@ class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        // ดึงงวดล่าสุด (ไม่จำเป็นต้อง fetched แล้ว)
+        // ดึงงวดล่าสุดที่มีผลรางวัลแล้ว (is_fetched = true) เป็นหลัก เพื่อแสดงผลหวยล่าสุดและเป็นค่าเริ่มต้นในการตรวจหวย
         $latestLotto = LottoData::query()
             ->whereNotNull('draw_date')
+            ->where('is_fetched', true)
             ->orderByDesc('draw_date')
             ->first();
+
+        if (!$latestLotto) {
+            $latestLotto = LottoData::query()
+                ->whereNotNull('draw_date')
+                ->orderByDesc('draw_date')
+                ->first();
+        }
 
         $latestResult = null;
         if ($latestLotto) {
@@ -119,24 +127,28 @@ class HomeController extends Controller
             ->values()
             ->all();
 
-        // ดึงเลขเด็ดสำนักแนะนำ (Sponsored Sources) ของงวดล่าสุดที่มีการลงเลข
-        $latestNumberDrawDate = LotteryNumber::query()
-            ->whereHas('source', function ($q) {
-                $q->where('status', 'active')
-                    ->where('is_promoted', true)
-                    ->where(function ($sub) {
-                        $sub->whereNull('promoted_until')
-                            ->orWhereDate('promoted_until', '>=', now()->toDateString());
-                    });
-            })
-            ->max('draw_date');
+        // ดึงเลขเด็ดสำนักแนะนำ (Sponsored Sources) ของงวดปัจจุบันเท่านั้น (ไม่ดึงเลขงวดเก่าที่ค้างอยู่มาแสดงข้ามเดือน)
+        $currentDrawDate = LottoData::query()
+            ->whereNotNull('draw_date')
+            ->orderByDesc('draw_date')
+            ->value('draw_date');
+
+        $currentDrawDateStr = $currentDrawDate instanceof \DateTimeInterface
+            ? $currentDrawDate->format('Y-m-d')
+            : ($currentDrawDate ? substr((string) $currentDrawDate, 0, 10) : null);
+
+        if (!$currentDrawDateStr && $latestLotto?->draw_date) {
+            $currentDrawDateStr = $latestLotto->draw_date instanceof \DateTimeInterface
+                ? $latestLotto->draw_date->format('Y-m-d')
+                : substr((string) $latestLotto->draw_date, 0, 10);
+        }
 
         $promotedNumbers = [];
-        if ($latestNumberDrawDate) {
+        if ($currentDrawDateStr) {
             $promotedCollection = LotteryNumber::query()
                 ->with('source')
                 ->join('sources', 'sources.id', '=', 'lottery_numbers.source_id')
-                ->where('lottery_numbers.draw_date', $latestNumberDrawDate)
+                ->where('lottery_numbers.draw_date', $currentDrawDateStr)
                 ->where('sources.status', 'active')
                 ->whereNull('sources.deleted_at')
                 ->where('sources.is_promoted', true)
@@ -236,6 +248,12 @@ class HomeController extends Controller
         // ดึงรางวัลทั้งหมด
         $prizes = LottoPrize::where('lotto_id', $lottoId)->get();
         $runningNumbers = LottoRunningNumber::where('lotto_id', $lottoId)->get();
+
+        if (!$lotto->is_fetched || ($prizes->isEmpty() && $runningNumbers->isEmpty())) {
+            return response()->json([
+                'error' => 'งวดวันที่ ' . $this->formatDateText($lotto->date_text) . ' ยังไม่ออกผลรางวัล หรืออยู่ระหว่างรออัปเดตผลสลากกินแบ่งรัฐบาลครับ',
+            ], 400);
+        }
 
         $results = [];
         $totalWinnings = 0;

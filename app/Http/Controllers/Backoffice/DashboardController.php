@@ -46,6 +46,10 @@ class DashboardController extends Controller
 
         // 3. Sources & Lottery Stats
         $activeSourcesCount = Source::where('status', 'active')->count();
+        $pendingOwnerSourcesCount = Source::where('status', '!=', 'active')
+            ->whereHas('owners')
+            ->count();
+
         $promotedSources = Source::where('status', 'active')
             ->where('is_promoted', true)
             ->orderBy('promoted_until')
@@ -63,9 +67,15 @@ class DashboardController extends Controller
             ->orderByDesc('draw_date')
             ->first();
 
-        $latestDrawDate = $latestLottoData?->draw_date?->format('Y-m-d');
+        $latestDrawDate = $latestLottoData?->draw_date instanceof \DateTimeInterface
+            ? $latestLottoData->draw_date->format('Y-m-d')
+            : ($latestLottoData?->draw_date ? substr((string) $latestLottoData->draw_date, 0, 10) : null);
+
         $latestDrawSourcesSubmitted = $latestDrawDate
-            ? LotteryNumber::where('draw_date', $latestDrawDate)->count()
+            ? LotteryNumber::where('draw_date', $latestDrawDate)
+                ->whereHas('source', fn ($q) => $q->where('status', 'active'))
+                ->distinct('source_id')
+                ->count('source_id')
             : 0;
 
         $pendingLottoDetailsCount = LottoData::where('is_fetched', false)->count();
@@ -99,6 +109,7 @@ class DashboardController extends Controller
                 'total_customers' => $totalCustomers,
                 'today_customers' => $todayCustomers,
                 'active_sources_count' => $activeSourcesCount,
+                'pending_owner_sources_count' => $pendingOwnerSourcesCount,
                 'promoted_sources_count' => $promotedSources->where('is_currently_promoted', true)->count(),
                 'latest_draw_date' => $latestDrawDate,
                 'latest_draw_date_text' => $latestLottoData?->date_text,

@@ -93,6 +93,7 @@ const topScores = computed(() => {
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">เฉียด (งวด)</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">สรุป 10 งวด</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">เลขงวดนี้</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -102,10 +103,15 @@ const topScores = computed(() => {
                                         row.is_recommended ? 'bg-amber-50/60' : ''
                                     ]">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="font-medium text-gray-900">{{ row.source_name }}</span>
+                                        <Link
+                                            :href="route('lucky-numbers.index', { source_id: row.source_id })"
+                                            class="font-bold text-gray-900 hover:text-red-600 hover:underline transition"
+                                        >
+                                            {{ row.source_name }}
+                                        </Link>
                                         <span v-if="row.is_recommended"
-                                            class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-200 text-amber-900">
-                                            สำนักแนะนำประจำงวด
+                                            class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-200 text-amber-900">
+                                            สำนักแนะนำประจำงวด (VIP)
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
@@ -128,9 +134,18 @@ const topScores = computed(() => {
                                         </span>
                                         <span v-else class="text-xs text-gray-400">—</span>
                                     </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <Link
+                                            :href="route('lucky-numbers.index', { source_id: row.source_id })"
+                                            :class="row.is_recommended ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-gray-950 hover:from-amber-500 hover:to-yellow-600' : 'bg-red-600 text-white hover:bg-red-700'"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-extrabold shadow-2xs transition"
+                                        >
+                                            <span>ดูเลขงวดนี้ →</span>
+                                        </Link>
+                                    </td>
                                 </tr>
                                 <tr v-if="!trackRecords || trackRecords.length === 0">
-                                    <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
                                         ยังไม่มีข้อมูล Track Record (รันคำนวณหลังมีผลหวยและเลขสำนัก)
                                     </td>
                                 </tr>
@@ -175,12 +190,17 @@ const topScores = computed(() => {
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">เข้า</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ทั้งหมด</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">เข้าติดกัน</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">เลขงวดนี้</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr v-for="(score, index) in scores" :key="score.id" class="hover:bg-gray-50">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ index + 1 }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ score.source_name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                                            <Link :href="route('lucky-numbers.index', { source_id: score.source_id })" class="hover:text-red-600 hover:underline">
+                                                {{ score.source_name }}
+                                            </Link>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                                             <span class="font-semibold" :class="{
                                                 'text-green-600': score.accuracy_percentage >= 50,
@@ -201,9 +221,17 @@ const topScores = computed(() => {
                                                 {{ score.consecutive_correct }} งวด
                                             </span>
                                         </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                                            <Link
+                                                :href="route('lucky-numbers.index', { source_id: score.source_id })"
+                                                class="inline-flex items-center px-3 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition"
+                                            >
+                                                ดูเลขงวดนี้ →
+                                            </Link>
+                                        </td>
                                     </tr>
                                     <tr v-if="scores.length === 0">
-                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">ยังไม่มีข้อมูลคะแนน</td>
+                                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">ยังไม่มีข้อมูลคะแนน</td>
                                     </tr>
                                 </tbody>
                             </table>

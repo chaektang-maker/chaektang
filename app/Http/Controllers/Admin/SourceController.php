@@ -11,20 +11,34 @@ class SourceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Source::query();
+        $query = Source::query()->with(['owners:id,name,email,source_id']);
 
         if ($search = $request->string('q')->toString()) {
-            $query->where('name', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('owners', function ($oq) use ($search) {
+                        $oq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
         }
 
         if ($status = $request->string('status')->toString()) {
             $query->where('status', $status);
         }
 
+        if ($hasOwner = $request->string('has_owner')->toString()) {
+            if ($hasOwner === 'yes') {
+                $query->whereHas('owners');
+            } elseif ($hasOwner === 'no') {
+                $query->whereDoesntHave('owners');
+            }
+        }
+
         $sources = $query
             ->orderByDesc('is_promoted')
             ->orderByDesc('popularity_score')
-            ->orderBy('name')
+            ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
 
@@ -32,6 +46,7 @@ class SourceController extends Controller
             'filters' => [
                 'q' => $request->string('q')->toString(),
                 'status' => $request->string('status')->toString(),
+                'has_owner' => $request->string('has_owner')->toString(),
             ],
             'sources' => $sources,
         ]);
@@ -88,15 +103,48 @@ class SourceController extends Controller
 
         $data['is_promoted'] = (bool)($data['is_promoted'] ?? false);
 
+        $oldName = $source->name;
         $source->update($data);
+
+        \App\Models\Platform::where('slug', 'source-' . $source->id)
+            ->orWhere('name', $oldName)
+            ->update([
+                'name' => $source->name,
+                'slug' => 'source-' . $source->id,
+                'is_active' => $source->status === 'active',
+            ]);
 
         return redirect()->route('backoffice.sources.index')->with('success', 'บันทึกสำเร็จ');
     }
 
     public function destroy(Source $source)
     {
+        \App\Models\Platform::where('slug', 'source-' . $source->id)
+            ->orWhere('name', $source->name)
+            ->update(['is_active' => false]);
+
         $source->delete();
 
         return redirect()->route('backoffice.sources.index')->with('success', 'ลบสำนักสำเร็จ');
+    }
+
+    /**
+     * สลับสถานะ เปิดแสดง (active) / ซ่อนสำนัก (suspended) ในคลิกเดียวจากตาราง
+     */
+    public function toggleStatus(Source $source)
+    {
+        $newStatus = $source->status === 'active' ? 'suspended' : 'active';
+        $source->update(['status' => $newStatus]);
+
+        // ซิงค์สถานะร้านค้า Platform ของสำนักนี้ให้เปิด/ซ่อนตามสำนักทันที
+        \App\Models\Platform::where('slug', 'source-' . $source->id)
+            ->orWhere('name', $source->name)
+            ->update(['is_active' => $newStatus === 'active']);
+
+        $msg = $newStatus === 'active'
+            ? "เปิดแสดงสำนัก \"{$source->name}\" บนหน้าเว็บเรียบร้อยแล้ว"
+            : "ซ่อนสำนัก \"{$source->name}\" จากหน้าเว็บชั่วคราวเรียบร้อยแล้ว";
+
+        return redirect()->back()->with('success', $msg);
     }
 }

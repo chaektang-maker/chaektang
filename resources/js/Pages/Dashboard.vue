@@ -115,6 +115,30 @@ const formatDateTime = (iso) => {
                     </Link>
                 </div>
 
+                <!-- Alert Banner: เจ้าสำนักสมัครใหม่รอเปิดแสดงผล -->
+                <div
+                    v-if="$page.props.auth.user?.can_access?.sources && stats.pending_owner_sources_count > 0"
+                    class="rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">🏛️</span>
+                        <div>
+                            <h3 class="text-lg font-extrabold">
+                                มีเจ้าสำนักสมัครใหม่รอเปิดแสดงผล {{ stats.pending_owner_sources_count }} สำนัก!
+                            </h3>
+                            <p class="text-sm text-indigo-100">
+                                เจ้าสำนักลงทะเบียนเข้ามาใหม่และถูกซ่อนไว้ชั่วคราว กรุณาตรวจสอบและกด "เลิกซ่อน (แสดง)" เพื่อนำขึ้นหน้าเว็บ
+                            </p>
+                        </div>
+                    </div>
+                    <Link
+                        :href="route('backoffice.sources.index', { status: 'suspended', has_owner: 'yes' })"
+                        class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-white text-indigo-900 font-bold text-sm hover:bg-indigo-50 shadow transition shrink-0"
+                    >
+                        ไปตรวจสอบสำนักใหม่ →
+                    </Link>
+                </div>
+
                 <!-- Section 1: Revenue & Membership Cards (Admin) -->
                 <div v-if="$page.props.auth.user?.is_admin" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     <!-- รายได้ VIP เดือนนี้ -->

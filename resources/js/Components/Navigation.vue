@@ -41,7 +41,7 @@ defineProps({
                     />
                     </div>
                     <div class="text-2xl font-extrabold">
-                        <span class="text-red-600">แจก</span><span class="text-gray-800">ตัง</span>
+                        <span class="text-red-600">แจก</span><span class="text-gray-800">ตังค์</span>
                     </div>
                 </Link>
                 

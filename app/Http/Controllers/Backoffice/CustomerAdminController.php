@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 
 class CustomerAdminController extends Controller
@@ -135,6 +137,43 @@ class CustomerAdminController extends Controller
             ]);
 
         return redirect()->back()->with('success', "ยกเลิกสถานะ VIP ของ {$customer->name} เรียบร้อยแล้ว");
+    }
+
+    /**
+     * สร้างลิงก์ให้ลูกค้ากดไปตั้งรหัสผ่านใหม่ด้วยตัวเอง (สำหรับแอดมินก๊อปปี้ส่งให้ลูกค้าทาง LINE)
+     */
+    public function generateResetLink(Request $request, Customer $customer)
+    {
+        $token = Password::broker('customers')->createToken($customer);
+        $resetUrl = route('password.reset', [
+            'token' => $token,
+            'email' => $customer->email,
+        ]);
+
+        return redirect()->back()
+            ->with('success', "สร้างลิงก์ตั้งรหัสผ่านใหม่สำหรับ {$customer->name} เรียบร้อยแล้ว คัดลอกลิงก์ด้านล่างส่งให้ลูกค้าได้เลยครับ")
+            ->with('generated_reset_link', [
+                'customer_id' => $customer->id,
+                'customer_name' => $customer->name,
+                'customer_email' => $customer->email,
+                'url' => $resetUrl,
+            ]);
+    }
+
+    /**
+     * แอดมินตั้งรหัสผ่านใหม่ให้ลูกค้าโดยตรง (กรณีลูกค้าผู้สูงอายุขอให้แอดมินตั้งรหัสให้)
+     */
+    public function resetPassword(Request $request, Customer $customer)
+    {
+        $validated = $request->validate([
+            'new_password' => ['required', 'string', 'min:6', 'max:100'],
+        ]);
+
+        $customer->update([
+            'password' => Hash::make($validated['new_password']),
+        ]);
+
+        return redirect()->back()->with('success', "เปลี่ยนรหัสผ่านใหม่ให้ {$customer->name} เรียบร้อยแล้ว");
     }
 }
 

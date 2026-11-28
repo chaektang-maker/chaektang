@@ -64,15 +64,42 @@ class UserController extends Controller
         ]);
     }
 
+    private function normalizeLoginIdentifier(string $rawLogin): string
+    {
+        $raw = trim($rawLogin);
+        $digitsOnly = preg_replace('/[^0-9]/', '', $raw);
+
+        if (!str_contains($raw, '@')) {
+            if (!preg_match('/^0[0-9]{9}$/', $digitsOnly)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'email' => 'กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก (เช่น 0812345678) หรืออีเมลให้ถูกต้อง',
+                ]);
+            }
+            return $digitsOnly;
+        }
+
+        if (!filter_var($raw, FILTER_VALIDATE_EMAIL)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => 'รูปแบบอีเมลไม่ถูกต้อง',
+            ]);
+        }
+
+        return strtolower($raw);
+    }
+
     public function store(Request $request)
     {
         if (!$request->user() || !$request->user()->isAdmin()) {
             abort(403, 'Only admin can access this page.');
         }
 
+        $request->merge([
+            'email' => $this->normalizeLoginIdentifier((string) $request->input('email', '')),
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:users',
+            'email' => 'required|string|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => 'required|in:admin,staff',
             'source_id' => 'nullable|exists:sources,id',
@@ -135,9 +162,13 @@ class UserController extends Controller
             abort(403, 'Only admin can access this page.');
         }
 
+        $request->merge([
+            'email' => $this->normalizeLoginIdentifier((string) $request->input('email', '')),
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|max:255|unique:users,email,' . $user->id,
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => 'required|in:admin,staff',
             'source_id' => 'nullable|exists:sources,id',

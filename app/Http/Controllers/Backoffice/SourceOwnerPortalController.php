@@ -50,6 +50,7 @@ class SourceOwnerPortalController extends Controller
     private function resolveSourcePlatform(Source $source): Platform
     {
         $slug = 'source-' . $source->id;
+        $shouldBeActive = $source->status === 'active';
 
         $platform = Platform::where('slug', $slug)
             ->orWhere('name', $source->name)
@@ -59,14 +60,15 @@ class SourceOwnerPortalController extends Controller
             $platform = Platform::create([
                 'name' => $source->name,
                 'slug' => $slug,
-                'is_active' => true,
+                'is_active' => $shouldBeActive,
                 'sort_order' => 0,
             ]);
         } else {
-            if (!$platform->is_active || $platform->name !== $source->name) {
+            if ($platform->is_active !== $shouldBeActive || $platform->name !== $source->name || $platform->slug !== $slug) {
                 $platform->update([
                     'name' => $source->name,
-                    'is_active' => true,
+                    'slug' => $slug,
+                    'is_active' => $shouldBeActive,
                 ]);
             }
         }
@@ -100,7 +102,7 @@ class SourceOwnerPortalController extends Controller
             ->limit(24)
             ->get()
             ->pluck('draw_date')
-            ->map(fn ($d) => $d->format('Y-m-d'))
+            ->map(fn ($d) => $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : substr((string) $d, 0, 10))
             ->values();
 
         $numbers = LotteryNumber::query()
@@ -110,11 +112,13 @@ class SourceOwnerPortalController extends Controller
             ->get()
             ->map(fn (LotteryNumber $n) => [
                 'id' => $n->id,
-                'draw_date' => $n->draw_date?->format('Y-m-d'),
+                'draw_date' => $n->draw_date instanceof \DateTimeInterface
+                    ? $n->draw_date->format('Y-m-d')
+                    : ($n->draw_date ? substr((string) $n->draw_date, 0, 10) : null),
                 'two_digit' => $n->two_digit ?? '',
                 'three_digit' => $n->three_digit ?? '',
                 'running_numbers' => is_array($n->running_numbers) ? implode(', ', $n->running_numbers) : ($n->running_numbers ?? ''),
-                'updated_at' => $n->updated_at?->toIso8601String(),
+                'updated_at' => $n->updated_at instanceof \DateTimeInterface ? $n->updated_at->toIso8601String() : (string) $n->updated_at,
             ]);
 
         $platform = Platform::where('slug', 'source-' . $source->id)
@@ -175,12 +179,17 @@ class SourceOwnerPortalController extends Controller
             'description' => trim((string) ($validated['description'] ?? '')) ?: null,
         ]);
 
-        // ซิงค์ชื่อร้านค้า Platform ให้ตรงกับชื่อสำนัก
+        // ซิงค์ชื่อร้านค้า Platform ให้ตรงกับชื่อสำนักและสถานะการแสดงผล
         Platform::where('slug', 'source-' . $source->id)
             ->orWhere('name', $oldName)
-            ->update(['name' => $source->name]);
+            ->update([
+                'name' => $source->name,
+                'slug' => 'source-' . $source->id,
+                'is_active' => $source->status === 'active',
+            ]);
 
-        return redirect()->back()->with('success', 'บันทึกข้อมูลสำนักและช่องทางติดต่อขึ้นหน้าเว็บเรียบร้อยแล้ว!');
+        return redirect()->route('backportal.index', ['source_id' => $source->id])
+            ->with('success', 'บันทึกข้อมูลสำนักและช่องทางติดต่อขึ้นหน้าเว็บเรียบร้อยแล้ว!');
     }
 
     /**
@@ -228,7 +237,8 @@ class SourceOwnerPortalController extends Controller
         } catch (\Throwable $e) {
         }
 
-        return redirect()->back()->with('success', "บันทึกเลขเด็ดงวด {$validated['draw_date']} ขึ้นหน้าเว็บเรียบร้อยแล้ว!");
+        return redirect()->route('backportal.index', ['source_id' => $source->id])
+            ->with('success', "บันทึกเลขเด็ดงวด {$validated['draw_date']} ขึ้นหน้าเว็บเรียบร้อยแล้ว!");
     }
 
     /**
@@ -272,7 +282,8 @@ class SourceOwnerPortalController extends Controller
                 'is_active' => $validated['is_active'] ?? true,
             ]);
 
-            return redirect()->back()->with('success', "อัปเดตสินค้า '{$product->title}' ขึ้นหน้าเว็บเรียบร้อยแล้ว!");
+            return redirect()->route('backportal.index', ['source_id' => $source->id])
+                ->with('success', "อัปเดตสินค้า '{$product->title}' เรียบร้อยแล้ว!");
         }
 
         AffiliateProduct::create([
@@ -285,7 +296,8 @@ class SourceOwnerPortalController extends Controller
             'is_active' => true,
         ]);
 
-        return redirect()->back()->with('success', "ลงสินค้า '{$validated['title']}' ขึ้นแสดงทั้ง 3 หน้าหลักเรียบร้อยแล้ว!");
+        return redirect()->route('backportal.index', ['source_id' => $source->id])
+            ->with('success', "ลงสินค้า '{$validated['title']}' เรียบร้อยแล้ว!");
     }
 
     public function deleteProduct(Request $request, int $productId)
@@ -304,6 +316,7 @@ class SourceOwnerPortalController extends Controller
         $title = $product->title;
         $product->delete();
 
-        return redirect()->back()->with('success', "ลบสินค้า '{$title}' เรียบร้อยแล้ว");
+        return redirect()->route('backportal.index', ['source_id' => $source->id])
+            ->with('success', "ลบสินค้า '{$title}' เรียบร้อยแล้ว");
     }
 }

@@ -67,6 +67,7 @@ const changeDrawDate = () => {
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">อันดับ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สำนัก</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">คะแนนโหวต</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">แนวทางเลข</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -75,31 +76,33 @@ const changeDrawDate = () => {
                                     :key="item.source_id" 
                                     class="hover:bg-gray-50 transition-colors"
                                     :class="{
-                                        'bg-yellow-50': index === 0,
-                                        'bg-gray-50': index === 1,
-                                        'bg-orange-50': index === 2,
+                                        'bg-yellow-50/70': index === 0,
+                                        'bg-gray-50/70': index === 1,
+                                        'bg-orange-50/70': index === 2,
                                     }"
                                 >
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center gap-2">
                                             <span 
-                                                class="text-lg font-bold"
+                                                class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-extrabold"
                                                 :class="{
-                                                    'text-yellow-600': index === 0,
-                                                    'text-gray-600': index === 1,
-                                                    'text-orange-600': index === 2,
-                                                    'text-gray-400': index > 2,
+                                                    'bg-yellow-400 text-gray-950 shadow-2xs': index === 0,
+                                                    'bg-gray-300 text-gray-900': index === 1,
+                                                    'bg-amber-600 text-white': index === 2,
+                                                    'bg-gray-100 text-gray-600': index > 2,
                                                 }"
                                             >
                                                 {{ index + 1 }}
                                             </span>
-                                            <span v-if="index === 0" class="text-2xl">🏆</span>
-                                            <span v-else-if="index === 1" class="text-2xl">🥈</span>
-                                            <span v-else-if="index === 2" class="text-2xl">🥉</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-sm font-medium text-gray-900">{{ item.source_name }}</span>
+                                        <Link
+                                            :href="route('lucky-numbers.index', { source_id: item.source_id, draw_date: selectedDrawDate })"
+                                            class="text-sm font-bold text-gray-900 hover:text-red-600 hover:underline"
+                                        >
+                                            {{ item.source_name }}
+                                        </Link>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                         <span 
@@ -115,9 +118,17 @@ const changeDrawDate = () => {
                                         </span>
                                         <span class="text-sm text-gray-500 ml-1">คะแนน</span>
                                     </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <Link
+                                            :href="route('lucky-numbers.index', { source_id: item.source_id, draw_date: selectedDrawDate })"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold shadow-2xs transition"
+                                        >
+                                            <span>ดูเลขสำนักนี้ →</span>
+                                        </Link>
+                                    </td>
                                 </tr>
                                 <tr v-if="voteCounts.length === 0">
-                                    <td colspan="3" class="px-6 py-8 text-center text-sm text-gray-500">
+                                    <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">
                                         ยังไม่มีคะแนนโหวตในงวดนี้
                                     </td>
                                 </tr>

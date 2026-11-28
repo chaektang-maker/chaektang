@@ -25,12 +25,12 @@ const form = useForm({
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Profile Information
+            <h2 class="text-lg font-bold text-gray-900">
+                ข้อมูลบัญชีผู้ใช้งาน
             </h2>
 
             <p class="mt-1 text-sm text-gray-600">
-                Update your account's profile information and email address.
+                แก้ไขชื่อผู้ใช้งาน และเบอร์โทรศัพท์มือถือ (10 หลัก) หรืออีเมลสำหรับใช้เข้าสู่ระบบ
             </p>
         </header>
 
@@ -39,7 +39,7 @@ const form = useForm({
             class="mt-6 space-y-6"
         >
             <div>
-                <InputLabel for="name" value="Name" />
+                <InputLabel for="name" value="ชื่อผู้ใช้งาน / ชื่อผู้ดูแล" />
 
                 <TextInput
                     id="name"
@@ -55,43 +55,23 @@ const form = useForm({
             </div>
 
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" value="เบอร์โทรศัพท์มือถือ (10 หลัก) หรือ อีเมล (สำหรับล็อกอิน)" />
 
                 <TextInput
                     id="email"
-                    type="email"
+                    type="text"
                     class="mt-1 block w-full"
                     v-model="form.email"
                     required
                     autocomplete="username"
+                    placeholder="เช่น 0812345678 หรือ email@example.com"
                 />
 
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="mt-2 text-sm text-gray-800">
-                    Your email address is unverified.
-                    <Link
-                        :href="route('verification.send')"
-                        method="post"
-                        as="button"
-                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        Click here to re-send the verification email.
-                    </Link>
-                </p>
-
-                <div
-                    v-show="status === 'verification-link-sent'"
-                    class="mt-2 text-sm font-medium text-green-600"
-                >
-                    A new verification link has been sent to your email address.
-                </div>
-            </div>
-
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <PrimaryButton :disabled="form.processing">บันทึกข้อมูล</PrimaryButton>
 
                 <Transition
                     enter-active-class="transition ease-in-out"
@@ -101,9 +81,9 @@ const form = useForm({
                 >
                     <p
                         v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
+                        class="text-sm font-bold text-emerald-600"
                     >
-                        Saved.
+                        ✓ บันทึกข้อมูลเรียบร้อยแล้ว
                     </p>
                 </Transition>
             </div>
